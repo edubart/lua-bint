@@ -12,6 +12,7 @@ local function _bigint_newempty()
 end
 
 function bigint.scale(size, bits)
+  bits = bits or 32
   assert(bits <= 32)
   assert(size * bits >= 64)
   BIGINT_SIZE = size
@@ -32,9 +33,8 @@ function bigint:_fromunsigned(x)
 end
 
 function bigint.fromunsigned(x)
-  x = tonumber(x)
   assert(math.type(x) == 'integer', 'number has no integer representation')
-  return _bigint_newempty():fromunsigned(x)
+  return _bigint_newempty():_fromunsigned(x)
 end
 
 function bigint.frominteger(x)
@@ -75,7 +75,7 @@ function bigint.fromstring(s, base)
     local part = int:sub(i,i+step-1)
     local d = tonumber(part, base)
     assert(d, 'invalid integer string representation')
-    n:_mul(base ^ #part):_add(d)
+    n = (n * (base ^ #part)):_add(d)
   end
   if sign == '-' then
     n:_unm()
@@ -108,16 +108,6 @@ function bigint.tostring(x, base)
   return table.concat(ss)
 end
 
-function bigint.from(x)
-  if getmetatable(x) == bigint then
-    return x
-  elseif type(x) == 'number' then
-    return bigint.fromnumber(x)
-  else
-    return bigint.frombase(x, 10)
-  end
-end
-
 function bigint.clone(x)
   assert(getmetatable(x) == bigint, 'invalid bigint')
   local n = {}
@@ -128,13 +118,23 @@ function bigint.clone(x)
   return n
 end
 
+function bigint.from(x)
+  if getmetatable(x) == bigint then
+    return x
+  elseif type(x) == 'number' then
+    return bigint.fromnumber(x)
+  else
+    return bigint.fromstring(x, 10)
+  end
+end
+
 function bigint.new(x)
   if getmetatable(x) == bigint then
     return x:clone()
   elseif type(x) == 'number' then
     return bigint.fromnumber(x)
   else
-    return bigint.frombase(x, 10)
+    return bigint.fromstring(x, 10)
   end
 end
 
@@ -357,15 +357,10 @@ function bigint.__sub(x, y)
   return bigint.new(x):_sub(y)
 end
 
-local mul_tmp1 = _bigint_newempty()
-local mul_tmp2 = _bigint_newempty()
-local mul_tmp3 = _bigint_newempty()
-
-function bigint:_mul(y)
-  local x, row, tmp = mul_tmp1, mul_tmp2, mul_tmp3
-  x:_assign(self)
-  y = bigint.from(y)
-  self:_zero()
+function bigint.__mul(x, y)
+  x, y = bigint.from(x), bigint.from(y)
+  local row, tmp = _bigint_newempty(), _bigint_newempty()
+  local res = bigint.zero()
   for i=1,BIGINT_SIZE do
     row:_zero()
     for j=1,BIGINT_SIZE do
@@ -374,26 +369,16 @@ function bigint:_mul(y)
         row:_add(tmp:_fromunsigned(x[i] * y[j]):_shlvals(nshifts))
       end
     end
-    self:_add(row)
+    res:_add(row)
   end
-  return self
+  return res
 end
 
-function bigint.__mul(x, y)
-  return bigint.new(x):_mul(y)
-end
-
-local udiv_tmp1 = _bigint_newempty()
-local udiv_tmp2 = _bigint_newempty()
-local udiv_tmp3 = _bigint_newempty()
-
-function bigint:_udiv(y)
-  y = bigint.from(y)
-  assert(not y:iszero(), 'attempt to divide by zero')
-  local current, dividend, denom = udiv_tmp1, udiv_tmp2, udiv_tmp3
-  current:_one()
-  dividend:_assign(self)
-  denom:_assign(y)
+function bigint.udiv(x, y)
+  local current = bigint.one()
+  local dividend = bigint.new(x)
+  local denom = bigint.new(y)
+  assert(not denom:iszero(), 'attempt to divide by zero')
   local overflow = false
   while denom:ule(dividend) do
     if denom[BIGINT_SIZE] >= BIGINT_HALFMAX then
@@ -407,8 +392,7 @@ function bigint:_udiv(y)
     current:_shrone()
     denom:_shrone()
   end
-  local quot = self
-  quot:_zero()
+  local quot = bigint.zero()
   while not current:iszero() do
     if denom:ule(dividend) then
       dividend:_sub(denom)
@@ -417,92 +401,71 @@ function bigint:_udiv(y)
     current:_shrone()
     denom:_shrone()
   end
-  return self
-end
-
-function bigint.udiv(x, y)
-  return bigint.new(x):_udiv(y)
-end
-
-local udivmod_tmp1 = _bigint_newempty()
-function bigint.udivmod(x, y)
-  x = bigint.new(x)
-  y = bigint.from(y)
-  local quot = bigint.new(x):_udiv(y)
-  local rem = x:_sub(udivmod_tmp1:_assign(quot):_mul(y))
-  return quot, rem
-end
-
-local umod_tmp1 = _bigint_newempty()
-function bigint:_umod(y)
-  y = bigint.from(y)
-  return self:_sub(umod_tmp1:_assign(self):_udiv(y):_mul(y))
+  return quot
 end
 
 function bigint.umod(x, y)
-  return bigint.new(x):_umod(y)
+  x, y = bigint.from(x), bigint.from(y)
+  return x - (bigint.udiv(x, y) * y)
 end
 
-local idiv_tmp1 = _bigint_newempty()
-local idiv_tmp2 = _bigint_newempty()
-local idiv_tmp3 = _bigint_newempty()
+function bigint.udivmod(x, y)
+  x, y = bigint.from(x), bigint.from(y)
+  local quot = bigint.udiv(x, y)
+  local rem = x - (quot * y)
+  return quot, rem
+end
 
-function bigint:_idiv(y)
+function bigint.__idiv(x, y)
   -- integer division, round quotient towards minus infinity, that is floor(x / y)
-  local x = idiv_tmp1:_assign(self)
-  y = bigint.from(y)
+  x, y = bigint.from(x), bigint.from(y)
   if y:isminusone() then
     return -x
   end
-  local tmp = idiv_tmp2
-  local quot = self
-  quot:_abs():_udiv(tmp:_assign(y):_abs())
+  local quot = bigint.udiv(x:abs(), y:abs())
   if x:isneg() ~= y:isneg() then
     quot:_unm()
 
     -- round quotient towards minus infinity
-    local rem = idiv_tmp3
-    rem:_assign(x):_sub(tmp:_assign(y):_mul(quot))
+    local rem = x - (y * quot)
     if not rem:iszero() then
       quot:_dec()
     end
   end
-  return self
-end
-
-function bigint.__idiv(x, y)
-  x = bigint.new(x)
-  return x:_idiv(y)
-end
-
-local mod_tmp1 = _bigint_newempty()
-function bigint:_mod(y)
-  y = bigint.from(y)
-  return self:_sub(mod_tmp1:_assign(self):_idiv(y):_mul(y))
+  return quot
 end
 
 function bigint.__mod(x, y)
-  return bigint.new(x):_mod(y)
+  x, y = bigint.from(x), bigint.from(y)
+  local quot = x // y
+  return x - (quot * y)
 end
 
-local pow_tmp1 = _bigint_newempty()
-function bigint:_pow(y)
-  y = bigint.tointeger(y)
-  assert(y <= math.maxinteger, 'attempt to pow to a very large integer')
-  assert(y >= 0, 'attempt to pow to a negative power')
-  if y == 0 then
-    self:_one()
-  elseif not self:iszero() then
-    local x = pow_tmp1:_assign(self)
-    for _=2,y do
-      self:_mul(x)
-    end
-  end
-  return self
+function bigint.idivmod(x, y)
+  x, y = bigint.from(x), bigint.from(y)
+  local quot = x // y
+  local rem = x - (quot * y)
+  return quot, rem
 end
 
 function bigint.__pow(x, y)
-  return bigint.new(x):_pow(y)
+  x = bigint.from(x)
+  assert(y <= math.maxinteger, 'attempt to pow to a very large integer')
+  assert(y >= 0, 'attempt to pow to a negative power')
+  if y == 0 then
+    return bigint.one()
+  else
+    x = bigint.from(x)
+    if x:iszero() then
+      return bigint.zero()
+    else
+      local res = x:clone()
+      for _=2,y do
+        res = res * x
+      end
+      return res
+    end
+  end
 end
 
 function bigint.__shl(x, y)
@@ -657,367 +620,5 @@ setmetatable(bigint, {
     return bigint.new(x)
   end
 })
-
-local function test(size, bits)
-  bigint.scale(size, bits)
-
-  local function assert_eq(a , b)
-    if a ~= b then
-      error('assertion failed: ' .. tostring(a) .. ' ~= ' .. tostring(b), 2)
-    end
-  end
-
-  do --utils
-    assert(bigint(0):iszero() == true)
-    assert(bigint(1):iszero() == false)
-    assert(bigint(-1):iszero() == false)
-
-    assert(bigint(1):isminusone() == false)
-    assert(bigint(0):isminusone() == false)
-    assert(bigint(-1):isminusone() == true)
-    assert(bigint(-2):isminusone() == false)
-
-    assert(bigint(-1):isneg() == true)
-    assert(bigint(-2):isneg() == true)
-    assert(bigint(0):isneg() == false)
-    assert(bigint(1):isneg() == false)
-    assert(bigint(2):isneg() == false)
-  end
-
-  do -- number conversion
-    local function test_num2num(x)
-      assert_eq(bigint(x):tonumber(), x)
-    end
-    local function test_num2hex(x)
-      assert_eq(bigint(x):tostring(16), ('%x'):format(x))
-    end
-    local function test_num2dec(x)
-      assert_eq(bigint(x):tostring(10), ('%d'):format(x))
-    end
-    local function test_num2oct(x)
-      assert_eq(bigint(x):tostring(8), ('%o'):format(x))
-    end
-    local function test_str2num(x)
-      assert_eq(bigint.fromstring(tostring(x)):tonumber(), x)
-    end
-    local function test_ops(x)
-      test_num2num(x)
-      test_num2num(-x)
-      test_num2hex(x)
-      test_num2oct(x)
-      if BIGINT_SIZE * BIGINT_VALBITS == 64 then
-        test_num2hex(-x)
-        test_num2oct(-x)
-      end
-      test_num2dec(x)
-      test_num2dec(-x)
-      test_str2num(x)
-      test_str2num(-x)
-    end
-    test_ops(0)
-    test_ops(1)
-    test_ops(0xfffffffffe)
-    test_ops(0xffffffff)
-    test_ops(0xffffffff)
-    test_ops(0x123456789abc)
-    test_ops(0xf505c2)
-    test_ops(0x9f735a)
-    test_ops(0xcf7810)
-    test_ops(0xbbc55f)
-  end
-
-  do -- add/sub/mul/band/bor/bxor/eq/lt/le
-    local function test_add(x, y)
-      assert_eq((bigint(x) + bigint(y)):tonumber(), x + y)
-    end
-    local function test_sub(x, y)
-      assert_eq((bigint(x) - bigint(y)):tonumber(), x - y)
-    end
-    local function test_mul(x, y)
-      assert_eq((bigint(x) * bigint(y)):tonumber(), x * y)
-    end
-    local function test_band(x, y)
-      assert_eq((bigint(x) & bigint(y)):tonumber(), x & y)
-    end
-    local function test_bor(x, y)
-      assert_eq((bigint(x) | bigint(y)):tonumber(), x | y)
-    end
-    local function test_bxor(x, y)
-      assert_eq((bigint(x) ~ bigint(y)):tonumber(), x ~ y)
-    end
-    local function test_eq(x, y)
-      assert_eq(bigint(x) == bigint(y), x == y)
-    end
-    local function test_le(x, y)
-      assert_eq(bigint(x) <= bigint(y), x <= y)
-    end
-    local function test_lt(x, y)
-      assert_eq(bigint(x) < bigint(y), x < y)
-    end
-    local function test_ops2(x, y)
-      test_add(x, y)
-      test_sub(x, y) test_sub(y, x)
-      test_mul(x, y) test_mul(y, x)
-      test_band(x, y)
-      test_bor(x, y)
-      test_bxor(x, y)
-      test_eq(x, y) test_eq(y, x) test_eq(x, x) test_eq(y, y)
-      test_lt(x, y) test_lt(y, x) test_lt(x, x) test_lt(y, y)
-      test_le(x, y) test_le(y, x) test_le(x, x) test_le(y, y)
-    end
-    local function test_ops(x, y)
-      test_ops2(x, y)
-      test_ops2(-x, y)
-      test_ops2(-x, -y)
-      test_ops2(x, -y)
-    end
-    test_ops(0, 0)
-    test_ops(1, 1)
-    test_ops(1, 2)
-    test_ops(80, 20)
-    test_ops(18, 22)
-    test_ops(12, 8)
-    test_ops(100080, 20)
-    test_ops(18, 559022)
-    test_ops(2000000000, 2000000000)
-    test_ops(0x00ffff, 1)
-    test_ops(0x00ffff00, 0x00000100)
-    test_ops(1000001, 1000000)
-    test_ops(42, 0)
-    test_ops(101, 100)
-    test_ops(242, 42)
-    test_ops(1042, 0)
-    test_ops(101010101, 101010100)
-    test_ops(0x010000, 1)
-    test_ops(0xf505c2, 0x0fffe0)
-    test_ops(0x9f735a, 0x65ffb5)
-    test_ops(0xcf7810, 0x04ff34)
-    test_ops(0xbbc55f, 0x4eff76)
-    test_ops(0x100000, 1)
-    test_ops(0x010000, 1)
-    test_ops(0xb5beb4, 0x01ffc4)
-    test_ops(0x707655, 0x50ffa8)
-    test_ops(0xf0a990, 0x1cffd1)
-    test_ops(0x010203, 0x1020)
-    test_ops(42, 0)
-    test_ops(42, 1)
-    test_ops(42, 2)
-    test_ops(42, 10)
-    test_ops(42, 100)
-    test_ops(420, 1000)
-    test_ops(200, 8)
-    test_ops(2, 256)
-    test_ops(500, 2)
-    test_ops(500000, 2)
-    test_ops(500, 500)
-    test_ops(1000000000, 2)
-    test_ops(2, 1000000000)
-    test_ops(1000000000, 4)
-    test_ops(0xfffffffe, 0xffffffff)
-    test_ops(0xffffffff, 0xffffffff)
-    test_ops(0xffffffff, 0x10000)
-    test_ops(0xffffffff, 0x1000)
-    test_ops(0xffffffff, 0x100)
-    test_ops(0xffffffff, 1)
-    test_ops(1000000, 1000)
-    test_ops(1000000, 10000)
-    test_ops(1000000, 100000)
-    test_ops(1000000, 1000000)
-    test_ops(1000000, 10000000)
-    test_ops(0xffffffff, 0x005500aa)
-    test_ops(7, 3)
-    test_ops(0xffffffff, 0)
-    test_ops(0, 0xffffffff)
-    test_ops(0xffffffff, 0xffffffff)
-    test_ops(0xffffffff, 0)
-    test_ops(0, 0xffffffff)
-    test_ops(0x00000000, 0xffffffff)
-    test_ops(0x55555555, 0xaaaaaaaa)
-    test_ops(0xffffffff, 0xffffffff)
-    test_ops(4, 3)
-  end
-
-  do --shl/shr
-    local function test_shl(x, y)
-      assert_eq((bigint(x) << y):tonumber(), x << y)
-    end
-    local function test_shr(x, y)
-      assert_eq((bigint(x) >> y):tonumber(), x >> y)
-    end
-    local function test_ops(x, y)
-      test_shl(x, y) test_shl(x, -y)
-      test_shr(x, y) test_shr(x, -y)
-    end
-    test_ops(0, 0)
-    test_ops(1, 0)
-    test_ops(1, 1)
-    test_ops(1, 2)
-    test_ops(1, 3)
-    test_ops(1, 4)
-    test_ops(1, 5)
-    test_ops(1, 6)
-    test_ops(1, 7)
-    test_ops(1, 8)
-    test_ops(1, 9)
-    test_ops(1, 10)
-    test_ops(1, 11)
-    test_ops(1, 12)
-    test_ops(1, 13)
-    test_ops(1, 14)
-    test_ops(1, 15)
-    test_ops(1, 16)
-    test_ops(1, 17)
-    test_ops(1, 18)
-    test_ops(1, 19)
-    test_ops(1, 20)
-    test_ops(0xdd, 0x18)
-    test_ops(0x68, 0x02)
-    test_ops(0xf6, 1)
-    test_ops(0x1a, 1)
-    test_ops(0xb0, 1)
-    test_ops(0xba, 1)
-    test_ops(0x10, 3)
-    test_ops(0xe8, 4)
-    test_ops(0x37, 4)
-    test_ops(0xa0, 7)
-    test_ops(      1,  0)
-    test_ops(      2,  1)
-    test_ops(      4,  2)
-    test_ops(      8,  3)
-    test_ops(     16,  4)
-    test_ops(     32,  5)
-    test_ops(     64,  6)
-    test_ops(    128,  7)
-    test_ops(    256,  8)
-    test_ops(    512,  9)
-    test_ops(   1024, 10)
-    test_ops(   2048, 11)
-    test_ops(   4096, 12)
-    test_ops(   8192, 13)
-    test_ops(  16384, 14)
-    test_ops(  32768, 15)
-    test_ops(  65536, 16)
-    test_ops( 131072, 17)
-    test_ops( 262144, 18)
-    test_ops( 524288, 19)
-    test_ops(1048576, 20)
-  end
-
-  do -- pow
-    local function test_pow(x, y)
-      assert_eq((bigint(x) ^ y):tonumber(), math.floor(x ^ y))
-    end
-    local function test_ops(x, y)
-      test_pow(x, y)
-      test_pow(-x, y)
-    end
-    test_ops(0, 0)
-    test_ops(0, 1)
-    test_ops(0, 2)
-    test_ops(0, 15)
-    test_ops(1, 0)
-    test_ops(1, 1)
-    test_ops(1, 2)
-    test_ops(1, 15)
-    test_ops(2, 0)
-    test_ops(2, 1)
-    test_ops(2, 2)
-    test_ops(2, 15)
-    test_ops(7, 4)
-    test_ops(7, 11)
-  end
-
-  do --bnot/unm
-    local function test_bnot(x)
-      assert_eq((~bigint(x)):tonumber(), ~x)
-      assert_eq((~ ~bigint(x)):tonumber(), x)
-    end
-    local function test_unm(x)
-      assert_eq((-bigint(x)):tonumber(), -x)
-      assert_eq((- -bigint(x)):tonumber(), x)
-    end
-    local function test_ops(x)
-      test_bnot(x) test_bnot(-x)
-      test_unm(x) test_unm(-x)
-    end
-    test_ops(0)
-    test_ops(1)
-    test_ops(2)
-    test_ops(15)
-    test_ops(16)
-    test_ops(17)
-    test_ops(0xffffffff)
-    test_ops(0xfffffffe)
-    test_ops(0xf505c2)
-    test_ops(0x9f735a)
-    test_ops(0xcf7810)
-    test_ops(0xbbc55f)
-  end
-
-  do -- idiv/mod
-    local function test_idiv(x, y)
-      assert_eq((bigint(x) // bigint(y)):tonumber(), x // y)
-    end
-    local function test_mod(x, y)
-      assert_eq((bigint(x) % bigint(y)):tonumber(), x % y)
-    end
-    local function test_ops(x, y)
-      test_idiv(x, y)
-      test_idiv(x, -y)
-      test_idiv(-x, -y)
-      test_idiv(-x, y)
-      test_mod(x, y)
-      test_mod(x, -y)
-      test_mod(-x, y)
-      test_mod(-x, -y)
-    end
-    test_ops(0xffffffff, 0xffffffff)
-    test_ops(0xffffffff, 0x10000)
-    test_ops(0xffffffff, 0x1000)
-    test_ops(0xffffffff, 0x100)
-    test_ops(1000000, 1000)
-    test_ops(1000000, 10000)
-    test_ops(1000000, 100000)
-    test_ops(1000000, 1000000)
-    test_ops(1000000, 10000000)
-    test_ops(8, 3)
-    test_ops(28, 7)
-    test_ops(27, 7)
-    test_ops(26, 7)
-    test_ops(25, 7)
-    test_ops(24, 7)
-    test_ops(23, 7)
-    test_ops(22, 7)
-    test_ops(21, 7)
-    test_ops(20, 7)
-    test_ops(0, 12)
-    test_ops(1, 16)
-    test_ops(10, 1)
-    test_ops(1024, 1000)
-    test_ops(12345678, 16384)
-    test_ops(0xffffff, 1234)
-    test_ops(0xffffffff, 1)
-    test_ops(0xffffffff, 0xef)
-    test_ops(0xffffffff, 0x10000)
-    test_ops(0xb36627, 0x0dff95)
-    test_ops(0xe5a18e, 0x09ff82)
-    test_ops(0x45edd0, 0x04ff1a)
-    test_ops(0xe7a344, 0x71ffe8)
-    test_ops(0xa3a9a1, 0x2ff44)
-    test_ops(0xc128b2, 0x60ff61)
-    test_ops(0xdc2254, 0x517fea)
-    test_ops(0x769c99, 0x2cffda)
-    test_ops(0xc19076, 0x31ffd4)
-  end
-end
-
-test(16, 4)
-test(8, 8)
-test(4, 16)
-test(4, 28)
-test(4, 32)
-test(2, 32)
-test(17, 4)
-test(8, 32)
 
 return bigint
