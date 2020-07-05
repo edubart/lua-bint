@@ -22,11 +22,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 
---[[-- A small multiple-precision integer implementation in pure Lua
+--[[--
 Small portable arbitrary-precision integer arithmetic in pure Lua for
 calculating with large numbers.
 
-Uses an array of lua integers as underlying data-type utilizing all bits in each word.
+Different from most arbitrary-precision integer libraries in pure Lua out there this one
+uses an array of lua integers as underlying data-type in its implementation instead of
+using strings or large tables, so regarding that aspect this library should be more efficient.
 
 ## Design goals
 
@@ -47,7 +49,7 @@ are implemented as metamethods.
 
 ## Usage
 
-First on you should configure how many bits the library work with,
+First on you should configure how many bits the library will work with,
 to do that call @{bigint.scale} once on startup with the desired number of bits in multiples of 32,
 for example bigint.scale(1024). By default bigint uses 256 bits integers.
 
@@ -60,7 +62,7 @@ Then when you need create a bigint, you can use one of the following functions:
 * @{bigint.new} (use to convert from anything)
 * @{bigint.zero}
 * @{bigint.one}
-* bigint
+* `bigint`
 
 You can also call `bigint`, it is an alias to `bigint.new`. In doubt use @{bigint.new}
 to create a new bigint.
@@ -76,7 +78,17 @@ When you are done computing and need to get the result, get the output from one 
 
 Note that outputting to lua number will make the integer overflow and its value wraps around.
 To output very large integer with no loss of precision you probably want to use @{bigint.tobase}
-to get a string representation.
+or call `tostring` to get a string representation.
+
+## Precautions
+
+All library functions can be mixed with lua integers, this makes easy to mix operations between
+bigints and lua numbers however the user should take care in some situations.
+Like comparing bigint with lua numbers for equality will always return false, in that case either
+cast the lua number to a bigint before comparing or use @{bigint.eq}.
+
+The library can work only with integers, doing operations with any fractional lua number will
+throw an assertion.
 ]]
 
 local bigint = {}
@@ -306,7 +318,7 @@ end
 -- @param[opt] unsigned Whether to output as unsigned integer.
 -- Defaults to true for base 10 and false for others.
 -- @return A string representing the input.
--- @raise An assert is thrown the base is invalid.
+-- @raise An assert is thrown in case the base is invalid.
 function bigint.tobase(x, base, unsigned)
   x = bigint.new(x)
   base = base or 10
@@ -892,6 +904,14 @@ function bigint.__eq(x, y)
     end
   end
   return true
+end
+
+--- Check if bigints are equal.
+-- @param x A value to compare.
+-- @param y A value to compare.
+function bigint.eq(x, y)
+  x, y = bigint_assert_from(x), bigint_assert_from(y)
+  return x == y
 end
 
 --- Compare if bigint x is less than y (unsigned version).

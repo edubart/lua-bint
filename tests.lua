@@ -53,6 +53,9 @@ local function test(bits)
     assert(bigint(1):isodd() == true)
     assert(bigint(2):isodd() == false)
     assert(bigint(3):isodd() == true)
+
+    assert(bigint.eq(1, 1) == true)
+    assert(bigint.eq(1, 0) == false)
   end
 
   do -- number conversion
