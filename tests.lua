@@ -10,20 +10,35 @@ local function test(bits)
   end
 
   do --utils
+    assert(bigint(-2):iszero() == false)
+    assert(bigint(-1):iszero() == false)
     assert(bigint(0):iszero() == true)
     assert(bigint(1):iszero() == false)
-    assert(bigint(-1):iszero() == false)
+    assert(bigint(2):iszero() == false)
 
-    assert(bigint(1):isminusone() == false)
-    assert(bigint(0):isminusone() == false)
+    assert(bigint(-2):isone() == false)
+    assert(bigint(-1):isone() == false)
+    assert(bigint(0):isone() == false)
+    assert(bigint(1):isone() == true)
+    assert(bigint(2):isone() == false)
+
     assert(bigint(-1):isminusone() == true)
     assert(bigint(-2):isminusone() == false)
+    assert(bigint(1):isminusone() == false)
+    assert(bigint(0):isminusone() == false)
+    assert(bigint(2):isminusone() == false)
 
     assert(bigint(-1):isneg() == true)
     assert(bigint(-2):isneg() == true)
     assert(bigint(0):isneg() == false)
     assert(bigint(1):isneg() == false)
     assert(bigint(2):isneg() == false)
+
+    assert(bigint(-1):ispos() == false)
+    assert(bigint(-2):ispos() == false)
+    assert(bigint(0):ispos() == false)
+    assert(bigint(1):ispos() == true)
+    assert(bigint(2):ispos() == true)
   end
 
   do -- number conversion
@@ -267,6 +282,7 @@ local function test(bits)
   do -- pow
     local function test_pow(x, y)
       assert_eq((bigint(x) ^ y):tonumber(), math.floor(x ^ y))
+      assert_eq((bigint(x) ^ bigint(y)):tonumber(), math.floor(x ^ y))
     end
     local function test_ops(x, y)
       test_pow(x, y)

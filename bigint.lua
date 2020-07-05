@@ -154,6 +154,8 @@ end
 function bigint.fromuinteger(x)
   x = tointeger(x)
   if not x then return nil end
+  if x == 1 then return bigint.one() end
+  if x == 0 then return bigint.zero() end
   return bigint_newempty():_fromuinteger(x)
 end
 
@@ -164,6 +166,8 @@ end
 function bigint.frominteger(x)
   x = tointeger(x)
   if not x then return nil end
+  if x == 1 then return bigint.one() end
+  if x == 0 then return bigint.zero() end
   local neg = false
   if x < 0 then
     x = math.abs(x)
@@ -224,9 +228,10 @@ end
 -- @see bigint.new
 function bigint.from(x)
   if getmetatable(x) ~= bigint then
-    if type(x) == 'number' then
+    local ty = type(x)
+    if ty == 'number' then
       x = bigint.frominteger(x)
-    else
+    elseif ty == 'string' then
       x = bigint.frombase(x, 10)
     end
   end
@@ -295,21 +300,23 @@ function bigint.tonumber(x)
 end
 
 --- Convert a bigint to a string in the desired base.
--- The sign cahracter ('-') for negative integers is only prepended when the base is 10.
--- All other bases treats negative integers as unsigned integers following two's complement
--- rules on this conversion.
 -- @param x The bigint to be converted from.
--- @param[opt] base Base that the number is represented, defaults to 10.
+-- @param[opt] base Base to be represented, defaults to 10.
 -- Must be at least 2 and at most 36.
+-- @param[opt] unsigned Whether to output as unsigned integer.
+-- Defaults to true for base 10 and false for others.
 -- @return A string representing the input.
 -- @raise An assert is thrown the base is invalid.
-function bigint.tobase(x, base)
+function bigint.tobase(x, base, unsigned)
   x = bigint.new(x)
   base = base or 10
   assert(base >= 2 and base <= 36, 'number base is too large')
   local BASE_LETTERS = '0123456789abcdefghijklmnopqrstuvwxyz'
   local ss = {}
-  local neg = base == 10 and x:isneg()
+  if unsigned == nil then
+    unsigned = base ~= 10
+  end
+  local neg = not unsigned and x:isneg()
   if neg then
     x:_abs()
   end
@@ -336,10 +343,13 @@ end
 function bigint.new(x)
   if getmetatable(x) == bigint then
     x = x:clone()
-  elseif type(x) == 'number' then
-    x = bigint.frominteger(x)
   else
-    x = bigint.frombase(x, 10)
+    local ty = type(x)
+    if ty == 'number' then
+      x = bigint.frominteger(x)
+    elseif ty == 'string' then
+      x = bigint.frombase(x, 10)
+    end
   end
   assert(x, 'value cannot be represented by a bigint')
   return x
@@ -370,6 +380,19 @@ function bigint:iszero()
   return true
 end
 
+--- Check if bigint is 1.
+function bigint:isone()
+  if self[1] ~= 1 then
+    return false
+  end
+  for i=2,BIGINT_SIZE do
+    if self[i] ~= 0 then
+      return false
+    end
+  end
+  return true
+end
+
 --- Check if bigint is -1.
 function bigint:isminusone()
   for i=1,BIGINT_SIZE do
@@ -384,6 +407,11 @@ end
 -- Zero is guaranteed to never be negative.
 function bigint:isneg()
   return self[BIGINT_SIZE] & BIGINT_SIGNBIT ~= 0
+end
+
+--- Check if bigint is positive.
+function bigint:ispos()
+  return not self:isneg() and not self:iszero()
 end
 
 --- Assign a bigint to zero (in-place).
@@ -705,7 +733,7 @@ end
 -- @return The result of the pow operation.
 -- @raise Asserts on attempt pow with a negative exponent or very large exponent.
 function bigint.__pow(x, y)
-  x = bigint_assert_from(x)
+  y = bigint_assert_tointeger(y)
   assert(y <= math.maxinteger, 'attempt to pow to a very large integer')
   assert(y >= 0, 'attempt to pow to a negative power')
   if y == 0 then

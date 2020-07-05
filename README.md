@@ -26,7 +26,7 @@ are implemented as metamethods.
 
 ## Documentation
 
-The full API reference and documentation is at https://edubart.github.io/lua-bigint/
+The full API reference and documentation can viewed in the [documentation website](https://edubart.github.io/lua-bigint/).
 
 ## Example
 
@@ -41,9 +41,11 @@ local x = bigint(1)
 print(x << 128)
 ```
 
+For more usage examples check the [examples directory](https://github.com/edubart/lua-bigint/tree/master/examples)
+
 ## Tests
 
-Just run `test.lua` it should work with Lua 5.3/5.4.
+To check if everything is working as expected under your machine run `lua tests.lua` or `make test`.
 
 ## Limitations
 
