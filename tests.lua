@@ -56,24 +56,29 @@ local function test(bits)
 
     assert(bigint.eq(1, 1) == true)
     assert(bigint.eq(1, 0) == false)
+
+    if bits > 96 then
+      assert((bigint(1) << 96):tonumber() > 1e28)
+      assert((-(bigint(1) << 96)):tonumber() < -1e28)
+    end
   end
 
   do -- number conversion
     local function test_num2num(x)
-      assert_eq(bigint(x):tonumber(), x)
-      assert_eq(bigint.new(x):tonumber(), x)
-      assert_eq(bigint.from(x):tonumber(), x)
-      assert_eq(bigint.fromuinteger(x):tonumber(), x)
-      assert_eq(bigint.new(bigint(x)):tonumber(), x)
-      assert_eq(bigint.from(bigint(x)):tonumber(), x)
-      assert_eq(bigint.new(tostring(x)):tonumber(), x)
-      assert_eq(bigint.from(tostring(x)):tonumber(), x)
-      assert_eq(bigint.tonumber(x), x)
-      assert_eq(bigint.tonumber(bigint(x)), x)
+      assert_eq(bigint(x):tointeger(), x)
+      assert_eq(bigint.new(x):tointeger(), x)
+      assert_eq(bigint.from(x):tointeger(), x)
+      assert_eq(bigint.fromuinteger(x):tointeger(), x)
+      assert_eq(bigint.new(bigint(x)):tointeger(), x)
+      assert_eq(bigint.from(bigint(x)):tointeger(), x)
+      assert_eq(bigint.new(tostring(x)):tointeger(), x)
+      assert_eq(bigint.from(tostring(x)):tointeger(), x)
+      assert_eq(bigint.tointeger(x), x)
+      assert_eq(bigint.tointeger(bigint(x)), x)
       assert_eq(bigint.tointeger(x), x)
       assert_eq(bigint.tointeger(x * 1.0), x)
       assert_eq(bigint.tointeger(bigint(x)), x)
-      assert_eq(bigint.zero():_assign(x):tonumber(), x)
+      assert_eq(bigint.zero():_assign(x):tointeger(), x)
     end
     local function test_num2hex(x)
       assert_eq(bigint(x):tobase(16), ('%x'):format(x))
@@ -85,7 +90,7 @@ local function test(bits)
       assert_eq(bigint(x):tobase(8), ('%o'):format(x))
     end
     local function test_str2num(x)
-      assert_eq(bigint.frombase(tostring(x)):tonumber(), x)
+      assert_eq(bigint.frombase(tostring(x)):tointeger(), x)
     end
     local function test_ops(x)
       test_num2num(x)
@@ -101,8 +106,8 @@ local function test(bits)
       test_str2num(x)
       test_str2num(-x)
     end
-    assert_eq(bigint.fromnumber(1.1):tonumber(), 1)
-    assert_eq(bigint.fromnumber(-1.1):tonumber(), -1)
+    assert_eq(bigint.fromnumber(1.1):tointeger(), 1)
+    assert_eq(bigint.fromnumber(-1.1):tointeger(), -1)
     test_ops(0)
     test_ops(1)
     test_ops(0xfffffffffe)
@@ -117,22 +122,22 @@ local function test(bits)
 
   do -- add/sub/mul/band/bor/bxor/eq/lt/le
     local function test_add(x, y)
-      assert_eq((bigint(x) + bigint(y)):tonumber(), x + y)
+      assert_eq((bigint(x) + bigint(y)):tointeger(), x + y)
     end
     local function test_sub(x, y)
-      assert_eq((bigint(x) - bigint(y)):tonumber(), x - y)
+      assert_eq((bigint(x) - bigint(y)):tointeger(), x - y)
     end
     local function test_mul(x, y)
-      assert_eq((bigint(x) * bigint(y)):tonumber(), x * y)
+      assert_eq((bigint(x) * bigint(y)):tointeger(), x * y)
     end
     local function test_band(x, y)
-      assert_eq((bigint(x) & bigint(y)):tonumber(), x & y)
+      assert_eq((bigint(x) & bigint(y)):tointeger(), x & y)
     end
     local function test_bor(x, y)
-      assert_eq((bigint(x) | bigint(y)):tonumber(), x | y)
+      assert_eq((bigint(x) | bigint(y)):tointeger(), x | y)
     end
     local function test_bxor(x, y)
-      assert_eq((bigint(x) ~ bigint(y)):tonumber(), x ~ y)
+      assert_eq((bigint(x) ~ bigint(y)):tointeger(), x ~ y)
     end
     local function test_eq(x, y)
       assert_eq(bigint(x) == bigint(y), x == y)
@@ -228,10 +233,10 @@ local function test(bits)
 
   do --shl/shr
     local function test_shl(x, y)
-      assert_eq((bigint(x) << y):tonumber(), x << y)
+      assert_eq((bigint(x) << y):tointeger(), x << y)
     end
     local function test_shr(x, y)
-      assert_eq((bigint(x) >> y):tonumber(), x >> y)
+      assert_eq((bigint(x) >> y):tointeger(), x >> y)
     end
     local function test_ops(x, y)
       test_shl(x, y) test_shl(x, -y)
@@ -298,8 +303,8 @@ local function test(bits)
 
   do -- pow
     local function test_pow(x, y)
-      assert_eq((bigint(x) ^ y):tonumber(), math.floor(x ^ y))
-      assert_eq((bigint(x) ^ bigint(y)):tonumber(), math.floor(x ^ y))
+      assert_eq((bigint(x) ^ y):tointeger(), math.floor(x ^ y))
+      assert_eq((bigint(x) ^ bigint(y)):tointeger(), math.floor(x ^ y))
     end
     local function test_ops(x, y)
       test_pow(x, y)
@@ -323,18 +328,18 @@ local function test(bits)
 
   do --bnot/unm
     local function test_bnot(x)
-      assert_eq((~bigint(x)):tonumber(), ~x)
-      assert_eq((~ ~bigint(x)):tonumber(), x)
+      assert_eq((~bigint(x)):tointeger(), ~x)
+      assert_eq((~ ~bigint(x)):tointeger(), x)
     end
     local function test_unm(x)
-      assert_eq((-bigint(x)):tonumber(), -x)
-      assert_eq((- -bigint(x)):tonumber(), x)
+      assert_eq((-bigint(x)):tointeger(), -x)
+      assert_eq((- -bigint(x)):tointeger(), x)
     end
     local function test_inc(x)
-      assert_eq(bigint(x):inc():tonumber(), x + 1)
+      assert_eq(bigint(x):inc():tointeger(), x + 1)
     end
     local function test_dec(x)
-      assert_eq(bigint(x):dec():tonumber(), x - 1)
+      assert_eq(bigint(x):dec():tointeger(), x - 1)
     end
     local function test_ops(x)
       test_bnot(x) test_bnot(-x)
@@ -358,26 +363,26 @@ local function test(bits)
 
   do -- idiv/mod
     local function test_udiv(x, y)
-      assert_eq(bigint.udiv(x, y):tonumber(), x // y)
+      assert_eq(bigint.udiv(x, y):tointeger(), x // y)
     end
     local function test_idiv(x, y)
-      assert_eq((bigint(x) // bigint(y)):tonumber(), x // y)
+      assert_eq((bigint(x) // bigint(y)):tointeger(), x // y)
     end
     local function test_umod(x, y)
-      assert_eq(bigint.umod(x, y):tonumber(), x % y)
+      assert_eq(bigint.umod(x, y):tointeger(), x % y)
     end
     local function test_mod(x, y)
-      assert_eq((bigint(x) % bigint(y)):tonumber(), x % y)
+      assert_eq((bigint(x) % bigint(y)):tointeger(), x % y)
     end
     local function test_udivmod(x, y)
       local quot, rem = bigint.udivmod(x, y)
-      assert_eq(quot:tonumber(), x // y)
-      assert_eq(rem:tonumber(), x % y)
+      assert_eq(quot:tointeger(), x // y)
+      assert_eq(rem:tointeger(), x % y)
     end
     local function test_idivmod(x, y)
       local quot, rem = bigint.idivmod(x, y)
-      assert_eq(quot:tonumber(), x // y)
-      assert_eq(rem:tonumber(), x % y)
+      assert_eq(quot:tointeger(), x // y)
+      assert_eq(rem:tointeger(), x % y)
     end
     local function test_ops(x, y)
       test_udiv(x, y)

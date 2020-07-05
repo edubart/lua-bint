@@ -282,7 +282,8 @@ end
 
 --- Convert a bigint to an unsigned integer.
 -- Note that large unsigned integers are still represented as negative values in lua integers.
--- Note that lua cannot represent values larger than 64 bits, in that case integer values wraps around.
+-- Note that lua cannot represent values larger than 64 bits,
+-- in that case integer values wraps around.
 -- @param x A bigint or a number to be converted into an unsigned integer.
 -- @return An integer or nil in case the input cannot be represented by an integer.
 -- @see bigint.tointeger
@@ -299,7 +300,8 @@ end
 
 --- Convert a bigint to a signed integer.
 -- It works by taking absolute values then applying the sign bit in case needed.
--- Note that lua cannot represent values larger than 64 bits, in that case integer values wraps around.
+-- Note that lua cannot represent values larger than 64 bits,
+-- in that case integer values wraps around.
 -- @param x A bigint or value to be converted into an unsigned integer.
 -- @return An integer or nil in case the input cannot be represented by an integer.
 -- @see bigint.touinteger
@@ -325,15 +327,20 @@ local function bigint_assert_tointeger(x)
   return assert(bigint.tointeger(x), 'value has no integer representation')
 end
 
---- Convert a bigint to a number. This is an alias to @{bigint.tointeger}.
+--- Convert a bigint to a lua number.
+-- Different from @{bigint.tointeger} the operation does not wraps around integers,
+-- but digits precision may be lost in the process of converting to a float.
 -- @param x A bigint or value to be converted into a number.
 -- @return An integer or nil in case the input cannot be represented by a number.
 -- @see bigint.tointeger
 function bigint.tonumber(x)
   if getmetatable(x) ~= bigint then
     return tonumber(x)
+  elseif x >= math.mininteger and x < math.maxinteger then
+    return x:tointeger()
+  else
+    return tonumber(tostring(x))
   end
-  return x:tointeger()
 end
 
 local BASE_LETTERS = {}
@@ -416,17 +423,12 @@ end
 
 --- Clone a bigint.
 -- This is useful only to use in-place operations on cloned values.
--- @param x The bigint to be cloned.
--- @return A new bigint with the same data.
--- @raise An assert is thrown in case x is not a bigint.
-function bigint.clone(x)
-  assert(getmetatable(x) == bigint, 'invalid bigint')
+function bigint:clone()
   local n = {}
   for i=1,BIGINT_SIZE do
-    n[i] = x[i]
+    n[i] = self[i]
   end
-  setmetatable(n, bigint)
-  return n
+  return setmetatable(n, bigint)
 end
 
 --- Create a new bigint with 1 value.
