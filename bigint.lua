@@ -207,6 +207,31 @@ function bigint.fromnumber(x)
   return bigint.frominteger(x)
 end
 
+local basesteps = {}
+local function getbasestep(base)
+  local step = basesteps[base]
+  if step then
+    return step
+  end
+  step = 0
+  local dmax = 1
+  local limit = math.maxinteger // base
+  repeat
+    step = step + 1
+    dmax = dmax * base
+  until dmax >= limit
+  basesteps[base] = step
+  return step
+end
+
+local function ipow(x, y)
+  local r = 1
+  for _=1,y do
+    r = r * x
+  end
+  return r
+end
+
 --- Create a bigint from a string of the desired base.
 -- @param s The string to be converted from, must have only alphanumeric and '+-' characters.
 -- @param[opt] base Base that the number is represented, defaults to 10.
@@ -220,12 +245,12 @@ function bigint.frombase(s, base)
   local sign, int = s:match('^([+-]?)(%w+)$')
   assert(sign and int, 'invalid integer string representation')
   local n = bigint.zero()
-  local step = 10
+  local step = getbasestep(base)
   for i=1,#int,step do
     local part = int:sub(i,i+step-1)
     local d = tonumber(part, base)
     assert(d, 'invalid integer string representation')
-    n = (n * (base ^ #part)):_add(d)
+    n = (n * ipow(base, #part)):_add(d)
   end
   if sign == '-' then
     n:_unm()
@@ -311,6 +336,17 @@ function bigint.tonumber(x)
   return x:tointeger()
 end
 
+local BASE_LETTERS = {}
+for i=1,36 do
+  BASE_LETTERS[i-1] = ('0123456789abcdefghijklmnopqrstuvwxyz'):sub(i,i)
+end
+
+local function idivmod(x, y)
+  local quot = x // y
+  local rem = x - (quot * y)
+  return quot, rem
+end
+
 --- Convert a bigint to a string in the desired base.
 -- @param x The bigint to be converted from.
 -- @param[opt] base Base to be represented, defaults to 10.
@@ -320,29 +356,40 @@ end
 -- @return A string representing the input.
 -- @raise An assert is thrown in case the base is invalid.
 function bigint.tobase(x, base, unsigned)
-  x = bigint.new(x)
+  x = bigint.from(x)
   base = base or 10
   assert(base >= 2 and base <= 36, 'number base is too large')
-  local BASE_LETTERS = '0123456789abcdefghijklmnopqrstuvwxyz'
   local ss = {}
   if unsigned == nil then
     unsigned = base ~= 10
   end
   local neg = not unsigned and x:isneg()
   if neg then
-    x:_abs()
+    x = x:abs()
   end
-  while not x:iszero() do
-    local d
-    x, d = bigint.udivmod(x, base)
-    d = d:touinteger()
-    table.insert(ss, 1, BASE_LETTERS:sub(d+1,d+1))
+  local step = getbasestep(base)
+  local divisor = ipow(base, step)
+  local stop = x:iszero()
+  if stop then
+    return '0'
+  end
+  while not stop do
+    local ix
+    x, ix = bigint.udivmod(x, divisor)
+    ix = ix:tointeger()
+    stop = x:iszero()
+    for _=1,step do
+      local d
+      ix, d = idivmod(ix, base)
+      if stop and ix == 0 and d == 0 then
+        -- stop on leading zeros
+        break
+      end
+      table.insert(ss, 1, BASE_LETTERS[d])
+    end
   end
   if neg then
     table.insert(ss, 1, '-')
-  end
-  if #ss == 0 then
-    return '0'
   end
   return table.concat(ss)
 end
