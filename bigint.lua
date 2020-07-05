@@ -1,3 +1,27 @@
+--[[
+The MIT License (MIT)
+
+Copyright (c) 2020 Eduardo Bart (https://github.com/edubart)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+]]
+
 --[[-- A small multiple-precision integer implementation in pure Lua
 Small portable arbitrary-precision integer arithmetic in pure Lua for
 calculating with large numbers.
@@ -18,8 +42,41 @@ integer division operations rounds towards minus infinity.
 The library is designed to be possible to work with only unsigned integer arithmetic when
 when using the proper methods.
 
-The basic lua integer arithmetic operators (+, -, *, //, %) and bitwise operators (&, |, ~, <<, >>)
+The basic lua integer arithmetic operators (+, -, *, //, /, %) and bitwise operators (&, |, ~, <<, >>)
 are implemented as metamethods.
+
+## Usage
+
+First on you should configure how many bits the library work with,
+to do that call @{bigint.scale} once on startup with the desired number of bits in multiples of 32,
+for example bigint.scale(1024). By default bigint uses 256 bits integers.
+
+Then when you need create a bigint, you can use one of the following functions:
+
+* @{bigint.fromuinteger}
+* @{bigint.frominteger}
+* @{bigint.fromnumber}
+* @{bigint.frombase} (use to convert from strings)
+* @{bigint.new} (use to convert from anything)
+* @{bigint.zero}
+* @{bigint.one}
+* bigint
+
+You can also call `bigint`, it is an alias to `bigint.new`. In doubt use @{bigint.new}
+to create a new bigint.
+
+Then you can use all the usual lua numeric operations on it, all the metamethods are implemented.
+When you are done computing and need to get the result, get the output from one of the following functions:
+
+* @{bigint.touinteger}
+* @{bigint.tointeger}
+* @{bigint.tonumber}
+* @{bigint.tobase} (use to convert to strings)
+* @{bigint.__tostring}
+
+Note that outputting to lua number will make the integer overflow and its value wraps around.
+To output very large integer with no loss of precision you probably want to use @{bigint.tobase}
+to get a string representation.
 ]]
 
 local bigint = {}
@@ -30,24 +87,6 @@ local BIGINT_WORDBITS
 local BIGINT_WORDMAX
 local BIGINT_SIGNBIT
 local BIGINT_HALFMAX
-
--- Return a new bigint not fully initialized yet.
-local function bigint_newempty()
-  return setmetatable({}, bigint)
-end
-
--- Convert a value to a lua integer without losing precision.
-local function tointeger(x)
-  x = tonumber(x)
-  if math.type(x) == 'float' then
-    local floorx = math.floor(x)
-    if floorx ~= x then
-      return nil
-    end
-    x = floorx
-  end
-  return x
-end
 
 -- Returns number of bits of the internal lua integer type.
 local function luainteger_bitsize()
@@ -77,7 +116,26 @@ function bigint.scale(bits, wordbits)
   BIGINT_HALFMAX = 1 + BIGINT_WORDMAX // 2
 end
 
-bigint.scale(128)
+-- set default scale
+bigint.scale(256)
+
+-- Return a new bigint not fully initialized yet.
+local function bigint_newempty()
+  return setmetatable({}, bigint)
+end
+
+-- Convert a value to a lua integer without losing precision.
+local function tointeger(x)
+  x = tonumber(x)
+  if math.type(x) == 'float' then
+    local floorx = math.floor(x)
+    if floorx ~= x then
+      return nil
+    end
+    x = floorx
+  end
+  return x
+end
 
 -- Assign bigint to an unsigned integer.  Used only internally.
 function bigint:_fromuinteger(x)
@@ -119,7 +177,7 @@ function bigint.frominteger(x)
 end
 
 --- Create a bigint from a number.
--- Floats values are truncated, that is, the fractional is discarded.
+-- Floats values are truncated, that is, the fractional port is discarded.
 -- @param x A value to initialize from, usually convertible to a number.
 -- @return A new bigint or nil in case the input cannot be represented by an integer.
 function bigint.fromnumber(x)
@@ -133,13 +191,13 @@ function bigint.fromnumber(x)
   return bigint.frominteger(x)
 end
 
---- Create a bigint from a string.
+--- Create a bigint from a string of the desired base.
 -- @param s The string to be converted from, must have only alphanumeric and '+-' characters.
 -- @param[opt] base Base that the number is represented, defaults to 10.
--- Must be at least 2 and at most 32.
+-- Must be at least 2 and at most 36.
 -- @return A new bigint.
 -- @raise An assert is thrown in case the string has invalid characters or the base is invalid.
-function bigint.fromstring(s, base)
+function bigint.frombase(s, base)
   s = s:lower()
   base = base or 10
   assert(base >= 2, base <= 36, 'number base is too large')
@@ -157,6 +215,27 @@ function bigint.fromstring(s, base)
     n:_unm()
   end
   return n
+end
+
+--- Create a bigint from a value in case needed.
+-- @param x A value convertible to a bigint (string, number or another bigint).
+-- @return A bigint, will be the same input value in case it already is a bigint.
+-- @raise An assert is thrown in case x is not convertible to a bigint.
+-- @see bigint.new
+function bigint.from(x)
+  if getmetatable(x) ~= bigint then
+    if type(x) == 'number' then
+      x = bigint.frominteger(x)
+    else
+      x = bigint.frombase(x, 10)
+    end
+  end
+  assert(x, 'value cannot be represented by a bigint')
+  return x
+end
+
+local function bigint_assert_from(x)
+  return assert(bigint.from(x), 'value has no bigint representation')
 end
 
 --- Convert a bigint to an unsigned integer.
@@ -204,7 +283,7 @@ local function bigint_assert_tointeger(x)
   return assert(bigint.tointeger(x), 'value has no integer representation')
 end
 
---- Convert a bigint to a number. This is an alias to bigint.tointeger().
+--- Convert a bigint to a number. This is an alias to @{bigint.tointeger}.
 -- @param x A bigint or value to be converted into a number.
 -- @return An integer or nil in case the input cannot be represented by a number.
 -- @see bigint.tointeger
@@ -215,16 +294,16 @@ function bigint.tonumber(x)
   return x:tointeger()
 end
 
---- Convert a bigint to a string.
+--- Convert a bigint to a string in the desired base.
 -- The sign cahracter ('-') for negative integers is only prepended when the base is 10.
 -- All other bases treats negative integers as unsigned integers following two's complement
 -- rules on this conversion.
 -- @param x The bigint to be converted from.
 -- @param[opt] base Base that the number is represented, defaults to 10.
--- Must be at least 2 and at most 32.
+-- Must be at least 2 and at most 36.
 -- @return A string representing the input.
 -- @raise An assert is thrown the base is invalid.
-function bigint.tostring(x, base)
+function bigint.tobase(x, base)
   x = bigint.new(x)
   base = base or 10
   assert(base >= 2 and base <= 36, 'number base is too large')
@@ -249,27 +328,6 @@ function bigint.tostring(x, base)
   return table.concat(ss)
 end
 
---- Create a bigint from a value in case needed.
--- @param x A value convertible to a bigint (string, number or another bigint).
--- @return A bigint, will be the same input value in case it already is a bigint.
--- @raise An assert is thrown in case x is not convertible to a bigint.
--- @see bigint.new
-function bigint.from(x)
-  if getmetatable(x) ~= bigint then
-    if type(x) == 'number' then
-      x = bigint.frominteger(x)
-    else
-      x = bigint.fromstring(x, 10)
-    end
-  end
-  assert(x, 'value cannot be represented by a bigint')
-  return x
-end
-
-local function bigint_assert_from(x)
-  return assert(bigint.from(x), 'value has no bigint representation')
-end
-
 --- Create a new bigint from a value.
 -- @param x A value convertible to a bigint (string, number or another bigint).
 -- @return A new bigint, guaranteed to be clone in case needed.
@@ -281,7 +339,7 @@ function bigint.new(x)
   elseif type(x) == 'number' then
     x = bigint.frominteger(x)
   else
-    x = bigint.fromstring(x, 10)
+    x = bigint.frombase(x, 10)
   end
   assert(x, 'value cannot be represented by a bigint')
   return x
@@ -611,6 +669,8 @@ function bigint.__idiv(x, y)
   return quot
 end
 
+bigint.__div = bigint.__idiv
+
 --- Perform integer floor modulo operation between two bigints.
 -- The operation is defined as the remainder of the floor division
 -- (division that rounds the quotient towards minus infinity).
@@ -853,9 +913,9 @@ function bigint.__le(x, y)
 end
 
 --- Convert a bigint to a string (uses base 10)
--- @see bigint.tostring
+-- @see bigint.tobase
 function bigint:__tostring()
-  return self:tostring(10)
+  return self:tobase(10)
 end
 
 setmetatable(bigint, {

@@ -62,8 +62,45 @@ integer division operations rounds towards minus infinity.</p>
 <p>The library is designed to be possible to work with only unsigned integer arithmetic when
 when using the proper methods.</p>
 
-<p>The basic lua integer arithmetic operators (+, -, *, //, %) and bitwise operators (&amp;, |, ~, &lt;<, >>)
+<p>The basic lua integer arithmetic operators (+, -, *, //, /, %) and bitwise operators (&amp;, |, ~, &lt;<, >>)
 are implemented as metamethods.</p>
+
+<h2>Usage</h2>
+
+<p>First on you should configure how many bits the library work with,
+to do that call <a href="index.html#scale">bigint.scale</a> once on startup with the desired number of bits in multiples of 32,
+for example bigint.scale(1024). By default bigint uses 256 bits integers.</p>
+
+<p>Then when you need create a bigint, you can use one of the following functions:</p>
+
+<ul>
+    <li><a href="index.html#fromuinteger">bigint.fromuinteger</a></li>
+    <li><a href="index.html#frominteger">bigint.frominteger</a></li>
+    <li><a href="index.html#fromnumber">bigint.fromnumber</a></li>
+    <li><a href="index.html#frombase">bigint.frombase</a> (use to convert from strings)</li>
+    <li><a href="index.html#new">bigint.new</a> (use to convert from anything)</li>
+    <li><a href="index.html#zero">bigint.zero</a></li>
+    <li><a href="index.html#one">bigint.one</a></li>
+    <li>bigint</li>
+</ul>
+
+<p>You can also call <a href="index.html#">bigint</a>, it is an alias to <a href="index.html#new">bigint.new</a>. In doubt use <a href="index.html#new">bigint.new</a>
+to create a new bigint.</p>
+
+<p>Then you can use all the usual lua numeric operations on it, all the metamethods are implemented.
+When you are done computing and need to get the result, get the output from one of the following functions:</p>
+
+<ul>
+    <li><a href="index.html#touinteger">bigint.touinteger</a></li>
+    <li><a href="index.html#tointeger">bigint.tointeger</a></li>
+    <li><a href="index.html#tonumber">bigint.tonumber</a></li>
+    <li><a href="index.html#tobase">bigint.tobase</a> (use to convert to strings)</li>
+    <li><a href="index.html#__tostring">bigint.__tostring</a></li>
+</ul>
+
+<p>Note that outputting to lua number will make the integer overflow and its value wraps around.
+To output very large integer with no loss of precision you probably want to use <a href="index.html#tobase">bigint.tobase</a>
+to get a string representation.</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
@@ -85,8 +122,12 @@ are implemented as metamethods.</p>
 	<td class="summary">Create a bigint from a number.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#fromstring">fromstring (s[, base])</a></td>
-	<td class="summary">Create a bigint from a string.</td>
+	<td class="name" nowrap><a href="#frombase">frombase (s[, base])</a></td>
+	<td class="summary">Create a bigint from a string of the desired base.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from">from (x)</a></td>
+	<td class="summary">Create a bigint from a value in case needed.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#touinteger">touinteger (x)</a></td>
@@ -101,12 +142,8 @@ are implemented as metamethods.</p>
 	<td class="summary">Convert a bigint to a number.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#tostring">tostring (x[, base])</a></td>
-	<td class="summary">Convert a bigint to a string.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#from">from (x)</a></td>
-	<td class="summary">Create a bigint from a value in case needed.</td>
+	<td class="name" nowrap><a href="#tobase">tobase (x[, base])</a></td>
+	<td class="summary">Convert a bigint to a string in the desired base.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#new">new (x)</a></td>
@@ -400,7 +437,7 @@ are implemented as metamethods.</p>
     </dt>
     <dd>
     Create a bigint from a number.
- Floats values are truncated, that is, the fractional is discarded.
+ Floats values are truncated, that is, the fractional port is discarded.
 
 
     <h3>Parameters:</h3>
@@ -421,11 +458,11 @@ are implemented as metamethods.</p>
 
 </dd>
     <dt>
-    <a name = "fromstring"></a>
-    <strong>fromstring (s[, base])</strong>
+    <a name = "frombase"></a>
+    <strong>frombase (s[, base])</strong>
     </dt>
     <dd>
-    Create a bigint from a string.
+    Create a bigint from a string of the desired base.
 
 
     <h3>Parameters:</h3>
@@ -435,7 +472,7 @@ are implemented as metamethods.</p>
         </li>
         <li><span class="parameter">base</span>
          Base that the number is represented, defaults to 10.
- Must be at least 2 and at most 32.
+ Must be at least 2 and at most 36.
          (<em>optional</em>)
         </li>
     </ul>
@@ -449,6 +486,37 @@ are implemented as metamethods.</p>
     <h3>Raises:</h3>
     An assert is thrown in case the string has invalid characters or the base is invalid.
 
+
+
+</dd>
+    <dt>
+    <a name = "from"></a>
+    <strong>from (x)</strong>
+    </dt>
+    <dd>
+    Create a bigint from a value in case needed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value convertible to a bigint (string, number or another bigint).
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A bigint, will be the same input value in case it already is a bigint.
+    </ol>
+
+    <h3>Raises:</h3>
+    An assert is thrown in case x is not convertible to a bigint.
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#new">bigint.new</a>
+    </ul>
 
 
 </dd>
@@ -519,7 +587,7 @@ are implemented as metamethods.</p>
     <strong>tonumber (x)</strong>
     </dt>
     <dd>
-    Convert a bigint to a number.  This is an alias to bigint.tointeger().
+    Convert a bigint to a number.  This is an alias to <a href="index.html#tointeger">bigint.tointeger</a>.
 
 
     <h3>Parameters:</h3>
@@ -544,11 +612,11 @@ are implemented as metamethods.</p>
 
 </dd>
     <dt>
-    <a name = "tostring"></a>
-    <strong>tostring (x[, base])</strong>
+    <a name = "tobase"></a>
+    <strong>tobase (x[, base])</strong>
     </dt>
     <dd>
-    Convert a bigint to a string.
+    Convert a bigint to a string in the desired base.
  The sign cahracter ('-') for negative integers is only prepended when the base is 10.
  All other bases treats negative integers as unsigned integers following two's complement
  rules on this conversion.
@@ -561,7 +629,7 @@ are implemented as metamethods.</p>
         </li>
         <li><span class="parameter">base</span>
          Base that the number is represented, defaults to 10.
- Must be at least 2 and at most 32.
+ Must be at least 2 and at most 36.
          (<em>optional</em>)
         </li>
     </ul>
@@ -575,37 +643,6 @@ are implemented as metamethods.</p>
     <h3>Raises:</h3>
     An assert is thrown the base is invalid.
 
-
-
-</dd>
-    <dt>
-    <a name = "from"></a>
-    <strong>from (x)</strong>
-    </dt>
-    <dd>
-    Create a bigint from a value in case needed.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         A value convertible to a bigint (string, number or another bigint).
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        A bigint, will be the same input value in case it already is a bigint.
-    </ol>
-
-    <h3>Raises:</h3>
-    An assert is thrown in case x is not convertible to a bigint.
-
-    <h3>See also:</h3>
-    <ul>
-         <a href="index.html#new">bigint.new</a>
-    </ul>
 
 
 </dd>
@@ -1639,7 +1676,7 @@ are implemented as metamethods.</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#tostring">bigint.tostring</a>
+         <a href="index.html#tobase">bigint.tobase</a>
     </ul>
 
 
@@ -1651,7 +1688,7 @@ are implemented as metamethods.</p>
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-07-05 09:54:46 </i>
+<i style="float:right;">Last updated 2020-07-05 10:42:00 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

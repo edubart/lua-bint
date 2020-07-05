@@ -44,16 +44,16 @@ local function test(bits)
       assert_eq(bigint.zero():_assign(x):tonumber(), x)
     end
     local function test_num2hex(x)
-      assert_eq(bigint(x):tostring(16), ('%x'):format(x))
+      assert_eq(bigint(x):tobase(16), ('%x'):format(x))
     end
     local function test_num2dec(x)
       assert_eq(tostring(bigint(x)), ('%d'):format(x))
     end
     local function test_num2oct(x)
-      assert_eq(bigint(x):tostring(8), ('%o'):format(x))
+      assert_eq(bigint(x):tobase(8), ('%o'):format(x))
     end
     local function test_str2num(x)
-      assert_eq(bigint.fromstring(tostring(x)):tonumber(), x)
+      assert_eq(bigint.frombase(tostring(x)):tonumber(), x)
     end
     local function test_ops(x)
       test_num2num(x)
