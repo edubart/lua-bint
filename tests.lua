@@ -39,6 +39,20 @@ local function test(bits)
     assert(bigint(0):ispos() == false)
     assert(bigint(1):ispos() == true)
     assert(bigint(2):ispos() == true)
+
+    assert(bigint(-2):iseven() == true)
+    assert(bigint(-1):iseven() == false)
+    assert(bigint(0):iseven() == true)
+    assert(bigint(1):iseven() == false)
+    assert(bigint(2):iseven() == true)
+    assert(bigint(3):iseven() == false)
+
+    assert(bigint(-2):isodd() == false)
+    assert(bigint(-1):isodd() == true)
+    assert(bigint(0):isodd() == false)
+    assert(bigint(1):isodd() == true)
+    assert(bigint(2):isodd() == false)
+    assert(bigint(3):isodd() == true)
   end
 
   do -- number conversion

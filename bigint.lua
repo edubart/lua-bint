@@ -39,7 +39,7 @@ integer overflow warps around,
 signed integers are implemented using two-complement arithmetic rules and
 integer division operations rounds towards minus infinity.
 
-The library is designed to be possible to work with only unsigned integer arithmetic when
+The library is designed to be possible to work with only unsigned integer arithmetic
 when using the proper methods.
 
 The basic lua integer arithmetic operators (+, -, *, //, /, %) and bitwise operators (&, |, ~, <<, >>)
@@ -414,6 +414,16 @@ function bigint:ispos()
   return not self:isneg() and not self:iszero()
 end
 
+-- Check if bigint is even.
+function bigint:iseven()
+  return self[1] & 1 == 0
+end
+
+-- Check if bigint is odd.
+function bigint:isodd()
+  return self[1] & 1 == 1
+end
+
 --- Assign a bigint to zero (in-place).
 function bigint:_zero()
   for i=1,BIGINT_SIZE do
@@ -731,25 +741,29 @@ end
 -- @param x The base.
 -- @param y The exponent, cannot be negative.
 -- @return The result of the pow operation.
--- @raise Asserts on attempt pow with a negative exponent or very large exponent.
+-- @raise Asserts on attempt pow with a negative exponent.
 function bigint.__pow(x, y)
-  y = bigint_assert_tointeger(y)
-  assert(y <= math.maxinteger, 'attempt to pow to a very large integer')
-  assert(y >= 0, 'attempt to pow to a negative power')
-  if y == 0 then
+  y = bigint_assert_from(y)
+  assert(not y:isneg(), "attempt to pow to a negative power")
+  if y:iszero() then
     return bigint.one()
-  else
-    x = bigint_assert_from(x)
-    if x:iszero() then
-      return bigint.zero()
-    else
-      local res = x:clone()
-      for _=2,y do
-        res = res * x
-      end
-      return res
-    end
+  elseif y:isone() then
+    return bigint.new(x)
   end
+  -- compute exponentiation by squaring
+  x, y = bigint.new(x),  y:clone()
+  local z = bigint.one()
+  repeat
+    if y:iseven() then
+      x = x * x
+      y:_shrone()
+    else
+      z = x * z
+      x = x * x
+      y:_dec():_shrone()
+    end
+  until y:isone()
+  return x * z
 end
 
 --- Bitwise left shift bigints.

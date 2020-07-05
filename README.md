@@ -18,7 +18,7 @@ integer overflow warps around,
 signed integers are implemented using two-complement arithmetic rules and
 integer division operations rounds towards minus infinity.
 
-The library is designed to be possible to work with only unsigned integer arithmetic when
+The library is designed to be possible to work with only unsigned integer arithmetic
 when using the proper methods.
 
 The basic lua integer arithmetic operators (+, -, *, //, %) and bitwise operators (&, |, ~, <<, >>)
