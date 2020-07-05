@@ -431,7 +431,7 @@ function bigint:clone()
   return setmetatable(n, bigint)
 end
 
---- Create a new bigint with 1 value.
+--- Check if bigint is 0.
 function bigint:iszero()
   for i=1,BIGINT_SIZE do
     if self[i] ~= 0 then
@@ -475,12 +475,12 @@ function bigint:ispos()
   return not self:isneg() and not self:iszero()
 end
 
--- Check if bigint is even.
+--- Check if bigint is even.
 function bigint:iseven()
   return self[1] & 1 == 0
 end
 
--- Check if bigint is odd.
+--- Check if bigint is odd.
 function bigint:isodd()
   return self[1] & 1 == 1
 end
