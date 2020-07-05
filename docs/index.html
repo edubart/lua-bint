@@ -1,0 +1,1658 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>bigint</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>bigint</code></h1>
+<p>A small multiple-precision integer implementation in pure Lua
+Small portable arbitrary-precision integer arithmetic in pure Lua for
+calculating with large numbers.</p>
+<p>Uses an array of lua integers as underlying data-type utilizing all bits in each word.</p>
+
+<h2>Design goals</h2>
+
+<p>The main design goal of this library is to be small, correct, self contained and use few
+resources while retaining acceptable performance and feature completeness.
+Clarity of the code is also highly valued.</p>
+
+<p>The library is designed to follow recent Lua integer semantics, this means,
+integer overflow warps around,
+signed integers are implemented using two-complement arithmetic rules and
+integer division operations rounds towards minus infinity.</p>
+
+<p>The library is designed to be possible to work with only unsigned integer arithmetic when
+when using the proper methods.</p>
+
+<p>The basic lua integer arithmetic operators (+, -, *, //, %) and bitwise operators (&amp;, |, ~, &lt;<, >>)
+are implemented as metamethods.</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#scale">scale (bits[, wordbits])</a></td>
+	<td class="summary">Scale bigint to represent integers of the desired bit size.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fromuinteger">fromuinteger (x)</a></td>
+	<td class="summary">Create a bigint from an unsigned integer.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#frominteger">frominteger (x)</a></td>
+	<td class="summary">Create a bigint from a signed integer.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fromnumber">fromnumber (x)</a></td>
+	<td class="summary">Create a bigint from a number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#fromstring">fromstring (s[, base])</a></td>
+	<td class="summary">Create a bigint from a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#touinteger">touinteger (x)</a></td>
+	<td class="summary">Convert a bigint to an unsigned integer.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tointeger">tointeger (x)</a></td>
+	<td class="summary">Convert a bigint to a signed integer.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tonumber">tonumber (x)</a></td>
+	<td class="summary">Convert a bigint to a number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tostring">tostring (x[, base])</a></td>
+	<td class="summary">Convert a bigint to a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#from">from (x)</a></td>
+	<td class="summary">Create a bigint from a value in case needed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#new">new (x)</a></td>
+	<td class="summary">Create a new bigint from a value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#clone">clone (x)</a></td>
+	<td class="summary">Clone a bigint.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#iszero">iszero ()</a></td>
+	<td class="summary">Create a new bigint with 1 value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isminusone">isminusone ()</a></td>
+	<td class="summary">Check if bigint is -1.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isneg">isneg ()</a></td>
+	<td class="summary">Check if bigint is negative.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_zero">_zero ()</a></td>
+	<td class="summary">Assign a bigint to zero (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#zero">zero ()</a></td>
+	<td class="summary">Create a new bigint with 0 value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_one">_one ()</a></td>
+	<td class="summary">Assign a bigint to 1 (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#one">one ()</a></td>
+	<td class="summary">Create a new bigint with 1 value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_shlone">_shlone ()</a></td>
+	<td class="summary">Bitwise left shift a bigint in one bit (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_shrone">_shrone ()</a></td>
+	<td class="summary">Bitwise right shift a bigint in one bit (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_inc">_inc ()</a></td>
+	<td class="summary">Increment a bigint by one (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#inc">inc (x)</a></td>
+	<td class="summary">Increment a bigint by one.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_dec">_dec ()</a></td>
+	<td class="summary">Decrement a bigint by one (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#dec">dec (x)</a></td>
+	<td class="summary">Decrement a bigint by one.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_assign">_assign (y)</a></td>
+	<td class="summary">Assign a bigint to a new value (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_abs">_abs ()</a></td>
+	<td class="summary">Take absolute of a bigint (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#abs">abs (x)</a></td>
+	<td class="summary">Take absolute of a bigint.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_add">_add (y)</a></td>
+	<td class="summary">Add value to a bigint (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__add">__add (x, y)</a></td>
+	<td class="summary">Add value to a bigint.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_sub">_sub (y)</a></td>
+	<td class="summary">Subtract value from a bigint (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__sub">__sub (x, y)</a></td>
+	<td class="summary">Subtract value from a bigint.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__mul">__mul (x, y)</a></td>
+	<td class="summary">Multiply two bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#udiv">udiv (x, y)</a></td>
+	<td class="summary">Perform unsigned division between two bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#umod">umod (x, y)</a></td>
+	<td class="summary">Perform unsigned integer modulo operation between two bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#udivmod">udivmod (x, y)</a></td>
+	<td class="summary">Perform unsigned division and modulo operation between two bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__idiv">__idiv (x, y)</a></td>
+	<td class="summary">Perform integer floor division between two bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__mod">__mod (x, y)</a></td>
+	<td class="summary">Perform integer floor modulo operation between two bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#idivmod">idivmod (x, y)</a></td>
+	<td class="summary">Perform integer floor division and modulo operation between two bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__pow">__pow (x, y)</a></td>
+	<td class="summary">Perform integer power between two bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__shl">__shl (x, y)</a></td>
+	<td class="summary">Bitwise left shift bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__shr">__shr (x, y)</a></td>
+	<td class="summary">Bitwise right shift bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_band">_band (y)</a></td>
+	<td class="summary">Bitwise AND bigints (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__band">__band (x, y)</a></td>
+	<td class="summary">Bitwise AND bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_bor">_bor (y)</a></td>
+	<td class="summary">Bitwise OR bigints (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__bor">__bor (x, y)</a></td>
+	<td class="summary">Bitwise OR bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_bxor">_bxor (y)</a></td>
+	<td class="summary">Bitwise XOR bigints (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__bxor">__bxor (x, y)</a></td>
+	<td class="summary">Bitwise XOR bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_bnot">_bnot ()</a></td>
+	<td class="summary">Bitwise NOT a bigint (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__bnot">__bnot (x)</a></td>
+	<td class="summary">Bitwise NOT a bigint.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_unm">_unm ()</a></td>
+	<td class="summary">Negate a bigint (in-place).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__unm">__unm (x)</a></td>
+	<td class="summary">Negate a bigint.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__eq">__eq (x, y)</a></td>
+	<td class="summary">Check if bigints are equal.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ult">ult (x, y)</a></td>
+	<td class="summary">Compare if bigint x is less than y (unsigned version).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ule">ule (x, y)</a></td>
+	<td class="summary">Compare if bigint x is less or equal than y (unsigned version).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__lt">__lt (x, y)</a></td>
+	<td class="summary">Compare if bigint x is less than y (signed version).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__le">__le (x, y)</a></td>
+	<td class="summary">Compare if bigint x is less or equal than y (signed version).</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__tostring">__tostring ()</a></td>
+	<td class="summary">Convert a bigint to a string (uses base 10)</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "scale"></a>
+    <strong>scale (bits[, wordbits])</strong>
+    </dt>
+    <dd>
+    Scale bigint to represent integers of the desired bit size.
+ Must be called only once on startup.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">bits</span>
+         Number of bits for the integer representation, must be multiple of wordbits and
+ at least 64.
+        </li>
+        <li><span class="parameter">wordbits</span>
+         Number of the bits for the internal world, defaults to 32.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fromuinteger"></a>
+    <strong>fromuinteger (x)</strong>
+    </dt>
+    <dd>
+    Create a bigint from an unsigned integer.
+ Treats signed integers as an unsigned integer.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to initialize from, usually convertible to a lua integer.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A new bigint or nil in case the input cannot be represented by an integer.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#frominteger">bigint.frominteger</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "frominteger"></a>
+    <strong>frominteger (x)</strong>
+    </dt>
+    <dd>
+    Create a bigint from a signed integer.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to initialize from, usually convertible to a lua integer.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A new bigint or nil in case the input cannot be represented by an integer.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#fromuinteger">bigint.fromuinteger</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "fromnumber"></a>
+    <strong>fromnumber (x)</strong>
+    </dt>
+    <dd>
+    Create a bigint from a number.
+ Floats values are truncated, that is, the fractional is discarded.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to initialize from, usually convertible to a number.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A new bigint or nil in case the input cannot be represented by an integer.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "fromstring"></a>
+    <strong>fromstring (s[, base])</strong>
+    </dt>
+    <dd>
+    Create a bigint from a string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         The string to be converted from, must have only alphanumeric and '+-' characters.
+        </li>
+        <li><span class="parameter">base</span>
+         Base that the number is represented, defaults to 10.
+ Must be at least 2 and at most 32.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A new bigint.
+    </ol>
+
+    <h3>Raises:</h3>
+    An assert is thrown in case the string has invalid characters or the base is invalid.
+
+
+
+</dd>
+    <dt>
+    <a name = "touinteger"></a>
+    <strong>touinteger (x)</strong>
+    </dt>
+    <dd>
+    Convert a bigint to an unsigned integer.
+ Note that large unsigned integers are still represented as negative values in lua integers.
+ Note that lua cannot represent values larger than 64 bits, in that case integer values wraps around.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bigint or a number to be converted into an unsigned integer.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        An integer or nil in case the input cannot be represented by an integer.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#tointeger">bigint.tointeger</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "tointeger"></a>
+    <strong>tointeger (x)</strong>
+    </dt>
+    <dd>
+    Convert a bigint to a signed integer.
+ It works by taking absolute values then applying the sign bit in case needed.
+ Note that lua cannot represent values larger than 64 bits, in that case integer values wraps around.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bigint or value to be converted into an unsigned integer.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        An integer or nil in case the input cannot be represented by an integer.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#touinteger">bigint.touinteger</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "tonumber"></a>
+    <strong>tonumber (x)</strong>
+    </dt>
+    <dd>
+    Convert a bigint to a number.  This is an alias to bigint.tointeger().
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bigint or value to be converted into a number.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        An integer or nil in case the input cannot be represented by a number.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#tointeger">bigint.tointeger</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "tostring"></a>
+    <strong>tostring (x[, base])</strong>
+    </dt>
+    <dd>
+    Convert a bigint to a string.
+ The sign cahracter ('-') for negative integers is only prepended when the base is 10.
+ All other bases treats negative integers as unsigned integers following two's complement
+ rules on this conversion.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The bigint to be converted from.
+        </li>
+        <li><span class="parameter">base</span>
+         Base that the number is represented, defaults to 10.
+ Must be at least 2 and at most 32.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A string representing the input.
+    </ol>
+
+    <h3>Raises:</h3>
+    An assert is thrown the base is invalid.
+
+
+
+</dd>
+    <dt>
+    <a name = "from"></a>
+    <strong>from (x)</strong>
+    </dt>
+    <dd>
+    Create a bigint from a value in case needed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value convertible to a bigint (string, number or another bigint).
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A bigint, will be the same input value in case it already is a bigint.
+    </ol>
+
+    <h3>Raises:</h3>
+    An assert is thrown in case x is not convertible to a bigint.
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#new">bigint.new</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "new"></a>
+    <strong>new (x)</strong>
+    </dt>
+    <dd>
+    Create a new bigint from a value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value convertible to a bigint (string, number or another bigint).
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A new bigint, guaranteed to be clone in case needed.
+    </ol>
+
+    <h3>Raises:</h3>
+    An assert is thrown in case x is not convertible to a bigint.
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#from">bigint.from</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "clone"></a>
+    <strong>clone (x)</strong>
+    </dt>
+    <dd>
+    Clone a bigint.
+ This is useful only to use in-place operations on cloned values.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The bigint to be cloned.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A new bigint with the same data.
+    </ol>
+
+    <h3>Raises:</h3>
+    An assert is thrown in case x is not a bigint.
+
+
+
+</dd>
+    <dt>
+    <a name = "iszero"></a>
+    <strong>iszero ()</strong>
+    </dt>
+    <dd>
+    Create a new bigint with 1 value.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isminusone"></a>
+    <strong>isminusone ()</strong>
+    </dt>
+    <dd>
+    Check if bigint is -1.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isneg"></a>
+    <strong>isneg ()</strong>
+    </dt>
+    <dd>
+    Check if bigint is negative.
+ Zero is guaranteed to never be negative.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_zero"></a>
+    <strong>_zero ()</strong>
+    </dt>
+    <dd>
+    Assign a bigint to zero (in-place).
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "zero"></a>
+    <strong>zero ()</strong>
+    </dt>
+    <dd>
+    Create a new bigint with 0 value.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_one"></a>
+    <strong>_one ()</strong>
+    </dt>
+    <dd>
+    Assign a bigint to 1 (in-place).
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "one"></a>
+    <strong>one ()</strong>
+    </dt>
+    <dd>
+    Create a new bigint with 1 value.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_shlone"></a>
+    <strong>_shlone ()</strong>
+    </dt>
+    <dd>
+    Bitwise left shift a bigint in one bit (in-place).
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_shrone"></a>
+    <strong>_shrone ()</strong>
+    </dt>
+    <dd>
+    Bitwise right shift a bigint in one bit (in-place).
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_inc"></a>
+    <strong>_inc ()</strong>
+    </dt>
+    <dd>
+    Increment a bigint by one (in-place).
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "inc"></a>
+    <strong>inc (x)</strong>
+    </dt>
+    <dd>
+    Increment a bigint by one.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to be incremented.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_dec"></a>
+    <strong>_dec ()</strong>
+    </dt>
+    <dd>
+    Decrement a bigint by one (in-place).
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "dec"></a>
+    <strong>dec (x)</strong>
+    </dt>
+    <dd>
+    Decrement a bigint by one.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to be decremented.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_assign"></a>
+    <strong>_assign (y)</strong>
+    </dt>
+    <dd>
+    Assign a bigint to a new value (in-place).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">y</span>
+         A value to be copied from.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_abs"></a>
+    <strong>_abs ()</strong>
+    </dt>
+    <dd>
+    Take absolute of a bigint (in-place).
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "abs"></a>
+    <strong>abs (x)</strong>
+    </dt>
+    <dd>
+    Take absolute of a bigint.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to take the absolute from.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_add"></a>
+    <strong>_add (y)</strong>
+    </dt>
+    <dd>
+    Add value to a bigint (in-place).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">y</span>
+         A value to be added.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__add"></a>
+    <strong>__add (x, y)</strong>
+    </dt>
+    <dd>
+    Add value to a bigint.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to be added.
+        </li>
+        <li><span class="parameter">y</span>
+         A value to be added.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_sub"></a>
+    <strong>_sub (y)</strong>
+    </dt>
+    <dd>
+    Subtract value from a bigint (in-place).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">y</span>
+         A value to subtract.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__sub"></a>
+    <strong>__sub (x, y)</strong>
+    </dt>
+    <dd>
+    Subtract value from a bigint.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to be subtract from.
+        </li>
+        <li><span class="parameter">y</span>
+         A value to subtract.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__mul"></a>
+    <strong>__mul (x, y)</strong>
+    </dt>
+    <dd>
+    Multiply two bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to multiply.
+        </li>
+        <li><span class="parameter">y</span>
+         A value to multiply.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "udiv"></a>
+    <strong>udiv (x, y)</strong>
+    </dt>
+    <dd>
+    Perform unsigned division between two bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The numerator.
+        </li>
+        <li><span class="parameter">y</span>
+         The denominator.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The quotient.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt to divide by zero.
+
+
+
+</dd>
+    <dt>
+    <a name = "umod"></a>
+    <strong>umod (x, y)</strong>
+    </dt>
+    <dd>
+    Perform unsigned integer modulo operation between two bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The numerator.
+        </li>
+        <li><span class="parameter">y</span>
+         The denominator.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The remainder.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt to divide by zero.
+
+
+
+</dd>
+    <dt>
+    <a name = "udivmod"></a>
+    <strong>udivmod (x, y)</strong>
+    </dt>
+    <dd>
+    Perform unsigned division and modulo operation between two bigints.
+ This is effectively the same of <a href="index.html#udiv">bigint.udiv</a> and <a href="index.html#umod">bigint.umod</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The numerator.
+        </li>
+        <li><span class="parameter">y</span>
+         The denominator.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The quotient following the remainder
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt to divide by zero.
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="index.html#udiv">bigint.udiv</a></li>
+         <li><a href="index.html#umod">bigint.umod</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "__idiv"></a>
+    <strong>__idiv (x, y)</strong>
+    </dt>
+    <dd>
+    Perform integer floor division between two bigints.
+ Floor division is a division that rounds the quotient towards minus infinity,
+ resulting in the floor of the division of its operands.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The numerator.
+        </li>
+        <li><span class="parameter">y</span>
+         The denominator.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The quotient.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt to divide by zero.
+
+
+
+</dd>
+    <dt>
+    <a name = "__mod"></a>
+    <strong>__mod (x, y)</strong>
+    </dt>
+    <dd>
+    Perform integer floor modulo operation between two bigints.
+ The operation is defined as the remainder of the floor division
+ (division that rounds the quotient towards minus infinity).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The numerator.
+        </li>
+        <li><span class="parameter">y</span>
+         The denominator.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The remainder.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt to divide by zero.
+
+
+
+</dd>
+    <dt>
+    <a name = "idivmod"></a>
+    <strong>idivmod (x, y)</strong>
+    </dt>
+    <dd>
+    Perform integer floor division and modulo operation between two bigints.
+ This is effectively the same of <a href="index.html#__idiv">bigint.__idiv</a> and <a href="index.html#__mod">bigint.__mod</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The numerator.
+        </li>
+        <li><span class="parameter">y</span>
+         The denominator.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The quotient following the remainder
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt to divide by zero.
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="index.html#__idiv">bigint.__idiv</a></li>
+         <li><a href="index.html#__mod">bigint.__mod</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "__pow"></a>
+    <strong>__pow (x, y)</strong>
+    </dt>
+    <dd>
+    Perform integer power between two bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The base.
+        </li>
+        <li><span class="parameter">y</span>
+         The exponent, cannot be negative.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The result of the pow operation.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt pow with a negative exponent or very large exponent.
+
+
+
+</dd>
+    <dt>
+    <a name = "__shl"></a>
+    <strong>__shl (x, y)</strong>
+    </dt>
+    <dd>
+    Bitwise left shift bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to perform the bitwise shift.
+        </li>
+        <li><span class="parameter">y</span>
+         Number of bits to shift.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__shr"></a>
+    <strong>__shr (x, y)</strong>
+    </dt>
+    <dd>
+    Bitwise right shift bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to perform the bitwise shift.
+        </li>
+        <li><span class="parameter">y</span>
+         Number of bits to shift.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_band"></a>
+    <strong>_band (y)</strong>
+    </dt>
+    <dd>
+    Bitwise AND bigints (in-place).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">y</span>
+         A value to perform bitwise AND.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__band"></a>
+    <strong>__band (x, y)</strong>
+    </dt>
+    <dd>
+    Bitwise AND bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to perform bitwise AND.
+        </li>
+        <li><span class="parameter">y</span>
+         A value to perform bitwise AND.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_bor"></a>
+    <strong>_bor (y)</strong>
+    </dt>
+    <dd>
+    Bitwise OR bigints (in-place).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">y</span>
+         A value to perform bitwise OR.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__bor"></a>
+    <strong>__bor (x, y)</strong>
+    </dt>
+    <dd>
+    Bitwise OR bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to perform bitwise OR.
+        </li>
+        <li><span class="parameter">y</span>
+         A value to perform bitwise OR.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_bxor"></a>
+    <strong>_bxor (y)</strong>
+    </dt>
+    <dd>
+    Bitwise XOR bigints (in-place).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">y</span>
+         A value to perform bitwise XOR.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__bxor"></a>
+    <strong>__bxor (x, y)</strong>
+    </dt>
+    <dd>
+    Bitwise XOR bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to perform bitwise XOR.
+        </li>
+        <li><span class="parameter">y</span>
+         A value to perform bitwise XOR.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_bnot"></a>
+    <strong>_bnot ()</strong>
+    </dt>
+    <dd>
+    Bitwise NOT a bigint (in-place).
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__bnot"></a>
+    <strong>__bnot (x)</strong>
+    </dt>
+    <dd>
+    Bitwise NOT a bigint.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to perform bitwise NOT.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_unm"></a>
+    <strong>_unm ()</strong>
+    </dt>
+    <dd>
+    Negate a bigint (in-place).  This apply effectively apply two's complements.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__unm"></a>
+    <strong>__unm (x)</strong>
+    </dt>
+    <dd>
+    Negate a bigint.  This apply effectively apply two's complements.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to perform negation.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__eq"></a>
+    <strong>__eq (x, y)</strong>
+    </dt>
+    <dd>
+    Check if bigints are equal.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to compare.
+        </li>
+        <li><span class="parameter">y</span>
+         A value to compare.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ult"></a>
+    <strong>ult (x, y)</strong>
+    </dt>
+    <dd>
+    Compare if bigint x is less than y (unsigned version).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         Left value to compare.
+        </li>
+        <li><span class="parameter">y</span>
+         Right value to compare.
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#__lt">bigint.__lt</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "ule"></a>
+    <strong>ule (x, y)</strong>
+    </dt>
+    <dd>
+    Compare if bigint x is less or equal than y (unsigned version).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         Left value to compare.
+        </li>
+        <li><span class="parameter">y</span>
+         Right value to compare.
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#__le">bigint.__le</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "__lt"></a>
+    <strong>__lt (x, y)</strong>
+    </dt>
+    <dd>
+    Compare if bigint x is less than y (signed version).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         Left value to compare.
+        </li>
+        <li><span class="parameter">y</span>
+         Right value to compare.
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#ult">bigint.ult</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "__le"></a>
+    <strong>__le (x, y)</strong>
+    </dt>
+    <dd>
+    Compare if bigint x is less or equal than y (signed version).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         Left value to compare.
+        </li>
+        <li><span class="parameter">y</span>
+         Right value to compare.
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#ule">bigint.ule</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "__tostring"></a>
+    <strong>__tostring ()</strong>
+    </dt>
+    <dd>
+    Convert a bigint to a string (uses base 10)
+
+
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#tostring">bigint.tostring</a>
+    </ul>
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-07-05 09:54:46 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

@@ -1,8 +1,7 @@
 local bigint = require 'bigint'
 
-local function test(size, bits)
-  local totalbits = size * bits
-  bigint.scale(size, bits)
+local function test(bits)
+  bigint.scale(bits)
 
   local function assert_eq(a , b)
     if a ~= b then --luacov:disable
@@ -32,7 +31,7 @@ local function test(size, bits)
       assert_eq(bigint(x):tonumber(), x)
       assert_eq(bigint.new(x):tonumber(), x)
       assert_eq(bigint.from(x):tonumber(), x)
-      assert_eq(bigint.fromunsigned(x):tonumber(), x)
+      assert_eq(bigint.fromuinteger(x):tonumber(), x)
       assert_eq(bigint.new(bigint(x)):tonumber(), x)
       assert_eq(bigint.from(bigint(x)):tonumber(), x)
       assert_eq(bigint.new(tostring(x)):tonumber(), x)
@@ -61,7 +60,7 @@ local function test(size, bits)
       test_num2num(-x)
       test_num2hex(x)
       test_num2oct(x)
-      if totalbits == 64 then
+      if bits == 64 then
         test_num2hex(-x)
         test_num2oct(-x)
       end
@@ -401,9 +400,9 @@ local function test(size, bits)
   end
 end
 
-test(16, 4)
-test(8, 8)
-test(4, 16)
-test(2, 32)
-test(4, 32)
-test(8, 32)
+test(64, 4)
+test(64, 8)
+test(64, 16)
+test(64)
+test(128)
+test(256)
