@@ -1,7 +1,7 @@
 # Lua Bigint
 
 Small portable arbitrary-precision integer arithmetic library in pure Lua for
-calculating with large numbers.
+computing with large integers.
 
 Different from most arbitrary-precision integer libraries in pure Lua out there this one
 uses an array of lua integers as underlying data-type in its implementation instead of
@@ -16,28 +16,31 @@ The main design goal of this library is to be small, correct, self contained and
 resources while retaining acceptable performance and feature completeness.
 Clarity of the code is also highly valued.
 
-The library is designed to follow recent Lua integer semantics, this means,
+The library is designed to follow recent Lua integer semantics, this means that
 integer overflow warps around,
-signed integers are implemented using two-complement arithmetic rules and
-integer division operations rounds towards minus infinity.
+signed integers are implemented using two-complement arithmetic rules,
+integer division operations rounds towards minus infinity,
+any mixed operations with float numbers promotes the value to a float,
+and the usual division/power operation always promote floats.
 
 The library is designed to be possible to work with only unsigned integer arithmetic
 when using the proper methods.
 
-The basic lua integer arithmetic operators (+, -, *, //, /, %) and bitwise operators (&, |, ~, <<, >>)
+All the lua arithmetic operators (+, -, *, //, /, %) and bitwise operators (&, |, ~, <<, >>)
 are implemented as metamethods.
 
 ## Features
 
 * Small and simple
 * Efficient (for a pure Lua integer library)
-* Works with fixed width integer
+* Works with a fixed width integer
 * Follows Lua 5.3+ integer arithmetic semantics by default
 * All integer overflows wraps around
 * Can work with large integer widths with reasonable speed (such as 1024bit integers)
-* Implements lua arithmetic metamethods for integers
+* Implements all lua arithmetic metamethods
 * Provide methods to work with unsigned arithmetic only
 * Supports signed integers by default using two-complement arithmetic rules on unsigned operations
+* Allow to mix any operation with lua numbers, promoting to lua floats where needed
 
 ## Documentation
 

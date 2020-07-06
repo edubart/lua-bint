@@ -3,7 +3,7 @@ local bigint = require 'bigint'
 bigint.scale(512)
 
 local function gcd(a, b)
-  a, b = bigint.from(a), bigint.from(b)
+  a, b = bigint.convert(a), bigint.convert(b)
   while not b:iszero() do
     a, b = b, a % b
   end
@@ -11,7 +11,7 @@ local function gcd(a, b)
 end
 
 local function modinverse(a, m)
-  a, m = bigint.from(a), bigint.from(m)
+  a, m = bigint.convert(a), bigint.convert(m)
   assert(gcd(a, m):isone(), 'no inverse')
   if m:isone() then
     return m
@@ -42,15 +42,15 @@ local d = modinverse(e, phi_n)
 assert(d == bigint(65))
 
 local function encrypt(msg)
-  return (msg ^ e) % n
+  return bigint.ipow(msg, e) % n
 end
 
 local function decrypt(msg)
-  return (msg ^ d) % n
+  return bigint.ipow(msg, d) % n
 end
 
 local function test(msg)
-  msg = bigint.from(msg)
+  msg = bigint.convert(msg)
   local emsg = encrypt(msg)
   print(msg, emsg)
   local dmsg = decrypt(emsg)

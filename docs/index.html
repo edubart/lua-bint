@@ -43,8 +43,11 @@
 <div id="content">
 
 <h1>Module <code>bigint</code></h1>
-<p>Small portable arbitrary-precision integer arithmetic in pure Lua for
-calculating with large numbers.</p>
+<p>Small portable arbitrary-precision integer arithmetic library in pure Lua for
+computing with large integers.</p>
+<p>
+
+
 <p>Different from most arbitrary-precision integer libraries in pure Lua out there this one
 uses an array of lua integers as underlying data-type in its implementation instead of
 using strings or large tables, so regarding that aspect this library should be more efficient.</p>
@@ -55,70 +58,88 @@ using strings or large tables, so regarding that aspect this library should be m
 resources while retaining acceptable performance and feature completeness.
 Clarity of the code is also highly valued.</p>
 
-<p>The library is designed to follow recent Lua integer semantics, this means,
+<p>The library is designed to follow recent Lua integer semantics, this means that
 integer overflow warps around,
-signed integers are implemented using two-complement arithmetic rules and
-integer division operations rounds towards minus infinity.</p>
+signed integers are implemented using two-complement arithmetic rules,
+integer division operations rounds towards minus infinity,
+any mixed operations with float numbers promotes the value to a float,
+and the usual division/power operation always promote floats.</p>
 
 <p>The library is designed to be possible to work with only unsigned integer arithmetic
 when using the proper methods.</p>
 
-<p>The basic lua integer arithmetic operators (+, -, *, //, /, %) and bitwise operators (&amp;, |, ~, &lt;<, >>)
+<p>All the lua arithmetic operators (+, -, *, //, /, %) and bitwise operators (&amp;, |, ~, &lt;<, >>)
 are implemented as metamethods.</p>
 
 <h2>Usage</h2>
 
 <p>First on you should configure how many bits the library will work with,
 to do that call <a href="index.html#scale">bigint.scale</a> once on startup with the desired number of bits in multiples of 32,
-for example bigint.scale(1024). By default bigint uses 256 bits integers.</p>
+for example bigint.scale(1024).
+By default bigint uses 256 bits integers in case you never call scale.</p>
 
 <p>Then when you need create a bigint, you can use one of the following functions:</p>
 
 <ul>
-    <li><a href="index.html#fromuinteger">bigint.fromuinteger</a></li>
-    <li><a href="index.html#frominteger">bigint.frominteger</a></li>
-    <li><a href="index.html#fromnumber">bigint.fromnumber</a></li>
-    <li><a href="index.html#frombase">bigint.frombase</a> (use to convert from strings)</li>
-    <li><a href="index.html#new">bigint.new</a> (use to convert from anything)</li>
+    <li><a href="index.html#fromuinteger">bigint.fromuinteger</a> (convert from lua integers, but read as unsigned integer)</li>
+    <li><a href="index.html#frominteger">bigint.frominteger</a> (convert from lua integers, preserving the sign)</li>
+    <li><a href="index.html#fromnumber">bigint.fromnumber</a> (convert from lua floats, truncating the fractional part)</li>
+    <li><a href="index.html#frombase">bigint.frombase</a> (convert from arbitrary bases, like hexadecimal)</li>
+    <li><a href="index.html#new">bigint.new</a> (convert from anything, asserts on invalid values)</li>
+    <li><a href="index.html#convert">bigint.convert</a> (convert form anything, returns nil on invalid values)</li>
+    <li><a href="index.html#parse">bigint.parse</a> (convert from anything, returns a lua number as fallback)</li>
     <li><a href="index.html#zero">bigint.zero</a></li>
     <li><a href="index.html#one">bigint.one</a></li>
     <li><a href="index.html#">bigint</a></li>
 </ul>
 
-<p>You can also call <a href="index.html#">bigint</a>, it is an alias to <a href="index.html#new">bigint.new</a>. In doubt use <a href="index.html#new">bigint.new</a>
-to create a new bigint.</p>
+<p>You can also call <a href="index.html#">bigint</a> as it is an alias to <a href="index.html#new">bigint.new</a>.
+In doubt use <a href="index.html#new">bigint.new</a> to create a new bigint.</p>
 
-<p>Then you can use all the usual lua numeric operations on it, all the metamethods are implemented.
-When you are done computing and need to get the result, get the output from one of the following functions:</p>
+<p>Then you can use all the usual lua numeric operations on it,
+all the arithmetic metamethods are implemented.
+When you are done computing and need to get the result,
+get the output from one of the following functions:</p>
 
 <ul>
-    <li><a href="index.html#touinteger">bigint.touinteger</a></li>
-    <li><a href="index.html#tointeger">bigint.tointeger</a></li>
-    <li><a href="index.html#tonumber">bigint.tonumber</a></li>
-    <li><a href="index.html#tobase">bigint.tobase</a> (use to convert to strings)</li>
-    <li><a href="index.html#__tostring">bigint.__tostring</a></li>
+    <li><a href="index.html#touinteger">bigint.touinteger</a> (convert to a lua integer, wraps around as an unsigned integer)</li>
+    <li><a href="index.html#tointeger">bigint.tointeger</a> (convert to a lua integer, always preserving the sign)</li>
+    <li><a href="index.html#tonumber">bigint.tonumber</a> (convert to lua float, losing precision)</li>
+    <li><a href="index.html#tobase">bigint.tobase</a> (convert to a string in any base)</li>
+    <li><a href="index.html#__tostring">bigint.__tostring</a> (convert to a string in base 10)</li>
 </ul>
 
-<p>Note that outputting to lua number will make the integer overflow and its value wraps around.
+<p>Note that outputting to a lua number will make the integer overflow and its value wraps around.
 To output very large integer with no loss of precision you probably want to use <a href="index.html#tobase">bigint.tobase</a>
 or call <a href="https://www.lua.org/manual/5.3/manual.html#pdf-tostring">tostring</a> to get a string representation.</p>
 
 <h2>Precautions</h2>
 
-<p>All library functions can be mixed with lua integers, this makes easy to mix operations between
-bigints and lua numbers however the user should take care in some situations.
-Like comparing bigint with lua numbers for equality will always return false, in that case either
-cast the lua number to a bigint before comparing or use <a href="index.html#eq">bigint.eq</a>.</p>
+<p>All library functions can be mixed with lua numbers,
+this makes easy to mix operations between bigints and lua numbers,
+however the user should take care in some situations:</p>
 
-<p>The library can work only with integers, doing operations with any fractional lua number will
-throw an assertion.</p>
+<ul>
+    <li>Don't mix integers and float operations if you want to work with integers only.</li>
+    <li>Don't use the regular equal operator ('==') to compare values from this library,
+    unless you know in advance that both values are of the same primitive type,
+    otherwise it will always returns false, use <a href="index.html#eq">bigint.eq</a> to be safe.</li>
+    <li>Don't pass fractional numbers to functions that an integer is expected
+    as this will throw assertions.</li>
+    <li>Remember that casting back to lua integers or numbers precision can be lost.</li>
+    <li>For dividing while preserving integers use the <a href="index.html#__idiv">bigint.__idiv</a> (the '//' operator).</li>
+    <li>For doing power operation preserving integers use the <a href="index.html#ipow">bigint.ipow</a> function.</li>
+    <li>Configure the internal integer fixed width using <a href="index.html#scale">bigint.scale</a>
+    to the proper size you intend to work with, otherwise large integers may wraps around.</li>
+</ul>
+</p>
 
 
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#scale">scale (bits[, wordbits])</a></td>
-	<td class="summary">Scale bigint to represent integers of the desired bit size.</td>
+	<td class="summary">Scale bigint's integer width to represent integers of the desired bit size.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#fromuinteger">fromuinteger (x)</a></td>
@@ -135,10 +156,6 @@ throw an assertion.</p>
 	<tr>
 	<td class="name" nowrap><a href="#frombase">frombase (s[, base])</a></td>
 	<td class="summary">Create a bigint from a string of the desired base.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#from">from (x)</a></td>
-	<td class="summary">Create a bigint from a value in case needed.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#touinteger">touinteger (x)</a></td>
@@ -161,36 +178,40 @@ throw an assertion.</p>
 	<td class="summary">Create a new bigint from a value.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#clone">clone ()</a></td>
-	<td class="summary">Clone a bigint.</td>
+	<td class="name" nowrap><a href="#convert">convert (x[, clone])</a></td>
+	<td class="summary">Convert a value to a bigint if possible.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#iszero">iszero ()</a></td>
-	<td class="summary">Check if bigint is 0.</td>
+	<td class="name" nowrap><a href="#parse">parse (x[, clone])</a></td>
+	<td class="summary">Convert a value to a bigint if possible otherwise to a lua number.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#isone">isone ()</a></td>
-	<td class="summary">Check if bigint is 1.</td>
+	<td class="name" nowrap><a href="#iszero">iszero (x)</a></td>
+	<td class="summary">Check if a number is 0 considering bigints.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#isminusone">isminusone ()</a></td>
-	<td class="summary">Check if bigint is -1.</td>
+	<td class="name" nowrap><a href="#isone">isone (x)</a></td>
+	<td class="summary">Check if a number is 1 considering bigints.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#isneg">isneg ()</a></td>
-	<td class="summary">Check if bigint is negative.</td>
+	<td class="name" nowrap><a href="#isminusone">isminusone (x)</a></td>
+	<td class="summary">Check if a number is -1 considering bigints.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#ispos">ispos ()</a></td>
-	<td class="summary">Check if bigint is positive.</td>
+	<td class="name" nowrap><a href="#isneg">isneg (x)</a></td>
+	<td class="summary">Check if a number is negative considering bigints.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#iseven">iseven ()</a></td>
-	<td class="summary">Check if bigint is even.</td>
+	<td class="name" nowrap><a href="#ispos">ispos (x)</a></td>
+	<td class="summary">Check if a number is positive considering bigints.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#isodd">isodd ()</a></td>
-	<td class="summary">Check if bigint is odd.</td>
+	<td class="name" nowrap><a href="#iseven">iseven (x)</a></td>
+	<td class="summary">Check if a number is even considering bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isodd">isodd (x)</a></td>
+	<td class="summary">Check if a number is odd considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_zero">_zero ()</a></td>
@@ -222,7 +243,7 @@ throw an assertion.</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#inc">inc (x)</a></td>
-	<td class="summary">Increment a bigint by one.</td>
+	<td class="summary">Increment a number by one considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_dec">_dec ()</a></td>
@@ -230,7 +251,7 @@ throw an assertion.</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#dec">dec (x)</a></td>
-	<td class="summary">Decrement a bigint by one.</td>
+	<td class="summary">Decrement a number by one considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_assign">_assign (y)</a></td>
@@ -242,63 +263,71 @@ throw an assertion.</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#abs">abs (x)</a></td>
-	<td class="summary">Take absolute of a bigint.</td>
+	<td class="summary">Take absolute of a number considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_add">_add (y)</a></td>
-	<td class="summary">Add value to a bigint (in-place).</td>
+	<td class="summary">Add an integer to a bigint (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__add">__add (x, y)</a></td>
-	<td class="summary">Add value to a bigint.</td>
+	<td class="summary">Add two numbers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_sub">_sub (y)</a></td>
-	<td class="summary">Subtract value from a bigint (in-place).</td>
+	<td class="summary">Subtract an integer from a bigint (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__sub">__sub (x, y)</a></td>
-	<td class="summary">Subtract value from a bigint.</td>
+	<td class="summary">Subtract two numbers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__mul">__mul (x, y)</a></td>
-	<td class="summary">Multiply two bigints.</td>
+	<td class="summary">Multiply two numbers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#udiv">udiv (x, y)</a></td>
-	<td class="summary">Perform unsigned division between two bigints.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#umod">umod (x, y)</a></td>
-	<td class="summary">Perform unsigned integer modulo operation between two bigints.</td>
+	<td class="summary">Perform unsigned division between two integers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#udivmod">udivmod (x, y)</a></td>
-	<td class="summary">Perform unsigned division and modulo operation between two bigints.</td>
+	<td class="summary">Perform unsigned division and modulo operation between two integers considering bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#umod">umod (x, y)</a></td>
+	<td class="summary">Perform unsigned integer modulo operation between two integers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__idiv">__idiv (x, y)</a></td>
-	<td class="summary">Perform integer floor division between two bigints.</td>
+	<td class="summary">Perform floor division between two numbers considering bigints.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#__mod">__mod (x, y)</a></td>
-	<td class="summary">Perform integer floor modulo operation between two bigints.</td>
+	<td class="name" nowrap><a href="#__div">__div (x, y)</a></td>
+	<td class="summary">Perform division between two numbers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#idivmod">idivmod (x, y)</a></td>
-	<td class="summary">Perform integer floor division and modulo operation between two bigints.</td>
+	<td class="summary">Perform integer floor division and modulo operation between two numbers considering bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__mod">__mod (x, y)</a></td>
+	<td class="summary">Perform integer floor modulo operation between two numbers considering bigints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ipow">ipow (x, y)</a></td>
+	<td class="summary">Perform integer power between two integers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__pow">__pow (x, y)</a></td>
-	<td class="summary">Perform integer power between two bigints.</td>
+	<td class="summary">Perform numeric power between two numbers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__shl">__shl (x, y)</a></td>
-	<td class="summary">Bitwise left shift bigints.</td>
+	<td class="summary">Bitwise left shift integers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__shr">__shr (x, y)</a></td>
-	<td class="summary">Bitwise right shift bigints.</td>
+	<td class="summary">Bitwise right shift integers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_band">_band (y)</a></td>
@@ -306,7 +335,7 @@ throw an assertion.</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__band">__band (x, y)</a></td>
-	<td class="summary">Bitwise AND bigints.</td>
+	<td class="summary">Bitwise AND two integers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_bor">_bor (y)</a></td>
@@ -314,7 +343,7 @@ throw an assertion.</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__bor">__bor (x, y)</a></td>
-	<td class="summary">Bitwise OR bigints.</td>
+	<td class="summary">Bitwise OR two integers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_bxor">_bxor (y)</a></td>
@@ -322,7 +351,7 @@ throw an assertion.</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__bxor">__bxor (x, y)</a></td>
-	<td class="summary">Bitwise XOR bigints.</td>
+	<td class="summary">Bitwise XOR two integers considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_bnot">_bnot ()</a></td>
@@ -346,27 +375,27 @@ throw an assertion.</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#eq">eq (x, y)</a></td>
-	<td class="summary">Check if bigints are equal.</td>
+	<td class="summary">Check if numbers are equal considering bigints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ult">ult (x, y)</a></td>
-	<td class="summary">Compare if bigint x is less than y (unsigned version).</td>
+	<td class="summary">Compare if integer x is less than y considering bigints (unsigned version).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ule">ule (x, y)</a></td>
-	<td class="summary">Compare if bigint x is less or equal than y (unsigned version).</td>
+	<td class="summary">Compare if bigint x is less or equal than y considering bigints (unsigned version).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__lt">__lt (x, y)</a></td>
-	<td class="summary">Compare if bigint x is less than y (signed version).</td>
+	<td class="summary">Compare if number x is less than y considering bigints and signs.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__le">__le (x, y)</a></td>
-	<td class="summary">Compare if bigint x is less or equal than y (signed version).</td>
+	<td class="summary">Compare if number x is less or equal than y considering bigints and signs.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__tostring">__tostring ()</a></td>
-	<td class="summary">Convert a bigint to a string (uses base 10)</td>
+	<td class="summary">Convert a bigint to a string on base 10.</td>
 	</tr>
 </table>
 
@@ -382,7 +411,7 @@ throw an assertion.</p>
     <strong>scale (bits[, wordbits])</strong>
     </dt>
     <dd>
-    Scale bigint to represent integers of the desired bit size.
+    Scale bigint's integer width to represent integers of the desired bit size.
  Must be called only once on startup.
 
 
@@ -415,7 +444,7 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to initialize from, usually convertible to a lua integer.
+         A value to initialize from convertible to a lua integer.
         </li>
     </ul>
 
@@ -444,7 +473,7 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to initialize from, usually convertible to a lua integer.
+         A value to initialize from convertible to a lua integer.
         </li>
     </ul>
 
@@ -474,7 +503,7 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to initialize from, usually convertible to a number.
+         A value to initialize from convertible to a lua number.
         </li>
     </ul>
 
@@ -499,7 +528,8 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">s</span>
-         The string to be converted from, must have only alphanumeric and '+-' characters.
+         The string to be converted from,
+ must have only alphanumeric and '+-' characters.
         </li>
         <li><span class="parameter">base</span>
          Base that the number is represented, defaults to 10.
@@ -511,43 +541,10 @@ throw an assertion.</p>
     <h3>Returns:</h3>
     <ol>
 
-        A new bigint.
+        A new bigint or nil in case the conversion failed.
     </ol>
 
-    <h3>Raises:</h3>
-    An assert is thrown in case the string has invalid characters or the base is invalid.
 
-
-
-</dd>
-    <dt>
-    <a name = "from"></a>
-    <strong>from (x)</strong>
-    </dt>
-    <dd>
-    Create a bigint from a value in case needed.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         A value convertible to a bigint (string, number or another bigint).
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        A bigint, will be the same input value in case it already is a bigint.
-    </ol>
-
-    <h3>Raises:</h3>
-    An assert is thrown in case x is not convertible to a bigint.
-
-    <h3>See also:</h3>
-    <ul>
-         <a href="index.html#new">bigint.new</a>
-    </ul>
 
 
 </dd>
@@ -557,7 +554,7 @@ throw an assertion.</p>
     </dt>
     <dd>
     Convert a bigint to an unsigned integer.
- Note that large unsigned integers are still represented as negative values in lua integers.
+ Note that large unsigned integers may be represented as negatives in lua integers.
  Note that lua cannot represent values larger than 64 bits,
  in that case integer values wraps around.
 
@@ -701,7 +698,7 @@ throw an assertion.</p>
     <h3>Returns:</h3>
     <ol>
 
-        A new bigint, guaranteed to be clone in case needed.
+        A new bigint, guaranteed to be a new reference in case needed.
     </ol>
 
     <h3>Raises:</h3>
@@ -709,34 +706,97 @@ throw an assertion.</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#from">bigint.from</a>
+         <li><a href="index.html#convert">bigint.convert</a></li>
+         <li><a href="index.html#parse">bigint.parse</a></li>
     </ul>
 
 
 </dd>
     <dt>
-    <a name = "clone"></a>
-    <strong>clone ()</strong>
+    <a name = "convert"></a>
+    <strong>convert (x[, clone])</strong>
     </dt>
     <dd>
-    Clone a bigint.
- This is useful only to use in-place operations on cloned values.
+    Convert a value to a bigint if possible.
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to be converted (string, number or another bigint).
+        </li>
+        <li><span class="parameter">clone</span>
+         A boolean that tells if a new bigint reference should be returned.
+ Defaults to false.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A bigint or nil in case the conversion failed.
+    </ol>
 
 
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="index.html#new">bigint.new</a></li>
+         <li><a href="index.html#parse">bigint.parse</a></li>
+    </ul>
 
+
+</dd>
+    <dt>
+    <a name = "parse"></a>
+    <strong>parse (x[, clone])</strong>
+    </dt>
+    <dd>
+    Convert a value to a bigint if possible otherwise to a lua number.
+ Useful to prepare values that you are unsure if its going to be a integer or float.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to be converted (string, number or another bigint).
+        </li>
+        <li><span class="parameter">clone</span>
+         A boolean that tells if a new bigint reference should be returned.
+ Defaults to false.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A bigint or a lua number or nil in case the conversion failed.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="index.html#new">bigint.new</a></li>
+         <li><a href="index.html#convert">bigint.convert</a></li>
+    </ul>
 
 
 </dd>
     <dt>
     <a name = "iszero"></a>
-    <strong>iszero ()</strong>
+    <strong>iszero (x)</strong>
     </dt>
     <dd>
-    Check if bigint is 0.
+    Check if a number is 0 considering bigints.
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bigint or a lua number.
+        </li>
+    </ul>
 
 
 
@@ -745,12 +805,18 @@ throw an assertion.</p>
 </dd>
     <dt>
     <a name = "isone"></a>
-    <strong>isone ()</strong>
+    <strong>isone (x)</strong>
     </dt>
     <dd>
-    Check if bigint is 1.
+    Check if a number is 1 considering bigints.
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bigint or a lua number.
+        </li>
+    </ul>
 
 
 
@@ -759,12 +825,18 @@ throw an assertion.</p>
 </dd>
     <dt>
     <a name = "isminusone"></a>
-    <strong>isminusone ()</strong>
+    <strong>isminusone (x)</strong>
     </dt>
     <dd>
-    Check if bigint is -1.
+    Check if a number is -1 considering bigints.
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bigint or a lua number.
+        </li>
+    </ul>
 
 
 
@@ -773,13 +845,19 @@ throw an assertion.</p>
 </dd>
     <dt>
     <a name = "isneg"></a>
-    <strong>isneg ()</strong>
+    <strong>isneg (x)</strong>
     </dt>
     <dd>
-    Check if bigint is negative.
- Zero is guaranteed to never be negative.
+    Check if a number is negative considering bigints.
+ Zero is guaranteed to never be negative for bigints.
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bigint or a lua number.
+        </li>
+    </ul>
 
 
 
@@ -788,12 +866,18 @@ throw an assertion.</p>
 </dd>
     <dt>
     <a name = "ispos"></a>
-    <strong>ispos ()</strong>
+    <strong>ispos (x)</strong>
     </dt>
     <dd>
-    Check if bigint is positive.
+    Check if a number is positive considering bigints.
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bigint or a lua number.
+        </li>
+    </ul>
 
 
 
@@ -802,12 +886,18 @@ throw an assertion.</p>
 </dd>
     <dt>
     <a name = "iseven"></a>
-    <strong>iseven ()</strong>
+    <strong>iseven (x)</strong>
     </dt>
     <dd>
-    Check if bigint is even.
+    Check if a number is even considering bigints.
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bigint or a lua number.
+        </li>
+    </ul>
 
 
 
@@ -816,12 +906,18 @@ throw an assertion.</p>
 </dd>
     <dt>
     <a name = "isodd"></a>
-    <strong>isodd ()</strong>
+    <strong>isodd (x)</strong>
     </dt>
     <dd>
-    Check if bigint is odd.
+    Check if a number is odd considering bigints.
 
 
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bigint or a lua number.
+        </li>
+    </ul>
 
 
 
@@ -931,13 +1027,13 @@ throw an assertion.</p>
     <strong>inc (x)</strong>
     </dt>
     <dd>
-    Increment a bigint by one.
+    Increment a number by one considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to be incremented.
+         A bigint or a lua number to increment.
         </li>
     </ul>
 
@@ -965,13 +1061,13 @@ throw an assertion.</p>
     <strong>dec (x)</strong>
     </dt>
     <dd>
-    Decrement a bigint by one.
+    Decrement a number by one considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to be decremented.
+         A bigint or a lua number to decrement.
         </li>
     </ul>
 
@@ -996,6 +1092,8 @@ throw an assertion.</p>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1019,13 +1117,13 @@ throw an assertion.</p>
     <strong>abs (x)</strong>
     </dt>
     <dd>
-    Take absolute of a bigint.
+    Take absolute of a number considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to take the absolute from.
+         A bigint or a lua number to take the absolute.
         </li>
     </ul>
 
@@ -1039,17 +1137,19 @@ throw an assertion.</p>
     <strong>_add (y)</strong>
     </dt>
     <dd>
-    Add value to a bigint (in-place).
+    Add an integer to a bigint (in-place).
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">y</span>
-         A value to be added.
+         An integer to be added.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1059,16 +1159,16 @@ throw an assertion.</p>
     <strong>__add (x, y)</strong>
     </dt>
     <dd>
-    Add value to a bigint.
+    Add two numbers considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to be added.
+         A bigint or a lua number to be added.
         </li>
         <li><span class="parameter">y</span>
-         A value to be added.
+         A bigint or a lua number to be added.
         </li>
     </ul>
 
@@ -1082,17 +1182,19 @@ throw an assertion.</p>
     <strong>_sub (y)</strong>
     </dt>
     <dd>
-    Subtract value from a bigint (in-place).
+    Subtract an integer from a bigint (in-place).
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">y</span>
-         A value to subtract.
+         An integer to subtract.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1102,16 +1204,16 @@ throw an assertion.</p>
     <strong>__sub (x, y)</strong>
     </dt>
     <dd>
-    Subtract value from a bigint.
+    Subtract two numbers considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to be subtract from.
+         A bigint or a lua number to be subtract from.
         </li>
         <li><span class="parameter">y</span>
-         A value to subtract.
+         A bigint or a lua number to subtract.
         </li>
     </ul>
 
@@ -1125,16 +1227,16 @@ throw an assertion.</p>
     <strong>__mul (x, y)</strong>
     </dt>
     <dd>
-    Multiply two bigints.
+    Multiply two numbers considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to multiply.
+         A bigint or a lua number to multiply.
         </li>
         <li><span class="parameter">y</span>
-         A value to multiply.
+         A bigint or a lua number to multiply.
         </li>
     </ul>
 
@@ -1148,57 +1250,28 @@ throw an assertion.</p>
     <strong>udiv (x, y)</strong>
     </dt>
     <dd>
-    Perform unsigned division between two bigints.
+    Perform unsigned division between two integers considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator.
+         The numerator, must be a bigint or a lua integer.
         </li>
         <li><span class="parameter">y</span>
-         The denominator.
+         The denominator, must be a bigint or a lua integer.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The quotient.
+        The quotient, a bigint.
     </ol>
 
     <h3>Raises:</h3>
-    Asserts on attempt to divide by zero.
-
-
-
-</dd>
-    <dt>
-    <a name = "umod"></a>
-    <strong>umod (x, y)</strong>
-    </dt>
-    <dd>
-    Perform unsigned integer modulo operation between two bigints.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         The numerator.
-        </li>
-        <li><span class="parameter">y</span>
-         The denominator.
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        The remainder.
-    </ol>
-
-    <h3>Raises:</h3>
-    Asserts on attempt to divide by zero.
+    Asserts on attempt to divide by zero
+ or if inputs are not convertible to integers.
 
 
 
@@ -1208,28 +1281,29 @@ throw an assertion.</p>
     <strong>udivmod (x, y)</strong>
     </dt>
     <dd>
-    Perform unsigned division and modulo operation between two bigints.
+    Perform unsigned division and modulo operation between two integers considering bigints.
  This is effectively the same of <a href="index.html#udiv">bigint.udiv</a> and <a href="index.html#umod">bigint.umod</a>.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator.
+         The numerator, must be a bigint or a lua integer.
         </li>
         <li><span class="parameter">y</span>
-         The denominator.
+         The denominator, must be a bigint or a lua integer.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The quotient following the remainder
+        The quotient following the remainder, both bigints.
     </ol>
 
     <h3>Raises:</h3>
-    Asserts on attempt to divide by zero.
+    Asserts on attempt to divide by zero
+ or if inputs are not convertible to integers.
 
     <h3>See also:</h3>
     <ul>
@@ -1240,11 +1314,42 @@ throw an assertion.</p>
 
 </dd>
     <dt>
+    <a name = "umod"></a>
+    <strong>umod (x, y)</strong>
+    </dt>
+    <dd>
+    Perform unsigned integer modulo operation between two integers considering bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The numerator, must be a bigint or a lua integer.
+        </li>
+        <li><span class="parameter">y</span>
+         The denominator, must be a bigint or a lua integer.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The remainder, a bigint.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt to divide by zero
+ or if the inputs are not convertible to integers.
+
+
+
+</dd>
+    <dt>
     <a name = "__idiv"></a>
     <strong>__idiv (x, y)</strong>
     </dt>
     <dd>
-    Perform integer floor division between two bigints.
+    Perform floor division between two numbers considering bigints.
  Floor division is a division that rounds the quotient towards minus infinity,
  resulting in the floor of the division of its operands.
 
@@ -1252,17 +1357,17 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator.
+         The numerator, a bigint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         The denominator.
+         The denominator, a bigint or lua number.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The quotient.
+        The quotient, a bigint or lua number.
     </ol>
 
     <h3>Raises:</h3>
@@ -1272,33 +1377,30 @@ throw an assertion.</p>
 
 </dd>
     <dt>
-    <a name = "__mod"></a>
-    <strong>__mod (x, y)</strong>
+    <a name = "__div"></a>
+    <strong>__div (x, y)</strong>
     </dt>
     <dd>
-    Perform integer floor modulo operation between two bigints.
- The operation is defined as the remainder of the floor division
- (division that rounds the quotient towards minus infinity).
+    Perform division between two numbers considering bigints.
+ This always cast inputs to floats, for integer division only use <a href="index.html#__idiv">bigint.__idiv</a>.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator.
+         The numerator, a bigint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         The denominator.
+         The denominator, a bigint or lua number.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The remainder.
+        The quotient, a lua number.
     </ol>
 
-    <h3>Raises:</h3>
-    Asserts on attempt to divide by zero.
 
 
 
@@ -1308,24 +1410,24 @@ throw an assertion.</p>
     <strong>idivmod (x, y)</strong>
     </dt>
     <dd>
-    Perform integer floor division and modulo operation between two bigints.
+    Perform integer floor division and modulo operation between two numbers considering bigints.
  This is effectively the same of <a href="index.html#__idiv">bigint.__idiv</a> and <a href="index.html#__mod">bigint.__mod</a>.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator.
+         The numerator, a bigint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         The denominator.
+         The denominator, a bigint or lua number.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The quotient following the remainder
+        The quotient following the remainder, both bigint or lua number.
     </ol>
 
     <h3>Raises:</h3>
@@ -1340,32 +1442,102 @@ throw an assertion.</p>
 
 </dd>
     <dt>
-    <a name = "__pow"></a>
-    <strong>__pow (x, y)</strong>
+    <a name = "__mod"></a>
+    <strong>__mod (x, y)</strong>
     </dt>
     <dd>
-    Perform integer power between two bigints.
+    Perform integer floor modulo operation between two numbers considering bigints.
+ The operation is defined as the remainder of the floor division
+ (division that rounds the quotient towards minus infinity).
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The base.
+         The numerator, a bigint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         The exponent, cannot be negative.
+         The denominator, a bigint or lua number.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The result of the pow operation.
+        The remainder, a bigint or lua number.
     </ol>
 
     <h3>Raises:</h3>
-    Asserts on attempt pow with a negative exponent.
+    Asserts on attempt to divide by zero.
 
+
+
+</dd>
+    <dt>
+    <a name = "ipow"></a>
+    <strong>ipow (x, y)</strong>
+    </dt>
+    <dd>
+    Perform integer power between two integers considering bigints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The base, an integer.
+        </li>
+        <li><span class="parameter">y</span>
+         The exponent, cannot be negative, an integer.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The result of the pow operation, a bigint.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt to pow with a negative exponent
+ or if inputs are not convertible to integers.
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#__pow">bigint.__pow</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "__pow"></a>
+    <strong>__pow (x, y)</strong>
+    </dt>
+    <dd>
+    Perform numeric power between two numbers considering bigints.
+ This always cast inputs to floats, for integer power only use <a href="index.html#ipow">bigint.ipow</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The base, a bigint or lua number.
+        </li>
+        <li><span class="parameter">y</span>
+         The exponent, a bigint or lua number.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The result of the pow operation, a lua number.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#ipow">bigint.ipow</a>
+    </ul>
 
 
 </dd>
@@ -1374,20 +1546,27 @@ throw an assertion.</p>
     <strong>__shl (x, y)</strong>
     </dt>
     <dd>
-    Bitwise left shift bigints.
+    Bitwise left shift integers considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to perform the bitwise shift.
+         An integer to perform the bitwise shift.
         </li>
         <li><span class="parameter">y</span>
-         Number of bits to shift.
+         An integer with the number of bits to shift.
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
 
+        The result of shift operation, a bigint.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1397,20 +1576,27 @@ throw an assertion.</p>
     <strong>__shr (x, y)</strong>
     </dt>
     <dd>
-    Bitwise right shift bigints.
+    Bitwise right shift integers considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to perform the bitwise shift.
+         An integer to perform the bitwise shift.
         </li>
         <li><span class="parameter">y</span>
-         Number of bits to shift.
+         An integer with the number of bits to shift.
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
 
+        The result of shift operation, a bigint.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1426,11 +1612,13 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">y</span>
-         A value to perform bitwise AND.
+         An integer to perform bitwise AND.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1440,20 +1628,22 @@ throw an assertion.</p>
     <strong>__band (x, y)</strong>
     </dt>
     <dd>
-    Bitwise AND bigints.
+    Bitwise AND two integers considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to perform bitwise AND.
+         An integer to perform bitwise AND.
         </li>
         <li><span class="parameter">y</span>
-         A value to perform bitwise AND.
+         An integer to perform bitwise AND.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1469,11 +1659,13 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">y</span>
-         A value to perform bitwise OR.
+         An integer to perform bitwise OR.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1483,20 +1675,22 @@ throw an assertion.</p>
     <strong>__bor (x, y)</strong>
     </dt>
     <dd>
-    Bitwise OR bigints.
+    Bitwise OR two integers considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to perform bitwise OR.
+         An integer to perform bitwise OR.
         </li>
         <li><span class="parameter">y</span>
-         A value to perform bitwise OR.
+         An integer to perform bitwise OR.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1512,11 +1706,13 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">y</span>
-         A value to perform bitwise XOR.
+         An integer to perform bitwise XOR.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1526,20 +1722,22 @@ throw an assertion.</p>
     <strong>__bxor (x, y)</strong>
     </dt>
     <dd>
-    Bitwise XOR bigints.
+    Bitwise XOR two integers considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to perform bitwise XOR.
+         An integer to perform bitwise XOR.
         </li>
         <li><span class="parameter">y</span>
-         A value to perform bitwise XOR.
+         An integer to perform bitwise XOR.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1569,11 +1767,13 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to perform bitwise NOT.
+         An integer to perform bitwise NOT.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
 
 
@@ -1603,7 +1803,7 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to perform negation.
+         A bigint to perform negation.
         </li>
     </ul>
 
@@ -1623,10 +1823,10 @@ throw an assertion.</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to compare.
+         A bigint to compare.
         </li>
         <li><span class="parameter">y</span>
-         A value to compare.
+         A bigint to compare.
         </li>
     </ul>
 
@@ -1640,16 +1840,16 @@ throw an assertion.</p>
     <strong>eq (x, y)</strong>
     </dt>
     <dd>
-    Check if bigints are equal.
+    Check if numbers are equal considering bigints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to compare.
+         A bigint or lua number to compare.
         </li>
         <li><span class="parameter">y</span>
-         A value to compare.
+         A bigint or lua number to compare.
         </li>
     </ul>
 
@@ -1663,20 +1863,22 @@ throw an assertion.</p>
     <strong>ult (x, y)</strong>
     </dt>
     <dd>
-    Compare if bigint x is less than y (unsigned version).
+    Compare if integer x is less than y considering bigints (unsigned version).
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         Left value to compare.
+         Left integer to compare.
         </li>
         <li><span class="parameter">y</span>
-         Right value to compare.
+         Right integer to compare.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
     <h3>See also:</h3>
     <ul>
@@ -1690,20 +1892,22 @@ throw an assertion.</p>
     <strong>ule (x, y)</strong>
     </dt>
     <dd>
-    Compare if bigint x is less or equal than y (unsigned version).
+    Compare if bigint x is less or equal than y considering bigints (unsigned version).
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         Left value to compare.
+         Left integer to compare.
         </li>
         <li><span class="parameter">y</span>
-         Right value to compare.
+         Right integer to compare.
         </li>
     </ul>
 
 
+    <h3>Raises:</h3>
+    Asserts in case inputs are not convertible to integers.
 
     <h3>See also:</h3>
     <ul>
@@ -1717,16 +1921,16 @@ throw an assertion.</p>
     <strong>__lt (x, y)</strong>
     </dt>
     <dd>
-    Compare if bigint x is less than y (signed version).
+    Compare if number x is less than y considering bigints and signs.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         Left value to compare.
+         Left value to compare, a bigint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         Right value to compare.
+         Right value to compare, a bigint or lua number.
         </li>
     </ul>
 
@@ -1744,16 +1948,16 @@ throw an assertion.</p>
     <strong>__le (x, y)</strong>
     </dt>
     <dd>
-    Compare if bigint x is less or equal than y (signed version).
+    Compare if number x is less or equal than y considering bigints and signs.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         Left value to compare.
+         Left value to compare, a bigint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         Right value to compare.
+         Right value to compare, a bigint or lua number.
         </li>
     </ul>
 
@@ -1771,7 +1975,7 @@ throw an assertion.</p>
     <strong>__tostring ()</strong>
     </dt>
     <dd>
-    Convert a bigint to a string (uses base 10)
+    Convert a bigint to a string on base 10.
 
 
 
@@ -1791,7 +1995,7 @@ throw an assertion.</p>
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-07-05 18:42:11 </i>
+<i style="float:right;">Last updated 2020-07-06 15:09:24 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
