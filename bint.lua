@@ -26,7 +26,7 @@ SOFTWARE.
 Small portable arbitrary-precision integer arithmetic library in pure Lua for
 computing with large integers.
 
-Different from most arbitrary-precision integer libraries in pure Lua out there this one
+Different from most arbitrary precision integer libraries in pure Lua out there this one
 uses an array of lua integers as underlying data-type in its implementation instead of
 using strings or large tables, so regarding that aspect this library should be more efficient.
 

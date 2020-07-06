@@ -1,6 +1,6 @@
-# Lua BInt
+# Lua Bint
 
-Small portable arbitrary-precision integer arithmetic library in pure Lua for
+Small portable arbitrary precision integer arithmetic library in pure Lua for
 computing with large integers.
 
 Different from most arbitrary-precision integer libraries in pure Lua out there this one
@@ -10,7 +10,7 @@ using strings or large tables, so regarding that aspect this library should be m
 The library implementation was highly inspired by
 [tiny-bignum-c](https://github.com/kokke/tiny-bignum-c).
 
-BInt stands for Big Integer.
+Bint stands for Big Integer.
 
 ## Design goals
 
@@ -49,6 +49,16 @@ are implemented as metamethods.
 The full API reference and documentation can viewed in the
 [documentation website](https://edubart.github.io/lua-bint/).
 
+## Install
+
+You can use luarocks to install quickly:
+
+```bash
+luarocks install https://raw.githubusercontent.com/edubart/lua-bint/master/rockspecs/bint-dev-1.rockspec
+```
+
+Or just copy the `bint.lua` file, the library is self contained in this single file with no dependencies.
+
 ## Example
 
 ```lua
@@ -60,7 +70,7 @@ print(x) -- outputs: 340282366920938463463374607431768211456
 ```
 
 For more usage examples check the
-[examples directory](https://github.com/edubart/lua-bint/tree/master/examples)
+[examples directory](https://github.com/edubart/lua-bint/tree/master/examples).
 
 ## Tests
 
