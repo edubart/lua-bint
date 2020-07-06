@@ -52,65 +52,65 @@ are implemented as metamethods.
 ## Usage
 
 First on you should configure how many bits the library will work with,
-to do that call @{bigint.scale} once on startup with the desired number of bits in multiples of 32,
-for example bigint.scale(1024).
-By default bigint uses 256 bits integers in case you never call scale.
+to do that call @{bint.scale} once on startup with the desired number of bits in multiples of 32,
+for example bint.scale(1024).
+By default bint uses 256 bits integers in case you never call scale.
 
-Then when you need create a bigint, you can use one of the following functions:
+Then when you need create a bint, you can use one of the following functions:
 
-* @{bigint.fromuinteger} (convert from lua integers, but read as unsigned integer)
-* @{bigint.frominteger} (convert from lua integers, preserving the sign)
-* @{bigint.fromnumber} (convert from lua floats, truncating the fractional part)
-* @{bigint.frombase} (convert from arbitrary bases, like hexadecimal)
-* @{bigint.new} (convert from anything, asserts on invalid values)
-* @{bigint.convert} (convert form anything, returns nil on invalid values)
-* @{bigint.parse} (convert from anything, returns a lua number as fallback)
-* @{bigint.zero}
-* @{bigint.one}
-* `bigint`
+* @{bint.fromuinteger} (convert from lua integers, but read as unsigned integer)
+* @{bint.frominteger} (convert from lua integers, preserving the sign)
+* @{bint.fromnumber} (convert from lua floats, truncating the fractional part)
+* @{bint.frombase} (convert from arbitrary bases, like hexadecimal)
+* @{bint.new} (convert from anything, asserts on invalid values)
+* @{bint.convert} (convert form anything, returns nil on invalid values)
+* @{bint.parse} (convert from anything, returns a lua number as fallback)
+* @{bint.zero}
+* @{bint.one}
+* `bint`
 
-You can also call `bigint` as it is an alias to `bigint.new`.
-In doubt use @{bigint.new} to create a new bigint.
+You can also call `bint` as it is an alias to `bint.new`.
+In doubt use @{bint.new} to create a new bint.
 
 Then you can use all the usual lua numeric operations on it,
 all the arithmetic metamethods are implemented.
 When you are done computing and need to get the result,
 get the output from one of the following functions:
 
-* @{bigint.touinteger} (convert to a lua integer, wraps around as an unsigned integer)
-* @{bigint.tointeger} (convert to a lua integer, always preserving the sign)
-* @{bigint.tonumber} (convert to lua float, losing precision)
-* @{bigint.tobase} (convert to a string in any base)
-* @{bigint.__tostring} (convert to a string in base 10)
+* @{bint.touinteger} (convert to a lua integer, wraps around as an unsigned integer)
+* @{bint.tointeger} (convert to a lua integer, always preserving the sign)
+* @{bint.tonumber} (convert to lua float, losing precision)
+* @{bint.tobase} (convert to a string in any base)
+* @{bint.__tostring} (convert to a string in base 10)
 
 Note that outputting to a lua number will make the integer overflow and its value wraps around.
-To output very large integer with no loss of precision you probably want to use @{bigint.tobase}
+To output very large integer with no loss of precision you probably want to use @{bint.tobase}
 or call `tostring` to get a string representation.
 
 ## Precautions
 
 All library functions can be mixed with lua numbers,
-this makes easy to mix operations between bigints and lua numbers,
+this makes easy to mix operations between bints and lua numbers,
 however the user should take care in some situations:
 
 * Don't mix integers and float operations if you want to work with integers only.
 * Don't use the regular equal operator ('==') to compare values from this library,
 unless you know in advance that both values are of the same primitive type,
-otherwise it will always returns false, use @{bigint.eq} to be safe.
+otherwise it will always returns false, use @{bint.eq} to be safe.
 * Don't pass fractional numbers to functions that an integer is expected
 as this will throw assertions.
 * Remember that casting back to lua integers or numbers precision can be lost.
-* For dividing while preserving integers use the @{bigint.__idiv} (the '//' operator).
-* For doing power operation preserving integers use the @{bigint.ipow} function.
-* Configure the internal integer fixed width using @{bigint.scale}
+* For dividing while preserving integers use the @{bint.__idiv} (the '//' operator).
+* For doing power operation preserving integers use the @{bint.ipow} function.
+* Configure the internal integer fixed width using @{bint.scale}
 to the proper size you intend to work with, otherwise large integers may wraps around.
 
 ]]
 
-local bigint = {}
-bigint.__index = bigint
+local bint = {}
+bint.__index = bint
 
--- Constants used internally and modified by bigint.scale
+-- Constants used internally and modified by bint.scale
 local BIGINT_SIZE
 local BIGINT_WORDBITS
 local BIGINT_WORDMAX
@@ -130,12 +130,12 @@ local function luainteger_bitsize()
   return i
 end
 
---- Scale bigint's integer width to represent integers of the desired bit size.
+--- Scale bint's integer width to represent integers of the desired bit size.
 -- Must be called only once on startup.
 -- @param bits Number of bits for the integer representation, must be multiple of wordbits and
 -- at least 64.
 -- @param[opt] wordbits Number of the bits for the internal world, defaults to 32.
-function bigint.scale(bits, wordbits)
+function bint.scale(bits, wordbits)
   wordbits = wordbits or 32
   assert(bits % wordbits == 0, 'bitsize is not multiple of word bitsize')
   assert(2*wordbits <= luainteger_bitsize(), 'word bitsize must be half of the lua integer bitsize')
@@ -145,13 +145,13 @@ function bigint.scale(bits, wordbits)
   BIGINT_WORDMAX = (1 << BIGINT_WORDBITS) - 1
   BIGINT_SIGNBIT = (1 << (BIGINT_WORDBITS - 1))
   BIGINT_HALFMAX = 1 + BIGINT_WORDMAX // 2
-  BIGINT_MATHMININTEGER = bigint.new(math.mininteger)
-  BIGINT_MATHMAXINTEGER = bigint.new(math.maxinteger)
+  BIGINT_MATHMININTEGER = bint.new(math.mininteger)
+  BIGINT_MATHMAXINTEGER = bint.new(math.maxinteger)
 end
 
--- Create a new bigint without initializing.
-local function bigint_newempty()
-  return setmetatable({}, bigint)
+-- Create a new bint without initializing.
+local function bint_newempty()
+  return setmetatable({}, bint)
 end
 
 -- Convert a value to a lua integer without losing precision.
@@ -167,13 +167,13 @@ local function tointeger(x)
   return x
 end
 
--- Check if the input is a bigint.
-local function isbigint(x)
-  return getmetatable(x) == bigint
+-- Check if the input is a bint.
+local function isbint(x)
+  return getmetatable(x) == bint
 end
 
--- Assign bigint to an unsigned integer.  Used only internally.
-function bigint:_fromuinteger(x)
+-- Assign bint to an unsigned integer.  Used only internally.
+function bint:_fromuinteger(x)
   for i=1,BIGINT_SIZE do
     self[i] = x & BIGINT_WORDMAX
     x = x >> BIGINT_WORDBITS
@@ -181,53 +181,53 @@ function bigint:_fromuinteger(x)
   return self
 end
 
---- Create a bigint from an unsigned integer.
+--- Create a bint from an unsigned integer.
 -- Treats signed integers as an unsigned integer.
 -- @param x A value to initialize from convertible to a lua integer.
--- @return A new bigint or nil in case the input cannot be represented by an integer.
--- @see bigint.frominteger
-function bigint.fromuinteger(x)
+-- @return A new bint or nil in case the input cannot be represented by an integer.
+-- @see bint.frominteger
+function bint.fromuinteger(x)
   x = tointeger(x)
   if not x then
     return nil
   elseif x == 1 then
-    return bigint.one()
+    return bint.one()
   elseif x == 0 then
-    return bigint.zero()
+    return bint.zero()
   end
-  return bigint_newempty():_fromuinteger(x)
+  return bint_newempty():_fromuinteger(x)
 end
 
---- Create a bigint from a signed integer.
+--- Create a bint from a signed integer.
 -- @param x A value to initialize from convertible to a lua integer.
--- @return A new bigint or nil in case the input cannot be represented by an integer.
--- @see bigint.fromuinteger
-function bigint.frominteger(x)
+-- @return A new bint or nil in case the input cannot be represented by an integer.
+-- @see bint.fromuinteger
+function bint.frominteger(x)
   x = tointeger(x)
   if not x then
     return nil
   elseif  x == 1 then
-    return bigint.one()
+    return bint.one()
   elseif x == 0 then
-    return bigint.zero()
+    return bint.zero()
   end
   local neg = false
   if x < 0 then
     x = math.abs(x)
     neg = true
   end
-  local n = bigint_newempty():_fromuinteger(x)
+  local n = bint_newempty():_fromuinteger(x)
   if neg then
     n:_unm()
   end
   return n
 end
 
---- Create a bigint from a number.
+--- Create a bint from a number.
 -- Floats values are truncated, that is, the fractional port is discarded.
 -- @param x A value to initialize from convertible to a lua number.
--- @return A new bigint or nil in case the input cannot be represented by an integer.
-function bigint.fromnumber(x)
+-- @return A new bint or nil in case the input cannot be represented by an integer.
+function bint.fromnumber(x)
   x = tonumber(x)
   if not x then
     return nil
@@ -237,7 +237,7 @@ function bigint.fromnumber(x)
     -- truncate to integer
     x = math.modf(x)
   end
-  return bigint.frominteger(x)
+  return bint.frominteger(x)
 end
 
 local basesteps = {}
@@ -268,13 +268,13 @@ local function ipow(x, y)
   return r
 end
 
---- Create a bigint from a string of the desired base.
+--- Create a bint from a string of the desired base.
 -- @param s The string to be converted from,
 -- must have only alphanumeric and '+-' characters.
 -- @param[opt] base Base that the number is represented, defaults to 10.
 -- Must be at least 2 and at most 36.
--- @return A new bigint or nil in case the conversion failed.
-function bigint.frombase(s, base)
+-- @return A new bint or nil in case the conversion failed.
+function bint.frombase(s, base)
   if type(s) ~= 'string' then
     return nil
   end
@@ -289,7 +289,7 @@ function bigint.frombase(s, base)
     -- invalid integer string representation
     return nil
   end
-  local n = bigint.zero()
+  local n = bint.zero()
   local step = getbasestep(base)
   for i=1,#int,step do
     local part = int:sub(i,i+step-1)
@@ -306,15 +306,15 @@ function bigint.frombase(s, base)
   return n
 end
 
---- Convert a bigint to an unsigned integer.
+--- Convert a bint to an unsigned integer.
 -- Note that large unsigned integers may be represented as negatives in lua integers.
 -- Note that lua cannot represent values larger than 64 bits,
 -- in that case integer values wraps around.
--- @param x A bigint or a number to be converted into an unsigned integer.
+-- @param x A bint or a number to be converted into an unsigned integer.
 -- @return An integer or nil in case the input cannot be represented by an integer.
--- @see bigint.tointeger
-function bigint.touinteger(x)
-  if isbigint(x) then
+-- @see bint.tointeger
+function bint.touinteger(x)
+  if isbint(x) then
     local n = 0
     for i=1,BIGINT_SIZE do
       n = n | (x[i] << (BIGINT_WORDBITS * (i - 1)))
@@ -325,15 +325,15 @@ function bigint.touinteger(x)
   end
 end
 
---- Convert a bigint to a signed integer.
+--- Convert a bint to a signed integer.
 -- It works by taking absolute values then applying the sign bit in case needed.
 -- Note that lua cannot represent values larger than 64 bits,
 -- in that case integer values wraps around.
--- @param x A bigint or value to be converted into an unsigned integer.
+-- @param x A bint or value to be converted into an unsigned integer.
 -- @return An integer or nil in case the input cannot be represented by an integer.
--- @see bigint.touinteger
-function bigint.tointeger(x)
-  if isbigint(x) then
+-- @see bint.touinteger
+function bint.tointeger(x)
+  if isbint(x) then
     local n = 0
     local neg = x:isneg()
     if neg then
@@ -351,18 +351,18 @@ function bigint.tointeger(x)
   end
 end
 
-local function bigint_assert_tointeger(x)
-  return assert(bigint.tointeger(x), 'value has no integer representation')
+local function bint_assert_tointeger(x)
+  return assert(bint.tointeger(x), 'value has no integer representation')
 end
 
---- Convert a bigint to a lua number.
--- Different from @{bigint.tointeger} the operation does not wraps around integers,
+--- Convert a bint to a lua number.
+-- Different from @{bint.tointeger} the operation does not wraps around integers,
 -- but digits precision may be lost in the process of converting to a float.
--- @param x A bigint or value to be converted into a number.
+-- @param x A bint or value to be converted into a number.
 -- @return An integer or nil in case the input cannot be represented by a number.
--- @see bigint.tointeger
-function bigint.tonumber(x)
-  if isbigint(x) then
+-- @see bint.tointeger
+function bint.tonumber(x)
+  if isbint(x) then
     if x >= BIGINT_MATHMININTEGER and x <= BIGINT_MATHMAXINTEGER then
       return x:tointeger()
     else
@@ -373,7 +373,7 @@ function bigint.tonumber(x)
   end
 end
 
--- Compute base letters to use in bigint.tobase
+-- Compute base letters to use in bint.tobase
 local BASE_LETTERS = {}
 do
   for i=1,36 do
@@ -388,16 +388,16 @@ local function idivmod(x, y)
   return quot, rem
 end
 
---- Convert a bigint to a string in the desired base.
--- @param x The bigint to be converted from.
+--- Convert a bint to a string in the desired base.
+-- @param x The bint to be converted from.
 -- @param[opt] base Base to be represented, defaults to 10.
 -- Must be at least 2 and at most 36.
 -- @param[opt] unsigned Whether to output as unsigned integer.
 -- Defaults to true for base 10 and false for others.
 -- @return A string representing the input.
 -- @raise An assert is thrown in case the base is invalid.
-function bigint.tobase(x, base, unsigned)
-  x = bigint.convert(x)
+function bint.tobase(x, base, unsigned)
+  x = bint.convert(x)
   if not x then
     -- x is a fractional float or something else
     return nil
@@ -423,7 +423,7 @@ function bigint.tobase(x, base, unsigned)
   end
   while not stop do
     local ix
-    x, ix = bigint.udivmod(x, divisor)
+    x, ix = bint.udivmod(x, divisor)
     ix = ix:tointeger()
     stop = x:iszero()
     for _=1,step do
@@ -442,71 +442,71 @@ function bigint.tobase(x, base, unsigned)
   return table.concat(ss)
 end
 
--- Convert lua numbers and strings to a bigint
-local function bigint_fromvalue(x)
+-- Convert lua numbers and strings to a bint
+local function bint_fromvalue(x)
   local ty = type(x)
   if ty == 'number' then
-    return bigint.frominteger(x)
+    return bint.frominteger(x)
   elseif ty == 'string' then
-    return bigint.frombase(x, 10)
+    return bint.frombase(x, 10)
   end
   return nil
 end
 
---- Create a new bigint from a value.
--- @param x A value convertible to a bigint (string, number or another bigint).
--- @return A new bigint, guaranteed to be a new reference in case needed.
--- @raise An assert is thrown in case x is not convertible to a bigint.
--- @see bigint.convert
--- @see bigint.parse
-function bigint.new(x)
-  if isbigint(x) then
+--- Create a new bint from a value.
+-- @param x A value convertible to a bint (string, number or another bint).
+-- @return A new bint, guaranteed to be a new reference in case needed.
+-- @raise An assert is thrown in case x is not convertible to a bint.
+-- @see bint.convert
+-- @see bint.parse
+function bint.new(x)
+  if isbint(x) then
     -- return a clone
     local n = {}
     for i=1,BIGINT_SIZE do
       n[i] = x[i]
     end
-    return setmetatable(n, bigint)
+    return setmetatable(n, bint)
   else
-    x = bigint_fromvalue(x)
+    x = bint_fromvalue(x)
   end
-  assert(x, 'value cannot be represented by a bigint')
+  assert(x, 'value cannot be represented by a bint')
   return x
 end
 
---- Convert a value to a bigint if possible.
--- @param x A value to be converted (string, number or another bigint).
--- @param[opt] clone A boolean that tells if a new bigint reference should be returned.
+--- Convert a value to a bint if possible.
+-- @param x A value to be converted (string, number or another bint).
+-- @param[opt] clone A boolean that tells if a new bint reference should be returned.
 -- Defaults to false.
--- @return A bigint or nil in case the conversion failed.
--- @see bigint.new
--- @see bigint.parse
-function bigint.convert(x, clone)
-  if isbigint(x) then
+-- @return A bint or nil in case the conversion failed.
+-- @see bint.new
+-- @see bint.parse
+function bint.convert(x, clone)
+  if isbint(x) then
     if clone then
-      return bigint.new(x)
+      return bint.new(x)
     else
       return x
     end
   else
-    return bigint_fromvalue(x)
+    return bint_fromvalue(x)
   end
 end
 
-local function bigint_assert_convert(x)
-  return assert(bigint.convert(x), 'value has not integer representation')
+local function bint_assert_convert(x)
+  return assert(bint.convert(x), 'value has not integer representation')
 end
 
---- Convert a value to a bigint if possible otherwise to a lua number.
+--- Convert a value to a bint if possible otherwise to a lua number.
 -- Useful to prepare values that you are unsure if its going to be a integer or float.
--- @param x A value to be converted (string, number or another bigint).
--- @param[opt] clone A boolean that tells if a new bigint reference should be returned.
+-- @param x A value to be converted (string, number or another bint).
+-- @param[opt] clone A boolean that tells if a new bint reference should be returned.
 -- Defaults to false.
--- @return A bigint or a lua number or nil in case the conversion failed.
--- @see bigint.new
--- @see bigint.convert
-function bigint.parse(x, clone)
-  local i = bigint.convert(x, clone)
+-- @return A bint or a lua number or nil in case the conversion failed.
+-- @see bint.new
+-- @see bint.convert
+function bint.parse(x, clone)
+  local i = bint.convert(x, clone)
   if i then
     return i
   else
@@ -514,10 +514,10 @@ function bigint.parse(x, clone)
   end
 end
 
---- Check if a number is 0 considering bigints.
--- @param x A bigint or a lua number.
-function bigint.iszero(x)
-  if isbigint(x) then
+--- Check if a number is 0 considering bints.
+-- @param x A bint or a lua number.
+function bint.iszero(x)
+  if isbint(x) then
     for i=1,BIGINT_SIZE do
       if x[i] ~= 0 then
         return false
@@ -529,10 +529,10 @@ function bigint.iszero(x)
   end
 end
 
---- Check if a number is 1 considering bigints.
--- @param x A bigint or a lua number.
-function bigint.isone(x)
-  if isbigint(x) then
+--- Check if a number is 1 considering bints.
+-- @param x A bint or a lua number.
+function bint.isone(x)
+  if isbint(x) then
     if x[1] ~= 1 then
       return false
     end
@@ -547,10 +547,10 @@ function bigint.isone(x)
   end
 end
 
---- Check if a number is -1 considering bigints.
--- @param x A bigint or a lua number.
-function bigint.isminusone(x)
-  if isbigint(x) then
+--- Check if a number is -1 considering bints.
+-- @param x A bint or a lua number.
+function bint.isminusone(x)
+  if isbint(x) then
     for i=1,BIGINT_SIZE do
       if x[i] ~= BIGINT_WORDMAX then
         return false
@@ -562,62 +562,62 @@ function bigint.isminusone(x)
   end
 end
 
---- Check if a number is negative considering bigints.
--- Zero is guaranteed to never be negative for bigints.
--- @param x A bigint or a lua number.
-function bigint.isneg(x)
-  if isbigint(x) then
+--- Check if a number is negative considering bints.
+-- Zero is guaranteed to never be negative for bints.
+-- @param x A bint or a lua number.
+function bint.isneg(x)
+  if isbint(x) then
     return x[BIGINT_SIZE] & BIGINT_SIGNBIT ~= 0
   else
     return x < 0
   end
 end
 
---- Check if a number is positive considering bigints.
--- @param x A bigint or a lua number.
-function bigint.ispos(x)
-  if isbigint(x) then
+--- Check if a number is positive considering bints.
+-- @param x A bint or a lua number.
+function bint.ispos(x)
+  if isbint(x) then
     return not x:isneg() and not x:iszero()
   else
     return x > 0
   end
 end
 
---- Check if a number is even considering bigints.
--- @param x A bigint or a lua number.
-function bigint.iseven(x)
-  if isbigint(x) then
+--- Check if a number is even considering bints.
+-- @param x A bint or a lua number.
+function bint.iseven(x)
+  if isbint(x) then
     return x[1] & 1 == 0
   else
     return math.abs(x) % 2 == 0
   end
 end
 
---- Check if a number is odd considering bigints.
--- @param x A bigint or a lua number.
-function bigint.isodd(x)
-  if isbigint(x) then
+--- Check if a number is odd considering bints.
+-- @param x A bint or a lua number.
+function bint.isodd(x)
+  if isbint(x) then
     return x[1] & 1 == 1
   else
     return math.abs(x) % 2 == 1
   end
 end
 
---- Assign a bigint to zero (in-place).
-function bigint:_zero()
+--- Assign a bint to zero (in-place).
+function bint:_zero()
   for i=1,BIGINT_SIZE do
     self[i] = 0
   end
   return self
 end
 
---- Create a new bigint with 0 value.
-function bigint.zero()
-  return bigint_newempty():_zero()
+--- Create a new bint with 0 value.
+function bint.zero()
+  return bint_newempty():_zero()
 end
 
---- Assign a bigint to 1 (in-place).
-function bigint:_one()
+--- Assign a bint to 1 (in-place).
+function bint:_one()
   self[1] = 1
   for i=2,BIGINT_SIZE do
     self[i] = 0
@@ -625,13 +625,13 @@ function bigint:_one()
   return self
 end
 
---- Create a new bigint with 1 value.
-function bigint.one()
-  return bigint_newempty():_one()
+--- Create a new bint with 1 value.
+function bint.one()
+  return bint_newempty():_one()
 end
 
---- Bitwise left shift a bigint in one bit (in-place).
-function bigint:_shlone()
+--- Bitwise left shift a bint in one bit (in-place).
+function bint:_shlone()
   local wordbitsm1 = BIGINT_WORDBITS - 1
   for i=BIGINT_SIZE,2,-1 do
     self[i] = ((self[i] << 1) | (self[i-1] >> wordbitsm1)) & BIGINT_WORDMAX
@@ -640,8 +640,8 @@ function bigint:_shlone()
   return self
 end
 
---- Bitwise right shift a bigint in one bit (in-place).
-function bigint:_shrone()
+--- Bitwise right shift a bint in one bit (in-place).
+function bint:_shrone()
   local wordbitsm1 = BIGINT_WORDBITS - 1
   for i=1,BIGINT_SIZE-1 do
     self[i] = ((self[i] >> 1) | (self[i+1] << wordbitsm1)) & BIGINT_WORDMAX
@@ -650,8 +650,8 @@ function bigint:_shrone()
   return self
 end
 
--- Bitwise left shift words of a bigint (in-place). Used only internally.
-function bigint:_shlwords(n)
+-- Bitwise left shift words of a bint (in-place). Used only internally.
+function bint:_shlwords(n)
   for i=BIGINT_SIZE,n+1,-1 do
     self[i] = self[i - n]
   end
@@ -661,8 +661,8 @@ function bigint:_shlwords(n)
   return self
 end
 
--- Bitwise right shift words of a bigint (in-place). Used only internally.
-function bigint:_shrwords(n)
+-- Bitwise right shift words of a bint (in-place). Used only internally.
+function bint:_shrwords(n)
   if n < BIGINT_SIZE then
     for i=1,BIGINT_SIZE-n+1 do
       self[i] = self[i + n]
@@ -678,8 +678,8 @@ function bigint:_shrwords(n)
   return self
 end
 
---- Increment a bigint by one (in-place).
-function bigint:_inc()
+--- Increment a bint by one (in-place).
+function bint:_inc()
   for i=1,BIGINT_SIZE do
     local tmp = self[i]
     local v = (tmp + 1) & BIGINT_WORDMAX
@@ -691,10 +691,10 @@ function bigint:_inc()
   return self
 end
 
---- Increment a number by one considering bigints.
--- @param x A bigint or a lua number to increment.
-function bigint.inc(x)
-  local ix = bigint.convert(x, true)
+--- Increment a number by one considering bints.
+-- @param x A bint or a lua number to increment.
+function bint.inc(x)
+  local ix = bint.convert(x, true)
   if ix then
     return ix:_inc()
   else
@@ -702,8 +702,8 @@ function bigint.inc(x)
   end
 end
 
---- Decrement a bigint by one (in-place).
-function bigint:_dec()
+--- Decrement a bint by one (in-place).
+function bint:_dec()
   for i=1,BIGINT_SIZE do
     local tmp = self[i]
     local v = (tmp - 1) & BIGINT_WORDMAX
@@ -715,10 +715,10 @@ function bigint:_dec()
   return self
 end
 
---- Decrement a number by one considering bigints.
--- @param x A bigint or a lua number to decrement.
-function bigint.dec(x)
-  local ix = bigint.convert(x, true)
+--- Decrement a number by one considering bints.
+-- @param x A bint or a lua number to decrement.
+function bint.dec(x)
+  local ix = bint.convert(x, true)
   if ix then
     return ix:_dec()
   else
@@ -726,29 +726,29 @@ function bigint.dec(x)
   end
 end
 
---- Assign a bigint to a new value (in-place).
+--- Assign a bint to a new value (in-place).
 -- @param y A value to be copied from.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint:_assign(y)
-  y = bigint_assert_convert(y)
+function bint:_assign(y)
+  y = bint_assert_convert(y)
   for i=1,BIGINT_SIZE do
     self[i] = y[i]
   end
   return self
 end
 
---- Take absolute of a bigint (in-place).
-function bigint:_abs()
+--- Take absolute of a bint (in-place).
+function bint:_abs()
   if self:isneg() then
     self:_unm()
   end
   return self
 end
 
---- Take absolute of a number considering bigints.
--- @param x A bigint or a lua number to take the absolute.
-function bigint.abs(x)
-  local ix = bigint.convert(x, true)
+--- Take absolute of a number considering bints.
+-- @param x A bint or a lua number to take the absolute.
+function bint.abs(x)
+  local ix = bint.convert(x, true)
   if ix then
     return ix:_abs()
   else
@@ -756,11 +756,11 @@ function bigint.abs(x)
   end
 end
 
---- Add an integer to a bigint (in-place).
+--- Add an integer to a bint (in-place).
 -- @param y An integer to be added.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint:_add(y)
-  y = bigint_assert_convert(y)
+function bint:_add(y)
+  y = bint_assert_convert(y)
   local carry = 0
   for i=1,BIGINT_SIZE do
     local tmp = self[i] + y[i] + carry
@@ -770,24 +770,24 @@ function bigint:_add(y)
   return self
 end
 
---- Add two numbers considering bigints.
--- @param x A bigint or a lua number to be added.
--- @param y A bigint or a lua number to be added.
-function bigint.__add(x, y)
-  local ix = bigint.convert(x, true)
-  local iy = bigint.convert(y)
+--- Add two numbers considering bints.
+-- @param x A bint or a lua number to be added.
+-- @param y A bint or a lua number to be added.
+function bint.__add(x, y)
+  local ix = bint.convert(x, true)
+  local iy = bint.convert(y)
   if ix and iy then
     return ix:_add(iy)
   else
-    return bigint.tonumber(x) + bigint.tonumber(y)
+    return bint.tonumber(x) + bint.tonumber(y)
   end
 end
 
---- Subtract an integer from a bigint (in-place).
+--- Subtract an integer from a bint (in-place).
 -- @param y An integer to subtract.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint:_sub(y)
-  y = bigint_assert_convert(y)
+function bint:_sub(y)
+  y = bint_assert_convert(y)
   local borrow = 0
   for i=1,BIGINT_SIZE do
     local tmp1 = self[i] + (BIGINT_WORDMAX + 1)
@@ -799,28 +799,28 @@ function bigint:_sub(y)
   return self
 end
 
---- Subtract two numbers considering bigints.
--- @param x A bigint or a lua number to be subtract from.
--- @param y A bigint or a lua number to subtract.
-function bigint.__sub(x, y)
-  local ix = bigint.convert(x, true)
-  local iy = bigint.convert(y)
+--- Subtract two numbers considering bints.
+-- @param x A bint or a lua number to be subtract from.
+-- @param y A bint or a lua number to subtract.
+function bint.__sub(x, y)
+  local ix = bint.convert(x, true)
+  local iy = bint.convert(y)
   if ix and iy then
     return ix:_sub(iy)
   else
-    return bigint.tonumber(x) - bigint.tonumber(y)
+    return bint.tonumber(x) - bint.tonumber(y)
   end
 end
 
---- Multiply two numbers considering bigints.
--- @param x A bigint or a lua number to multiply.
--- @param y A bigint or a lua number to multiply.
-function bigint.__mul(x, y)
-  local ix = bigint.convert(x)
-  local iy = bigint.convert(y)
+--- Multiply two numbers considering bints.
+-- @param x A bint or a lua number to multiply.
+-- @param y A bint or a lua number to multiply.
+function bint.__mul(x, y)
+  local ix = bint.convert(x)
+  local iy = bint.convert(y)
   if ix and iy then
-    local row, tmp = bigint_newempty(), bigint_newempty()
-    local res = bigint.zero()
+    local row, tmp = bint_newempty(), bint_newempty()
+    local res = bint.zero()
     for i=1,BIGINT_SIZE do
       row:_zero()
       for j=1,BIGINT_SIZE do
@@ -833,20 +833,20 @@ function bigint.__mul(x, y)
     end
     return res
   else
-    return bigint.tonumber(x) * bigint.tonumber(y)
+    return bint.tonumber(x) * bint.tonumber(y)
   end
 end
 
---- Perform unsigned division between two integers considering bigints.
--- @param x The numerator, must be a bigint or a lua integer.
--- @param y The denominator, must be a bigint or a lua integer.
--- @return The quotient, a bigint.
+--- Perform unsigned division between two integers considering bints.
+-- @param x The numerator, must be a bint or a lua integer.
+-- @param y The denominator, must be a bint or a lua integer.
+-- @return The quotient, a bint.
 -- @raise Asserts on attempt to divide by zero
 -- or if inputs are not convertible to integers.
-function bigint.udiv(x, y)
-  local current = bigint.one()
-  local dividend = bigint.new(x)
-  local denom = bigint.new(y)
+function bint.udiv(x, y)
+  local current = bint.one()
+  local dividend = bint.new(x)
+  local denom = bint.new(y)
   assert(not denom:iszero(), 'attempt to divide by zero')
   local overflow = false
   while denom:ule(dividend) do
@@ -861,7 +861,7 @@ function bigint.udiv(x, y)
     current:_shrone()
     denom:_shrone()
   end
-  local quot = bigint.zero()
+  local quot = bint.zero()
   while not current:iszero() do
     if denom:ule(dividend) then
       dividend:_sub(denom)
@@ -873,48 +873,48 @@ function bigint.udiv(x, y)
   return quot
 end
 
---- Perform unsigned division and modulo operation between two integers considering bigints.
--- This is effectively the same of @{bigint.udiv} and @{bigint.umod}.
--- @param x The numerator, must be a bigint or a lua integer.
--- @param y The denominator, must be a bigint or a lua integer.
--- @return The quotient following the remainder, both bigints.
+--- Perform unsigned division and modulo operation between two integers considering bints.
+-- This is effectively the same of @{bint.udiv} and @{bint.umod}.
+-- @param x The numerator, must be a bint or a lua integer.
+-- @param y The denominator, must be a bint or a lua integer.
+-- @return The quotient following the remainder, both bints.
 -- @raise Asserts on attempt to divide by zero
 -- or if inputs are not convertible to integers.
--- @see bigint.udiv
--- @see bigint.umod
-function bigint.udivmod(x, y)
-  x, y = bigint_assert_convert(x), bigint_assert_convert(y)
-  local quot = bigint.udiv(x, y)
+-- @see bint.udiv
+-- @see bint.umod
+function bint.udivmod(x, y)
+  x, y = bint_assert_convert(x), bint_assert_convert(y)
+  local quot = bint.udiv(x, y)
   local rem = x - (quot * y)
   return quot, rem
 end
 
---- Perform unsigned integer modulo operation between two integers considering bigints.
--- @param x The numerator, must be a bigint or a lua integer.
--- @param y The denominator, must be a bigint or a lua integer.
--- @return The remainder, a bigint.
+--- Perform unsigned integer modulo operation between two integers considering bints.
+-- @param x The numerator, must be a bint or a lua integer.
+-- @param y The denominator, must be a bint or a lua integer.
+-- @return The remainder, a bint.
 -- @raise Asserts on attempt to divide by zero
 -- or if the inputs are not convertible to integers.
-function bigint.umod(x, y)
-  local _, rem = bigint.udivmod(x, y)
+function bint.umod(x, y)
+  local _, rem = bint.udivmod(x, y)
   return rem
 end
 
---- Perform floor division between two numbers considering bigints.
+--- Perform floor division between two numbers considering bints.
 -- Floor division is a division that rounds the quotient towards minus infinity,
 -- resulting in the floor of the division of its operands.
--- @param x The numerator, a bigint or lua number.
--- @param y The denominator, a bigint or lua number.
--- @return The quotient, a bigint or lua number.
+-- @param x The numerator, a bint or lua number.
+-- @param y The denominator, a bint or lua number.
+-- @return The quotient, a bint or lua number.
 -- @raise Asserts on attempt to divide by zero.
-function bigint.__idiv(x, y)
-  local ix = bigint.convert(x)
-  local iy = bigint.convert(y)
+function bint.__idiv(x, y)
+  local ix = bint.convert(x)
+  local iy = bint.convert(y)
   if ix and iy then
     if iy:isminusone() then
       return -ix
     end
-    local quot = bigint.udiv(ix:abs(), iy:abs())
+    local quot = bint.udiv(ix:abs(), iy:abs())
     if ix:isneg() ~= iy:isneg() then
       quot:_unm()
       -- round quotient towards minus infinity
@@ -925,67 +925,67 @@ function bigint.__idiv(x, y)
     end
     return quot
   else
-    return bigint.tonumber(x) // bigint.tonumber(y)
+    return bint.tonumber(x) // bint.tonumber(y)
   end
 end
 
---- Perform division between two numbers considering bigints.
--- This always cast inputs to floats, for integer division only use @{bigint.__idiv}.
--- @param x The numerator, a bigint or lua number.
--- @param y The denominator, a bigint or lua number.
+--- Perform division between two numbers considering bints.
+-- This always cast inputs to floats, for integer division only use @{bint.__idiv}.
+-- @param x The numerator, a bint or lua number.
+-- @param y The denominator, a bint or lua number.
 -- @return The quotient, a lua number.
-function bigint.__div(x, y)
-  return bigint.tonumber(x) / bigint.tonumber(y)
+function bint.__div(x, y)
+  return bint.tonumber(x) / bint.tonumber(y)
 end
 
---- Perform integer floor division and modulo operation between two numbers considering bigints.
--- This is effectively the same of @{bigint.__idiv} and @{bigint.__mod}.
--- @param x The numerator, a bigint or lua number.
--- @param y The denominator, a bigint or lua number.
--- @return The quotient following the remainder, both bigint or lua number.
+--- Perform integer floor division and modulo operation between two numbers considering bints.
+-- This is effectively the same of @{bint.__idiv} and @{bint.__mod}.
+-- @param x The numerator, a bint or lua number.
+-- @param y The denominator, a bint or lua number.
+-- @return The quotient following the remainder, both bint or lua number.
 -- @raise Asserts on attempt to divide by zero.
--- @see bigint.__idiv
--- @see bigint.__mod
-function bigint.idivmod(x, y)
-  local ix = bigint.convert(x)
-  local iy = bigint.convert(y)
+-- @see bint.__idiv
+-- @see bint.__mod
+function bint.idivmod(x, y)
+  local ix = bint.convert(x)
+  local iy = bint.convert(y)
   if ix and iy then
     return idivmod(ix, iy)
   else
-    return idivmod(bigint.tonumber(x), bigint.tonumber(y))
+    return idivmod(bint.tonumber(x), bint.tonumber(y))
   end
 end
 
---- Perform integer floor modulo operation between two numbers considering bigints.
+--- Perform integer floor modulo operation between two numbers considering bints.
 -- The operation is defined as the remainder of the floor division
 -- (division that rounds the quotient towards minus infinity).
--- @param x The numerator, a bigint or lua number.
--- @param y The denominator, a bigint or lua number.
--- @return The remainder, a bigint or lua number.
+-- @param x The numerator, a bint or lua number.
+-- @param y The denominator, a bint or lua number.
+-- @return The remainder, a bint or lua number.
 -- @raise Asserts on attempt to divide by zero.
-function bigint.__mod(x, y)
-  local _, rem = bigint.idivmod(x, y)
+function bint.__mod(x, y)
+  local _, rem = bint.idivmod(x, y)
   return rem
 end
 
---- Perform integer power between two integers considering bigints.
+--- Perform integer power between two integers considering bints.
 -- @param x The base, an integer.
 -- @param y The exponent, cannot be negative, an integer.
--- @return The result of the pow operation, a bigint.
+-- @return The result of the pow operation, a bint.
 -- @raise Asserts on attempt to pow with a negative exponent
 -- or if inputs are not convertible to integers.
--- @see bigint.__pow
-function bigint.ipow(x, y)
-  y = bigint_assert_convert(y)
+-- @see bint.__pow
+function bint.ipow(x, y)
+  y = bint_assert_convert(y)
   assert(not y:isneg(), "attempt to pow to a negative power")
   if y:iszero() then
-    return bigint.one()
+    return bint.one()
   elseif y:isone() then
-    return bigint.new(x)
+    return bint.new(x)
   end
   -- compute exponentiation by squaring
-  x, y = bigint.new(x),  bigint.new(y)
-  local z = bigint.one()
+  x, y = bint.new(x),  bint.new(y)
+  local z = bint.one()
   repeat
     if y:iseven() then
       x = x * x
@@ -999,23 +999,23 @@ function bigint.ipow(x, y)
   return x * z
 end
 
---- Perform numeric power between two numbers considering bigints.
--- This always cast inputs to floats, for integer power only use @{bigint.ipow}.
--- @param x The base, a bigint or lua number.
--- @param y The exponent, a bigint or lua number.
+--- Perform numeric power between two numbers considering bints.
+-- This always cast inputs to floats, for integer power only use @{bint.ipow}.
+-- @param x The base, a bint or lua number.
+-- @param y The exponent, a bint or lua number.
 -- @return The result of the pow operation, a lua number.
--- @see bigint.ipow
-function bigint.__pow(x, y)
-  return bigint.tonumber(x) ^ bigint.tonumber(y)
+-- @see bint.ipow
+function bint.__pow(x, y)
+  return bint.tonumber(x) ^ bint.tonumber(y)
 end
 
---- Bitwise left shift integers considering bigints.
+--- Bitwise left shift integers considering bints.
 -- @param x An integer to perform the bitwise shift.
 -- @param y An integer with the number of bits to shift.
--- @return The result of shift operation, a bigint.
+-- @return The result of shift operation, a bint.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint.__shl(x, y)
-  x, y = bigint.new(x), bigint_assert_tointeger(y)
+function bint.__shl(x, y)
+  x, y = bint.new(x), bint_assert_tointeger(y)
   if y < 0 then
     return x >> -y
   end
@@ -1034,13 +1034,13 @@ function bigint.__shl(x, y)
   return x
 end
 
---- Bitwise right shift integers considering bigints.
+--- Bitwise right shift integers considering bints.
 -- @param x An integer to perform the bitwise shift.
 -- @param y An integer with the number of bits to shift.
--- @return The result of shift operation, a bigint.
+-- @return The result of shift operation, a bint.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint.__shr(x, y)
-  x, y = bigint.new(x), bigint_assert_tointeger(y)
+function bint.__shr(x, y)
+  x, y = bint.new(x), bint_assert_tointeger(y)
   if y < 0 then
     return x << -y
   end
@@ -1059,93 +1059,93 @@ function bigint.__shr(x, y)
   return x
 end
 
---- Bitwise AND bigints (in-place).
+--- Bitwise AND bints (in-place).
 -- @param y An integer to perform bitwise AND.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint:_band(y)
-  y = bigint_assert_convert(y)
+function bint:_band(y)
+  y = bint_assert_convert(y)
   for i=1,BIGINT_SIZE do
     self[i] = self[i] & y[i]
   end
   return self
 end
 
---- Bitwise AND two integers considering bigints.
+--- Bitwise AND two integers considering bints.
 -- @param x An integer to perform bitwise AND.
 -- @param y An integer to perform bitwise AND.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint.__band(x, y)
-  return bigint.new(x):_band(y)
+function bint.__band(x, y)
+  return bint.new(x):_band(y)
 end
 
---- Bitwise OR bigints (in-place).
+--- Bitwise OR bints (in-place).
 -- @param y An integer to perform bitwise OR.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint:_bor(y)
-  y = bigint_assert_convert(y)
+function bint:_bor(y)
+  y = bint_assert_convert(y)
   for i=1,BIGINT_SIZE do
     self[i] = self[i] | y[i]
   end
   return self
 end
 
---- Bitwise OR two integers considering bigints.
+--- Bitwise OR two integers considering bints.
 -- @param x An integer to perform bitwise OR.
 -- @param y An integer to perform bitwise OR.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint.__bor(x, y)
-  return bigint.new(x):_bor(y)
+function bint.__bor(x, y)
+  return bint.new(x):_bor(y)
 end
 
---- Bitwise XOR bigints (in-place).
+--- Bitwise XOR bints (in-place).
 -- @param y An integer to perform bitwise XOR.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint:_bxor(y)
-  y = bigint_assert_convert(y)
+function bint:_bxor(y)
+  y = bint_assert_convert(y)
   for i=1,BIGINT_SIZE do
     self[i] = self[i] ~ y[i]
   end
   return self
 end
 
---- Bitwise XOR two integers considering bigints.
+--- Bitwise XOR two integers considering bints.
 -- @param x An integer to perform bitwise XOR.
 -- @param y An integer to perform bitwise XOR.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint.__bxor(x, y)
-  return bigint.new(x):_bxor(y)
+function bint.__bxor(x, y)
+  return bint.new(x):_bxor(y)
 end
 
---- Bitwise NOT a bigint (in-place).
-function bigint:_bnot()
+--- Bitwise NOT a bint (in-place).
+function bint:_bnot()
   for i=1,BIGINT_SIZE do
     self[i] = (~self[i]) & BIGINT_WORDMAX
   end
   return self
 end
 
---- Bitwise NOT a bigint.
+--- Bitwise NOT a bint.
 -- @param x An integer to perform bitwise NOT.
 -- @raise Asserts in case inputs are not convertible to integers.
-function bigint.__bnot(x)
-  return bigint.new(x):_bnot()
+function bint.__bnot(x)
+  return bint.new(x):_bnot()
 end
 
---- Negate a bigint (in-place). This apply effectively apply two's complements.
-function bigint:_unm()
+--- Negate a bint (in-place). This apply effectively apply two's complements.
+function bint:_unm()
   return self:_bnot():_inc()
 end
 
---- Negate a bigint. This apply effectively apply two's complements.
--- @param x A bigint to perform negation.
-function bigint.__unm(x)
-  return bigint.new(x):_unm()
+--- Negate a bint. This apply effectively apply two's complements.
+-- @param x A bint to perform negation.
+function bint.__unm(x)
+  return bint.new(x):_unm()
 end
 
---- Check if bigints are equal.
--- @param x A bigint to compare.
--- @param y A bigint to compare.
-function bigint.__eq(x, y)
+--- Check if bints are equal.
+-- @param x A bint to compare.
+-- @param y A bint to compare.
+function bint.__eq(x, y)
   for i=1,BIGINT_SIZE do
     if x[i] ~= y[i] then
       return false
@@ -1154,12 +1154,12 @@ function bigint.__eq(x, y)
   return true
 end
 
---- Check if numbers are equal considering bigints.
--- @param x A bigint or lua number to compare.
--- @param y A bigint or lua number to compare.
-function bigint.eq(x, y)
-  local ix = bigint.convert(x)
-  local iy = bigint.convert(y)
+--- Check if numbers are equal considering bints.
+-- @param x A bint or lua number to compare.
+-- @param y A bint or lua number to compare.
+function bint.eq(x, y)
+  local ix = bint.convert(x)
+  local iy = bint.convert(y)
   if ix and iy then
     return ix == iy
   else
@@ -1167,13 +1167,13 @@ function bigint.eq(x, y)
   end
 end
 
---- Compare if integer x is less than y considering bigints (unsigned version).
+--- Compare if integer x is less than y considering bints (unsigned version).
 -- @param x Left integer to compare.
 -- @param y Right integer to compare.
 -- @raise Asserts in case inputs are not convertible to integers.
--- @see bigint.__lt
-function bigint.ult(x, y)
-  x, y = bigint_assert_convert(x), bigint_assert_convert(y)
+-- @see bint.__lt
+function bint.ult(x, y)
+  x, y = bint_assert_convert(x), bint_assert_convert(y)
   for i=BIGINT_SIZE,1,-1 do
     if x[i] < y[i] then
       return true
@@ -1184,13 +1184,13 @@ function bigint.ult(x, y)
   return false
 end
 
---- Compare if bigint x is less or equal than y considering bigints (unsigned version).
+--- Compare if bint x is less or equal than y considering bints (unsigned version).
 -- @param x Left integer to compare.
 -- @param y Right integer to compare.
 -- @raise Asserts in case inputs are not convertible to integers.
--- @see bigint.__le
-function bigint.ule(x, y)
-  x, y = bigint_assert_convert(x), bigint_assert_convert(y)
+-- @see bint.__le
+function bint.ule(x, y)
+  x, y = bint_assert_convert(x), bint_assert_convert(y)
   for i=BIGINT_SIZE,1,-1 do
     if x[i] < y[i] then
       return true
@@ -1201,57 +1201,57 @@ function bigint.ule(x, y)
   return true
 end
 
---- Compare if number x is less than y considering bigints and signs.
--- @param x Left value to compare, a bigint or lua number.
--- @param y Right value to compare, a bigint or lua number.
--- @see bigint.ult
-function bigint.__lt(x, y)
-  local ix = bigint.convert(x)
-  local iy = bigint.convert(y)
+--- Compare if number x is less than y considering bints and signs.
+-- @param x Left value to compare, a bint or lua number.
+-- @param y Right value to compare, a bint or lua number.
+-- @see bint.ult
+function bint.__lt(x, y)
+  local ix = bint.convert(x)
+  local iy = bint.convert(y)
   if ix and iy then
     local xneg, yneg = ix:isneg(), iy:isneg()
     if xneg == yneg then
-      return bigint.ult(ix, iy)
+      return bint.ult(ix, iy)
     else
       return xneg and not yneg
     end
   else
-    return bigint.tonumber(x) < bigint.tonumber(y)
+    return bint.tonumber(x) < bint.tonumber(y)
   end
 end
 
---- Compare if number x is less or equal than y considering bigints and signs.
--- @param x Left value to compare, a bigint or lua number.
--- @param y Right value to compare, a bigint or lua number.
--- @see bigint.ule
-function bigint.__le(x, y)
-  local ix = bigint.convert(x)
-  local iy = bigint.convert(y)
+--- Compare if number x is less or equal than y considering bints and signs.
+-- @param x Left value to compare, a bint or lua number.
+-- @param y Right value to compare, a bint or lua number.
+-- @see bint.ule
+function bint.__le(x, y)
+  local ix = bint.convert(x)
+  local iy = bint.convert(y)
   if ix and iy then
     local xneg, yneg = ix:isneg(), iy:isneg()
     if xneg == yneg then
-      return bigint.ule(ix, iy)
+      return bint.ule(ix, iy)
     else
       return xneg and not yneg
     end
   else
-    return bigint.tonumber(x) <= bigint.tonumber(y)
+    return bint.tonumber(x) <= bint.tonumber(y)
   end
 end
 
---- Convert a bigint to a string on base 10.
--- @see bigint.tobase
-function bigint:__tostring()
+--- Convert a bint to a string on base 10.
+-- @see bint.tobase
+function bint:__tostring()
   return self:tobase(10)
 end
 
-setmetatable(bigint, {
+setmetatable(bint, {
   __call = function(_, x)
-    return bigint.new(x)
+    return bint.new(x)
   end
 })
 
 -- set default scale
-bigint.scale(256)
+bint.scale(256)
 
-return bigint
+return bint

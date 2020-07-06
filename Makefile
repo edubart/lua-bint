@@ -1,9 +1,3 @@
-docs:
-	ldoc -d docs -f markdown bigint.lua
-coverage:
-	rm -f *.out
-	lua -lluacov tests.lua
-	luacov
 test:
 	lua tests.lua
 	lua examples/simple.lua
@@ -11,4 +5,15 @@ test:
 	lua examples/factorial.lua
 	lua examples/rsa.lua
 
-.PHONY: docs
+docs:
+	ldoc -d docs -f markdown bint.lua
+
+coverage:
+	rm -f *.out
+	lua -lluacov tests.lua
+	luacov
+
+clean:
+	rm -f *.out
+
+.PHONY: test docs coverage clean

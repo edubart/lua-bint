@@ -1,4 +1,4 @@
-# Lua Bigint
+# Lua BInt
 
 Small portable arbitrary-precision integer arithmetic library in pure Lua for
 computing with large integers.
@@ -9,6 +9,8 @@ using strings or large tables, so regarding that aspect this library should be m
 
 The library implementation was highly inspired by
 [tiny-bignum-c](https://github.com/kokke/tiny-bignum-c).
+
+BInt stands for Big Integer.
 
 ## Design goals
 
@@ -45,20 +47,20 @@ are implemented as metamethods.
 ## Documentation
 
 The full API reference and documentation can viewed in the
-[documentation website](https://edubart.github.io/lua-bigint/).
+[documentation website](https://edubart.github.io/lua-bint/).
 
 ## Example
 
 ```lua
-local bigint = require 'bigint'
-bigint.scale(256) -- use 256 bit integers
-local x = bigint(1)
+local bint = require 'bint'
+bint.scale(256) -- use 256 bit integers
+local x = bint(1)
 x = x << 128
 print(x) -- outputs: 340282366920938463463374607431768211456
 ```
 
 For more usage examples check the
-[examples directory](https://github.com/edubart/lua-bigint/tree/master/examples)
+[examples directory](https://github.com/edubart/lua-bint/tree/master/examples)
 
 ## Tests
 

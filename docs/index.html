@@ -35,14 +35,14 @@
 
 <h2>Modules</h2>
 <ul class="nowrap">
-  <li><strong>bigint</strong></li>
+  <li><strong>bint</strong></li>
 </ul>
 
 </div>
 
 <div id="content">
 
-<h1>Module <code>bigint</code></h1>
+<h1>Module <code>bint</code></h1>
 <p>Small portable arbitrary-precision integer arithmetic library in pure Lua for
 computing with large integers.</p>
 <p>
@@ -74,27 +74,27 @@ are implemented as metamethods.</p>
 <h2>Usage</h2>
 
 <p>First on you should configure how many bits the library will work with,
-to do that call <a href="index.html#scale">bigint.scale</a> once on startup with the desired number of bits in multiples of 32,
-for example bigint.scale(1024).
-By default bigint uses 256 bits integers in case you never call scale.</p>
+to do that call <a href="index.html#scale">bint.scale</a> once on startup with the desired number of bits in multiples of 32,
+for example bint.scale(1024).
+By default bint uses 256 bits integers in case you never call scale.</p>
 
-<p>Then when you need create a bigint, you can use one of the following functions:</p>
+<p>Then when you need create a bint, you can use one of the following functions:</p>
 
 <ul>
-    <li><a href="index.html#fromuinteger">bigint.fromuinteger</a> (convert from lua integers, but read as unsigned integer)</li>
-    <li><a href="index.html#frominteger">bigint.frominteger</a> (convert from lua integers, preserving the sign)</li>
-    <li><a href="index.html#fromnumber">bigint.fromnumber</a> (convert from lua floats, truncating the fractional part)</li>
-    <li><a href="index.html#frombase">bigint.frombase</a> (convert from arbitrary bases, like hexadecimal)</li>
-    <li><a href="index.html#new">bigint.new</a> (convert from anything, asserts on invalid values)</li>
-    <li><a href="index.html#convert">bigint.convert</a> (convert form anything, returns nil on invalid values)</li>
-    <li><a href="index.html#parse">bigint.parse</a> (convert from anything, returns a lua number as fallback)</li>
-    <li><a href="index.html#zero">bigint.zero</a></li>
-    <li><a href="index.html#one">bigint.one</a></li>
-    <li><a href="index.html#">bigint</a></li>
+    <li><a href="index.html#fromuinteger">bint.fromuinteger</a> (convert from lua integers, but read as unsigned integer)</li>
+    <li><a href="index.html#frominteger">bint.frominteger</a> (convert from lua integers, preserving the sign)</li>
+    <li><a href="index.html#fromnumber">bint.fromnumber</a> (convert from lua floats, truncating the fractional part)</li>
+    <li><a href="index.html#frombase">bint.frombase</a> (convert from arbitrary bases, like hexadecimal)</li>
+    <li><a href="index.html#new">bint.new</a> (convert from anything, asserts on invalid values)</li>
+    <li><a href="index.html#convert">bint.convert</a> (convert form anything, returns nil on invalid values)</li>
+    <li><a href="index.html#parse">bint.parse</a> (convert from anything, returns a lua number as fallback)</li>
+    <li><a href="index.html#zero">bint.zero</a></li>
+    <li><a href="index.html#one">bint.one</a></li>
+    <li><a href="index.html#">bint</a></li>
 </ul>
 
-<p>You can also call <a href="index.html#">bigint</a> as it is an alias to <a href="index.html#new">bigint.new</a>.
-In doubt use <a href="index.html#new">bigint.new</a> to create a new bigint.</p>
+<p>You can also call <a href="index.html#">bint</a> as it is an alias to <a href="index.html#new">bint.new</a>.
+In doubt use <a href="index.html#new">bint.new</a> to create a new bint.</p>
 
 <p>Then you can use all the usual lua numeric operations on it,
 all the arithmetic metamethods are implemented.
@@ -102,34 +102,34 @@ When you are done computing and need to get the result,
 get the output from one of the following functions:</p>
 
 <ul>
-    <li><a href="index.html#touinteger">bigint.touinteger</a> (convert to a lua integer, wraps around as an unsigned integer)</li>
-    <li><a href="index.html#tointeger">bigint.tointeger</a> (convert to a lua integer, always preserving the sign)</li>
-    <li><a href="index.html#tonumber">bigint.tonumber</a> (convert to lua float, losing precision)</li>
-    <li><a href="index.html#tobase">bigint.tobase</a> (convert to a string in any base)</li>
-    <li><a href="index.html#__tostring">bigint.__tostring</a> (convert to a string in base 10)</li>
+    <li><a href="index.html#touinteger">bint.touinteger</a> (convert to a lua integer, wraps around as an unsigned integer)</li>
+    <li><a href="index.html#tointeger">bint.tointeger</a> (convert to a lua integer, always preserving the sign)</li>
+    <li><a href="index.html#tonumber">bint.tonumber</a> (convert to lua float, losing precision)</li>
+    <li><a href="index.html#tobase">bint.tobase</a> (convert to a string in any base)</li>
+    <li><a href="index.html#__tostring">bint.__tostring</a> (convert to a string in base 10)</li>
 </ul>
 
 <p>Note that outputting to a lua number will make the integer overflow and its value wraps around.
-To output very large integer with no loss of precision you probably want to use <a href="index.html#tobase">bigint.tobase</a>
+To output very large integer with no loss of precision you probably want to use <a href="index.html#tobase">bint.tobase</a>
 or call <a href="https://www.lua.org/manual/5.3/manual.html#pdf-tostring">tostring</a> to get a string representation.</p>
 
 <h2>Precautions</h2>
 
 <p>All library functions can be mixed with lua numbers,
-this makes easy to mix operations between bigints and lua numbers,
+this makes easy to mix operations between bints and lua numbers,
 however the user should take care in some situations:</p>
 
 <ul>
     <li>Don't mix integers and float operations if you want to work with integers only.</li>
     <li>Don't use the regular equal operator ('==') to compare values from this library,
     unless you know in advance that both values are of the same primitive type,
-    otherwise it will always returns false, use <a href="index.html#eq">bigint.eq</a> to be safe.</li>
+    otherwise it will always returns false, use <a href="index.html#eq">bint.eq</a> to be safe.</li>
     <li>Don't pass fractional numbers to functions that an integer is expected
     as this will throw assertions.</li>
     <li>Remember that casting back to lua integers or numbers precision can be lost.</li>
-    <li>For dividing while preserving integers use the <a href="index.html#__idiv">bigint.__idiv</a> (the '//' operator).</li>
-    <li>For doing power operation preserving integers use the <a href="index.html#ipow">bigint.ipow</a> function.</li>
-    <li>Configure the internal integer fixed width using <a href="index.html#scale">bigint.scale</a>
+    <li>For dividing while preserving integers use the <a href="index.html#__idiv">bint.__idiv</a> (the '//' operator).</li>
+    <li>For doing power operation preserving integers use the <a href="index.html#ipow">bint.ipow</a> function.</li>
+    <li>Configure the internal integer fixed width using <a href="index.html#scale">bint.scale</a>
     to the proper size you intend to work with, otherwise large integers may wraps around.</li>
 </ul>
 </p>
@@ -139,263 +139,263 @@ however the user should take care in some situations:</p>
 <table class="function_list">
 	<tr>
 	<td class="name" nowrap><a href="#scale">scale (bits[, wordbits])</a></td>
-	<td class="summary">Scale bigint's integer width to represent integers of the desired bit size.</td>
+	<td class="summary">Scale bint's integer width to represent integers of the desired bit size.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#fromuinteger">fromuinteger (x)</a></td>
-	<td class="summary">Create a bigint from an unsigned integer.</td>
+	<td class="summary">Create a bint from an unsigned integer.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#frominteger">frominteger (x)</a></td>
-	<td class="summary">Create a bigint from a signed integer.</td>
+	<td class="summary">Create a bint from a signed integer.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#fromnumber">fromnumber (x)</a></td>
-	<td class="summary">Create a bigint from a number.</td>
+	<td class="summary">Create a bint from a number.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#frombase">frombase (s[, base])</a></td>
-	<td class="summary">Create a bigint from a string of the desired base.</td>
+	<td class="summary">Create a bint from a string of the desired base.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#touinteger">touinteger (x)</a></td>
-	<td class="summary">Convert a bigint to an unsigned integer.</td>
+	<td class="summary">Convert a bint to an unsigned integer.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#tointeger">tointeger (x)</a></td>
-	<td class="summary">Convert a bigint to a signed integer.</td>
+	<td class="summary">Convert a bint to a signed integer.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#tonumber">tonumber (x)</a></td>
-	<td class="summary">Convert a bigint to a lua number.</td>
+	<td class="summary">Convert a bint to a lua number.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#tobase">tobase (x[, base[, unsigned]])</a></td>
-	<td class="summary">Convert a bigint to a string in the desired base.</td>
+	<td class="summary">Convert a bint to a string in the desired base.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#new">new (x)</a></td>
-	<td class="summary">Create a new bigint from a value.</td>
+	<td class="summary">Create a new bint from a value.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#convert">convert (x[, clone])</a></td>
-	<td class="summary">Convert a value to a bigint if possible.</td>
+	<td class="summary">Convert a value to a bint if possible.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#parse">parse (x[, clone])</a></td>
-	<td class="summary">Convert a value to a bigint if possible otherwise to a lua number.</td>
+	<td class="summary">Convert a value to a bint if possible otherwise to a lua number.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#iszero">iszero (x)</a></td>
-	<td class="summary">Check if a number is 0 considering bigints.</td>
+	<td class="summary">Check if a number is 0 considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#isone">isone (x)</a></td>
-	<td class="summary">Check if a number is 1 considering bigints.</td>
+	<td class="summary">Check if a number is 1 considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#isminusone">isminusone (x)</a></td>
-	<td class="summary">Check if a number is -1 considering bigints.</td>
+	<td class="summary">Check if a number is -1 considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#isneg">isneg (x)</a></td>
-	<td class="summary">Check if a number is negative considering bigints.</td>
+	<td class="summary">Check if a number is negative considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ispos">ispos (x)</a></td>
-	<td class="summary">Check if a number is positive considering bigints.</td>
+	<td class="summary">Check if a number is positive considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#iseven">iseven (x)</a></td>
-	<td class="summary">Check if a number is even considering bigints.</td>
+	<td class="summary">Check if a number is even considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#isodd">isodd (x)</a></td>
-	<td class="summary">Check if a number is odd considering bigints.</td>
+	<td class="summary">Check if a number is odd considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_zero">_zero ()</a></td>
-	<td class="summary">Assign a bigint to zero (in-place).</td>
+	<td class="summary">Assign a bint to zero (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#zero">zero ()</a></td>
-	<td class="summary">Create a new bigint with 0 value.</td>
+	<td class="summary">Create a new bint with 0 value.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_one">_one ()</a></td>
-	<td class="summary">Assign a bigint to 1 (in-place).</td>
+	<td class="summary">Assign a bint to 1 (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#one">one ()</a></td>
-	<td class="summary">Create a new bigint with 1 value.</td>
+	<td class="summary">Create a new bint with 1 value.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_shlone">_shlone ()</a></td>
-	<td class="summary">Bitwise left shift a bigint in one bit (in-place).</td>
+	<td class="summary">Bitwise left shift a bint in one bit (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_shrone">_shrone ()</a></td>
-	<td class="summary">Bitwise right shift a bigint in one bit (in-place).</td>
+	<td class="summary">Bitwise right shift a bint in one bit (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_inc">_inc ()</a></td>
-	<td class="summary">Increment a bigint by one (in-place).</td>
+	<td class="summary">Increment a bint by one (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#inc">inc (x)</a></td>
-	<td class="summary">Increment a number by one considering bigints.</td>
+	<td class="summary">Increment a number by one considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_dec">_dec ()</a></td>
-	<td class="summary">Decrement a bigint by one (in-place).</td>
+	<td class="summary">Decrement a bint by one (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#dec">dec (x)</a></td>
-	<td class="summary">Decrement a number by one considering bigints.</td>
+	<td class="summary">Decrement a number by one considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_assign">_assign (y)</a></td>
-	<td class="summary">Assign a bigint to a new value (in-place).</td>
+	<td class="summary">Assign a bint to a new value (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_abs">_abs ()</a></td>
-	<td class="summary">Take absolute of a bigint (in-place).</td>
+	<td class="summary">Take absolute of a bint (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#abs">abs (x)</a></td>
-	<td class="summary">Take absolute of a number considering bigints.</td>
+	<td class="summary">Take absolute of a number considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_add">_add (y)</a></td>
-	<td class="summary">Add an integer to a bigint (in-place).</td>
+	<td class="summary">Add an integer to a bint (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__add">__add (x, y)</a></td>
-	<td class="summary">Add two numbers considering bigints.</td>
+	<td class="summary">Add two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_sub">_sub (y)</a></td>
-	<td class="summary">Subtract an integer from a bigint (in-place).</td>
+	<td class="summary">Subtract an integer from a bint (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__sub">__sub (x, y)</a></td>
-	<td class="summary">Subtract two numbers considering bigints.</td>
+	<td class="summary">Subtract two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__mul">__mul (x, y)</a></td>
-	<td class="summary">Multiply two numbers considering bigints.</td>
+	<td class="summary">Multiply two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#udiv">udiv (x, y)</a></td>
-	<td class="summary">Perform unsigned division between two integers considering bigints.</td>
+	<td class="summary">Perform unsigned division between two integers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#udivmod">udivmod (x, y)</a></td>
-	<td class="summary">Perform unsigned division and modulo operation between two integers considering bigints.</td>
+	<td class="summary">Perform unsigned division and modulo operation between two integers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#umod">umod (x, y)</a></td>
-	<td class="summary">Perform unsigned integer modulo operation between two integers considering bigints.</td>
+	<td class="summary">Perform unsigned integer modulo operation between two integers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__idiv">__idiv (x, y)</a></td>
-	<td class="summary">Perform floor division between two numbers considering bigints.</td>
+	<td class="summary">Perform floor division between two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__div">__div (x, y)</a></td>
-	<td class="summary">Perform division between two numbers considering bigints.</td>
+	<td class="summary">Perform division between two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#idivmod">idivmod (x, y)</a></td>
-	<td class="summary">Perform integer floor division and modulo operation between two numbers considering bigints.</td>
+	<td class="summary">Perform integer floor division and modulo operation between two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__mod">__mod (x, y)</a></td>
-	<td class="summary">Perform integer floor modulo operation between two numbers considering bigints.</td>
+	<td class="summary">Perform integer floor modulo operation between two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ipow">ipow (x, y)</a></td>
-	<td class="summary">Perform integer power between two integers considering bigints.</td>
+	<td class="summary">Perform integer power between two integers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__pow">__pow (x, y)</a></td>
-	<td class="summary">Perform numeric power between two numbers considering bigints.</td>
+	<td class="summary">Perform numeric power between two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__shl">__shl (x, y)</a></td>
-	<td class="summary">Bitwise left shift integers considering bigints.</td>
+	<td class="summary">Bitwise left shift integers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__shr">__shr (x, y)</a></td>
-	<td class="summary">Bitwise right shift integers considering bigints.</td>
+	<td class="summary">Bitwise right shift integers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_band">_band (y)</a></td>
-	<td class="summary">Bitwise AND bigints (in-place).</td>
+	<td class="summary">Bitwise AND bints (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__band">__band (x, y)</a></td>
-	<td class="summary">Bitwise AND two integers considering bigints.</td>
+	<td class="summary">Bitwise AND two integers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_bor">_bor (y)</a></td>
-	<td class="summary">Bitwise OR bigints (in-place).</td>
+	<td class="summary">Bitwise OR bints (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__bor">__bor (x, y)</a></td>
-	<td class="summary">Bitwise OR two integers considering bigints.</td>
+	<td class="summary">Bitwise OR two integers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_bxor">_bxor (y)</a></td>
-	<td class="summary">Bitwise XOR bigints (in-place).</td>
+	<td class="summary">Bitwise XOR bints (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__bxor">__bxor (x, y)</a></td>
-	<td class="summary">Bitwise XOR two integers considering bigints.</td>
+	<td class="summary">Bitwise XOR two integers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_bnot">_bnot ()</a></td>
-	<td class="summary">Bitwise NOT a bigint (in-place).</td>
+	<td class="summary">Bitwise NOT a bint (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__bnot">__bnot (x)</a></td>
-	<td class="summary">Bitwise NOT a bigint.</td>
+	<td class="summary">Bitwise NOT a bint.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_unm">_unm ()</a></td>
-	<td class="summary">Negate a bigint (in-place).</td>
+	<td class="summary">Negate a bint (in-place).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__unm">__unm (x)</a></td>
-	<td class="summary">Negate a bigint.</td>
+	<td class="summary">Negate a bint.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__eq">__eq (x, y)</a></td>
-	<td class="summary">Check if bigints are equal.</td>
+	<td class="summary">Check if bints are equal.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#eq">eq (x, y)</a></td>
-	<td class="summary">Check if numbers are equal considering bigints.</td>
+	<td class="summary">Check if numbers are equal considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ult">ult (x, y)</a></td>
-	<td class="summary">Compare if integer x is less than y considering bigints (unsigned version).</td>
+	<td class="summary">Compare if integer x is less than y considering bints (unsigned version).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ule">ule (x, y)</a></td>
-	<td class="summary">Compare if bigint x is less or equal than y considering bigints (unsigned version).</td>
+	<td class="summary">Compare if bint x is less or equal than y considering bints (unsigned version).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__lt">__lt (x, y)</a></td>
-	<td class="summary">Compare if number x is less than y considering bigints and signs.</td>
+	<td class="summary">Compare if number x is less than y considering bints and signs.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__le">__le (x, y)</a></td>
-	<td class="summary">Compare if number x is less or equal than y considering bigints and signs.</td>
+	<td class="summary">Compare if number x is less or equal than y considering bints and signs.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__tostring">__tostring ()</a></td>
-	<td class="summary">Convert a bigint to a string on base 10.</td>
+	<td class="summary">Convert a bint to a string on base 10.</td>
 	</tr>
 </table>
 
@@ -411,7 +411,7 @@ however the user should take care in some situations:</p>
     <strong>scale (bits[, wordbits])</strong>
     </dt>
     <dd>
-    Scale bigint's integer width to represent integers of the desired bit size.
+    Scale bint's integer width to represent integers of the desired bit size.
  Must be called only once on startup.
 
 
@@ -437,7 +437,7 @@ however the user should take care in some situations:</p>
     <strong>fromuinteger (x)</strong>
     </dt>
     <dd>
-    Create a bigint from an unsigned integer.
+    Create a bint from an unsigned integer.
  Treats signed integers as an unsigned integer.
 
 
@@ -451,13 +451,13 @@ however the user should take care in some situations:</p>
     <h3>Returns:</h3>
     <ol>
 
-        A new bigint or nil in case the input cannot be represented by an integer.
+        A new bint or nil in case the input cannot be represented by an integer.
     </ol>
 
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#frominteger">bigint.frominteger</a>
+         <a href="index.html#frominteger">bint.frominteger</a>
     </ul>
 
 
@@ -467,7 +467,7 @@ however the user should take care in some situations:</p>
     <strong>frominteger (x)</strong>
     </dt>
     <dd>
-    Create a bigint from a signed integer.
+    Create a bint from a signed integer.
 
 
     <h3>Parameters:</h3>
@@ -480,13 +480,13 @@ however the user should take care in some situations:</p>
     <h3>Returns:</h3>
     <ol>
 
-        A new bigint or nil in case the input cannot be represented by an integer.
+        A new bint or nil in case the input cannot be represented by an integer.
     </ol>
 
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#fromuinteger">bigint.fromuinteger</a>
+         <a href="index.html#fromuinteger">bint.fromuinteger</a>
     </ul>
 
 
@@ -496,7 +496,7 @@ however the user should take care in some situations:</p>
     <strong>fromnumber (x)</strong>
     </dt>
     <dd>
-    Create a bigint from a number.
+    Create a bint from a number.
  Floats values are truncated, that is, the fractional port is discarded.
 
 
@@ -510,7 +510,7 @@ however the user should take care in some situations:</p>
     <h3>Returns:</h3>
     <ol>
 
-        A new bigint or nil in case the input cannot be represented by an integer.
+        A new bint or nil in case the input cannot be represented by an integer.
     </ol>
 
 
@@ -522,7 +522,7 @@ however the user should take care in some situations:</p>
     <strong>frombase (s[, base])</strong>
     </dt>
     <dd>
-    Create a bigint from a string of the desired base.
+    Create a bint from a string of the desired base.
 
 
     <h3>Parameters:</h3>
@@ -541,7 +541,7 @@ however the user should take care in some situations:</p>
     <h3>Returns:</h3>
     <ol>
 
-        A new bigint or nil in case the conversion failed.
+        A new bint or nil in case the conversion failed.
     </ol>
 
 
@@ -553,7 +553,7 @@ however the user should take care in some situations:</p>
     <strong>touinteger (x)</strong>
     </dt>
     <dd>
-    Convert a bigint to an unsigned integer.
+    Convert a bint to an unsigned integer.
  Note that large unsigned integers may be represented as negatives in lua integers.
  Note that lua cannot represent values larger than 64 bits,
  in that case integer values wraps around.
@@ -562,7 +562,7 @@ however the user should take care in some situations:</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a number to be converted into an unsigned integer.
+         A bint or a number to be converted into an unsigned integer.
         </li>
     </ul>
 
@@ -575,7 +575,7 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#tointeger">bigint.tointeger</a>
+         <a href="index.html#tointeger">bint.tointeger</a>
     </ul>
 
 
@@ -585,7 +585,7 @@ however the user should take care in some situations:</p>
     <strong>tointeger (x)</strong>
     </dt>
     <dd>
-    Convert a bigint to a signed integer.
+    Convert a bint to a signed integer.
  It works by taking absolute values then applying the sign bit in case needed.
  Note that lua cannot represent values larger than 64 bits,
  in that case integer values wraps around.
@@ -594,7 +594,7 @@ however the user should take care in some situations:</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or value to be converted into an unsigned integer.
+         A bint or value to be converted into an unsigned integer.
         </li>
     </ul>
 
@@ -607,7 +607,7 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#touinteger">bigint.touinteger</a>
+         <a href="index.html#touinteger">bint.touinteger</a>
     </ul>
 
 
@@ -617,15 +617,15 @@ however the user should take care in some situations:</p>
     <strong>tonumber (x)</strong>
     </dt>
     <dd>
-    Convert a bigint to a lua number.
- Different from <a href="index.html#tointeger">bigint.tointeger</a> the operation does not wraps around integers,
+    Convert a bint to a lua number.
+ Different from <a href="index.html#tointeger">bint.tointeger</a> the operation does not wraps around integers,
  but digits precision may be lost in the process of converting to a float.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or value to be converted into a number.
+         A bint or value to be converted into a number.
         </li>
     </ul>
 
@@ -638,7 +638,7 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#tointeger">bigint.tointeger</a>
+         <a href="index.html#tointeger">bint.tointeger</a>
     </ul>
 
 
@@ -648,13 +648,13 @@ however the user should take care in some situations:</p>
     <strong>tobase (x[, base[, unsigned]])</strong>
     </dt>
     <dd>
-    Convert a bigint to a string in the desired base.
+    Convert a bint to a string in the desired base.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The bigint to be converted from.
+         The bint to be converted from.
         </li>
         <li><span class="parameter">base</span>
          Base to be represented, defaults to 10.
@@ -685,29 +685,29 @@ however the user should take care in some situations:</p>
     <strong>new (x)</strong>
     </dt>
     <dd>
-    Create a new bigint from a value.
+    Create a new bint from a value.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value convertible to a bigint (string, number or another bigint).
+         A value convertible to a bint (string, number or another bint).
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        A new bigint, guaranteed to be a new reference in case needed.
+        A new bint, guaranteed to be a new reference in case needed.
     </ol>
 
     <h3>Raises:</h3>
-    An assert is thrown in case x is not convertible to a bigint.
+    An assert is thrown in case x is not convertible to a bint.
 
     <h3>See also:</h3>
     <ul>
-         <li><a href="index.html#convert">bigint.convert</a></li>
-         <li><a href="index.html#parse">bigint.parse</a></li>
+         <li><a href="index.html#convert">bint.convert</a></li>
+         <li><a href="index.html#parse">bint.parse</a></li>
     </ul>
 
 
@@ -717,16 +717,16 @@ however the user should take care in some situations:</p>
     <strong>convert (x[, clone])</strong>
     </dt>
     <dd>
-    Convert a value to a bigint if possible.
+    Convert a value to a bint if possible.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to be converted (string, number or another bigint).
+         A value to be converted (string, number or another bint).
         </li>
         <li><span class="parameter">clone</span>
-         A boolean that tells if a new bigint reference should be returned.
+         A boolean that tells if a new bint reference should be returned.
  Defaults to false.
          (<em>optional</em>)
         </li>
@@ -735,14 +735,14 @@ however the user should take care in some situations:</p>
     <h3>Returns:</h3>
     <ol>
 
-        A bigint or nil in case the conversion failed.
+        A bint or nil in case the conversion failed.
     </ol>
 
 
     <h3>See also:</h3>
     <ul>
-         <li><a href="index.html#new">bigint.new</a></li>
-         <li><a href="index.html#parse">bigint.parse</a></li>
+         <li><a href="index.html#new">bint.new</a></li>
+         <li><a href="index.html#parse">bint.parse</a></li>
     </ul>
 
 
@@ -752,17 +752,17 @@ however the user should take care in some situations:</p>
     <strong>parse (x[, clone])</strong>
     </dt>
     <dd>
-    Convert a value to a bigint if possible otherwise to a lua number.
+    Convert a value to a bint if possible otherwise to a lua number.
  Useful to prepare values that you are unsure if its going to be a integer or float.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A value to be converted (string, number or another bigint).
+         A value to be converted (string, number or another bint).
         </li>
         <li><span class="parameter">clone</span>
-         A boolean that tells if a new bigint reference should be returned.
+         A boolean that tells if a new bint reference should be returned.
  Defaults to false.
          (<em>optional</em>)
         </li>
@@ -771,14 +771,14 @@ however the user should take care in some situations:</p>
     <h3>Returns:</h3>
     <ol>
 
-        A bigint or a lua number or nil in case the conversion failed.
+        A bint or a lua number or nil in case the conversion failed.
     </ol>
 
 
     <h3>See also:</h3>
     <ul>
-         <li><a href="index.html#new">bigint.new</a></li>
-         <li><a href="index.html#convert">bigint.convert</a></li>
+         <li><a href="index.html#new">bint.new</a></li>
+         <li><a href="index.html#convert">bint.convert</a></li>
     </ul>
 
 
@@ -788,13 +788,13 @@ however the user should take care in some situations:</p>
     <strong>iszero (x)</strong>
     </dt>
     <dd>
-    Check if a number is 0 considering bigints.
+    Check if a number is 0 considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number.
+         A bint or a lua number.
         </li>
     </ul>
 
@@ -808,13 +808,13 @@ however the user should take care in some situations:</p>
     <strong>isone (x)</strong>
     </dt>
     <dd>
-    Check if a number is 1 considering bigints.
+    Check if a number is 1 considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number.
+         A bint or a lua number.
         </li>
     </ul>
 
@@ -828,13 +828,13 @@ however the user should take care in some situations:</p>
     <strong>isminusone (x)</strong>
     </dt>
     <dd>
-    Check if a number is -1 considering bigints.
+    Check if a number is -1 considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number.
+         A bint or a lua number.
         </li>
     </ul>
 
@@ -848,14 +848,14 @@ however the user should take care in some situations:</p>
     <strong>isneg (x)</strong>
     </dt>
     <dd>
-    Check if a number is negative considering bigints.
- Zero is guaranteed to never be negative for bigints.
+    Check if a number is negative considering bints.
+ Zero is guaranteed to never be negative for bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number.
+         A bint or a lua number.
         </li>
     </ul>
 
@@ -869,13 +869,13 @@ however the user should take care in some situations:</p>
     <strong>ispos (x)</strong>
     </dt>
     <dd>
-    Check if a number is positive considering bigints.
+    Check if a number is positive considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number.
+         A bint or a lua number.
         </li>
     </ul>
 
@@ -889,13 +889,13 @@ however the user should take care in some situations:</p>
     <strong>iseven (x)</strong>
     </dt>
     <dd>
-    Check if a number is even considering bigints.
+    Check if a number is even considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number.
+         A bint or a lua number.
         </li>
     </ul>
 
@@ -909,13 +909,13 @@ however the user should take care in some situations:</p>
     <strong>isodd (x)</strong>
     </dt>
     <dd>
-    Check if a number is odd considering bigints.
+    Check if a number is odd considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number.
+         A bint or a lua number.
         </li>
     </ul>
 
@@ -929,7 +929,7 @@ however the user should take care in some situations:</p>
     <strong>_zero ()</strong>
     </dt>
     <dd>
-    Assign a bigint to zero (in-place).
+    Assign a bint to zero (in-place).
 
 
 
@@ -943,7 +943,7 @@ however the user should take care in some situations:</p>
     <strong>zero ()</strong>
     </dt>
     <dd>
-    Create a new bigint with 0 value.
+    Create a new bint with 0 value.
 
 
 
@@ -957,7 +957,7 @@ however the user should take care in some situations:</p>
     <strong>_one ()</strong>
     </dt>
     <dd>
-    Assign a bigint to 1 (in-place).
+    Assign a bint to 1 (in-place).
 
 
 
@@ -971,7 +971,7 @@ however the user should take care in some situations:</p>
     <strong>one ()</strong>
     </dt>
     <dd>
-    Create a new bigint with 1 value.
+    Create a new bint with 1 value.
 
 
 
@@ -985,7 +985,7 @@ however the user should take care in some situations:</p>
     <strong>_shlone ()</strong>
     </dt>
     <dd>
-    Bitwise left shift a bigint in one bit (in-place).
+    Bitwise left shift a bint in one bit (in-place).
 
 
 
@@ -999,7 +999,7 @@ however the user should take care in some situations:</p>
     <strong>_shrone ()</strong>
     </dt>
     <dd>
-    Bitwise right shift a bigint in one bit (in-place).
+    Bitwise right shift a bint in one bit (in-place).
 
 
 
@@ -1013,7 +1013,7 @@ however the user should take care in some situations:</p>
     <strong>_inc ()</strong>
     </dt>
     <dd>
-    Increment a bigint by one (in-place).
+    Increment a bint by one (in-place).
 
 
 
@@ -1027,13 +1027,13 @@ however the user should take care in some situations:</p>
     <strong>inc (x)</strong>
     </dt>
     <dd>
-    Increment a number by one considering bigints.
+    Increment a number by one considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number to increment.
+         A bint or a lua number to increment.
         </li>
     </ul>
 
@@ -1047,7 +1047,7 @@ however the user should take care in some situations:</p>
     <strong>_dec ()</strong>
     </dt>
     <dd>
-    Decrement a bigint by one (in-place).
+    Decrement a bint by one (in-place).
 
 
 
@@ -1061,13 +1061,13 @@ however the user should take care in some situations:</p>
     <strong>dec (x)</strong>
     </dt>
     <dd>
-    Decrement a number by one considering bigints.
+    Decrement a number by one considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number to decrement.
+         A bint or a lua number to decrement.
         </li>
     </ul>
 
@@ -1081,7 +1081,7 @@ however the user should take care in some situations:</p>
     <strong>_assign (y)</strong>
     </dt>
     <dd>
-    Assign a bigint to a new value (in-place).
+    Assign a bint to a new value (in-place).
 
 
     <h3>Parameters:</h3>
@@ -1103,7 +1103,7 @@ however the user should take care in some situations:</p>
     <strong>_abs ()</strong>
     </dt>
     <dd>
-    Take absolute of a bigint (in-place).
+    Take absolute of a bint (in-place).
 
 
 
@@ -1117,13 +1117,13 @@ however the user should take care in some situations:</p>
     <strong>abs (x)</strong>
     </dt>
     <dd>
-    Take absolute of a number considering bigints.
+    Take absolute of a number considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number to take the absolute.
+         A bint or a lua number to take the absolute.
         </li>
     </ul>
 
@@ -1137,7 +1137,7 @@ however the user should take care in some situations:</p>
     <strong>_add (y)</strong>
     </dt>
     <dd>
-    Add an integer to a bigint (in-place).
+    Add an integer to a bint (in-place).
 
 
     <h3>Parameters:</h3>
@@ -1159,16 +1159,16 @@ however the user should take care in some situations:</p>
     <strong>__add (x, y)</strong>
     </dt>
     <dd>
-    Add two numbers considering bigints.
+    Add two numbers considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number to be added.
+         A bint or a lua number to be added.
         </li>
         <li><span class="parameter">y</span>
-         A bigint or a lua number to be added.
+         A bint or a lua number to be added.
         </li>
     </ul>
 
@@ -1182,7 +1182,7 @@ however the user should take care in some situations:</p>
     <strong>_sub (y)</strong>
     </dt>
     <dd>
-    Subtract an integer from a bigint (in-place).
+    Subtract an integer from a bint (in-place).
 
 
     <h3>Parameters:</h3>
@@ -1204,16 +1204,16 @@ however the user should take care in some situations:</p>
     <strong>__sub (x, y)</strong>
     </dt>
     <dd>
-    Subtract two numbers considering bigints.
+    Subtract two numbers considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number to be subtract from.
+         A bint or a lua number to be subtract from.
         </li>
         <li><span class="parameter">y</span>
-         A bigint or a lua number to subtract.
+         A bint or a lua number to subtract.
         </li>
     </ul>
 
@@ -1227,16 +1227,16 @@ however the user should take care in some situations:</p>
     <strong>__mul (x, y)</strong>
     </dt>
     <dd>
-    Multiply two numbers considering bigints.
+    Multiply two numbers considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or a lua number to multiply.
+         A bint or a lua number to multiply.
         </li>
         <li><span class="parameter">y</span>
-         A bigint or a lua number to multiply.
+         A bint or a lua number to multiply.
         </li>
     </ul>
 
@@ -1250,23 +1250,23 @@ however the user should take care in some situations:</p>
     <strong>udiv (x, y)</strong>
     </dt>
     <dd>
-    Perform unsigned division between two integers considering bigints.
+    Perform unsigned division between two integers considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator, must be a bigint or a lua integer.
+         The numerator, must be a bint or a lua integer.
         </li>
         <li><span class="parameter">y</span>
-         The denominator, must be a bigint or a lua integer.
+         The denominator, must be a bint or a lua integer.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The quotient, a bigint.
+        The quotient, a bint.
     </ol>
 
     <h3>Raises:</h3>
@@ -1281,24 +1281,24 @@ however the user should take care in some situations:</p>
     <strong>udivmod (x, y)</strong>
     </dt>
     <dd>
-    Perform unsigned division and modulo operation between two integers considering bigints.
- This is effectively the same of <a href="index.html#udiv">bigint.udiv</a> and <a href="index.html#umod">bigint.umod</a>.
+    Perform unsigned division and modulo operation between two integers considering bints.
+ This is effectively the same of <a href="index.html#udiv">bint.udiv</a> and <a href="index.html#umod">bint.umod</a>.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator, must be a bigint or a lua integer.
+         The numerator, must be a bint or a lua integer.
         </li>
         <li><span class="parameter">y</span>
-         The denominator, must be a bigint or a lua integer.
+         The denominator, must be a bint or a lua integer.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The quotient following the remainder, both bigints.
+        The quotient following the remainder, both bints.
     </ol>
 
     <h3>Raises:</h3>
@@ -1307,8 +1307,8 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <li><a href="index.html#udiv">bigint.udiv</a></li>
-         <li><a href="index.html#umod">bigint.umod</a></li>
+         <li><a href="index.html#udiv">bint.udiv</a></li>
+         <li><a href="index.html#umod">bint.umod</a></li>
     </ul>
 
 
@@ -1318,23 +1318,23 @@ however the user should take care in some situations:</p>
     <strong>umod (x, y)</strong>
     </dt>
     <dd>
-    Perform unsigned integer modulo operation between two integers considering bigints.
+    Perform unsigned integer modulo operation between two integers considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator, must be a bigint or a lua integer.
+         The numerator, must be a bint or a lua integer.
         </li>
         <li><span class="parameter">y</span>
-         The denominator, must be a bigint or a lua integer.
+         The denominator, must be a bint or a lua integer.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The remainder, a bigint.
+        The remainder, a bint.
     </ol>
 
     <h3>Raises:</h3>
@@ -1349,7 +1349,7 @@ however the user should take care in some situations:</p>
     <strong>__idiv (x, y)</strong>
     </dt>
     <dd>
-    Perform floor division between two numbers considering bigints.
+    Perform floor division between two numbers considering bints.
  Floor division is a division that rounds the quotient towards minus infinity,
  resulting in the floor of the division of its operands.
 
@@ -1357,17 +1357,17 @@ however the user should take care in some situations:</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator, a bigint or lua number.
+         The numerator, a bint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         The denominator, a bigint or lua number.
+         The denominator, a bint or lua number.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The quotient, a bigint or lua number.
+        The quotient, a bint or lua number.
     </ol>
 
     <h3>Raises:</h3>
@@ -1381,17 +1381,17 @@ however the user should take care in some situations:</p>
     <strong>__div (x, y)</strong>
     </dt>
     <dd>
-    Perform division between two numbers considering bigints.
- This always cast inputs to floats, for integer division only use <a href="index.html#__idiv">bigint.__idiv</a>.
+    Perform division between two numbers considering bints.
+ This always cast inputs to floats, for integer division only use <a href="index.html#__idiv">bint.__idiv</a>.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator, a bigint or lua number.
+         The numerator, a bint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         The denominator, a bigint or lua number.
+         The denominator, a bint or lua number.
         </li>
     </ul>
 
@@ -1410,24 +1410,24 @@ however the user should take care in some situations:</p>
     <strong>idivmod (x, y)</strong>
     </dt>
     <dd>
-    Perform integer floor division and modulo operation between two numbers considering bigints.
- This is effectively the same of <a href="index.html#__idiv">bigint.__idiv</a> and <a href="index.html#__mod">bigint.__mod</a>.
+    Perform integer floor division and modulo operation between two numbers considering bints.
+ This is effectively the same of <a href="index.html#__idiv">bint.__idiv</a> and <a href="index.html#__mod">bint.__mod</a>.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator, a bigint or lua number.
+         The numerator, a bint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         The denominator, a bigint or lua number.
+         The denominator, a bint or lua number.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The quotient following the remainder, both bigint or lua number.
+        The quotient following the remainder, both bint or lua number.
     </ol>
 
     <h3>Raises:</h3>
@@ -1435,8 +1435,8 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <li><a href="index.html#__idiv">bigint.__idiv</a></li>
-         <li><a href="index.html#__mod">bigint.__mod</a></li>
+         <li><a href="index.html#__idiv">bint.__idiv</a></li>
+         <li><a href="index.html#__mod">bint.__mod</a></li>
     </ul>
 
 
@@ -1446,7 +1446,7 @@ however the user should take care in some situations:</p>
     <strong>__mod (x, y)</strong>
     </dt>
     <dd>
-    Perform integer floor modulo operation between two numbers considering bigints.
+    Perform integer floor modulo operation between two numbers considering bints.
  The operation is defined as the remainder of the floor division
  (division that rounds the quotient towards minus infinity).
 
@@ -1454,17 +1454,17 @@ however the user should take care in some situations:</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The numerator, a bigint or lua number.
+         The numerator, a bint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         The denominator, a bigint or lua number.
+         The denominator, a bint or lua number.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        The remainder, a bigint or lua number.
+        The remainder, a bint or lua number.
     </ol>
 
     <h3>Raises:</h3>
@@ -1478,7 +1478,7 @@ however the user should take care in some situations:</p>
     <strong>ipow (x, y)</strong>
     </dt>
     <dd>
-    Perform integer power between two integers considering bigints.
+    Perform integer power between two integers considering bints.
 
 
     <h3>Parameters:</h3>
@@ -1494,7 +1494,7 @@ however the user should take care in some situations:</p>
     <h3>Returns:</h3>
     <ol>
 
-        The result of the pow operation, a bigint.
+        The result of the pow operation, a bint.
     </ol>
 
     <h3>Raises:</h3>
@@ -1503,7 +1503,7 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#__pow">bigint.__pow</a>
+         <a href="index.html#__pow">bint.__pow</a>
     </ul>
 
 
@@ -1513,17 +1513,17 @@ however the user should take care in some situations:</p>
     <strong>__pow (x, y)</strong>
     </dt>
     <dd>
-    Perform numeric power between two numbers considering bigints.
- This always cast inputs to floats, for integer power only use <a href="index.html#ipow">bigint.ipow</a>.
+    Perform numeric power between two numbers considering bints.
+ This always cast inputs to floats, for integer power only use <a href="index.html#ipow">bint.ipow</a>.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         The base, a bigint or lua number.
+         The base, a bint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         The exponent, a bigint or lua number.
+         The exponent, a bint or lua number.
         </li>
     </ul>
 
@@ -1536,7 +1536,7 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#ipow">bigint.ipow</a>
+         <a href="index.html#ipow">bint.ipow</a>
     </ul>
 
 
@@ -1546,7 +1546,7 @@ however the user should take care in some situations:</p>
     <strong>__shl (x, y)</strong>
     </dt>
     <dd>
-    Bitwise left shift integers considering bigints.
+    Bitwise left shift integers considering bints.
 
 
     <h3>Parameters:</h3>
@@ -1562,7 +1562,7 @@ however the user should take care in some situations:</p>
     <h3>Returns:</h3>
     <ol>
 
-        The result of shift operation, a bigint.
+        The result of shift operation, a bint.
     </ol>
 
     <h3>Raises:</h3>
@@ -1576,7 +1576,7 @@ however the user should take care in some situations:</p>
     <strong>__shr (x, y)</strong>
     </dt>
     <dd>
-    Bitwise right shift integers considering bigints.
+    Bitwise right shift integers considering bints.
 
 
     <h3>Parameters:</h3>
@@ -1592,7 +1592,7 @@ however the user should take care in some situations:</p>
     <h3>Returns:</h3>
     <ol>
 
-        The result of shift operation, a bigint.
+        The result of shift operation, a bint.
     </ol>
 
     <h3>Raises:</h3>
@@ -1606,7 +1606,7 @@ however the user should take care in some situations:</p>
     <strong>_band (y)</strong>
     </dt>
     <dd>
-    Bitwise AND bigints (in-place).
+    Bitwise AND bints (in-place).
 
 
     <h3>Parameters:</h3>
@@ -1628,7 +1628,7 @@ however the user should take care in some situations:</p>
     <strong>__band (x, y)</strong>
     </dt>
     <dd>
-    Bitwise AND two integers considering bigints.
+    Bitwise AND two integers considering bints.
 
 
     <h3>Parameters:</h3>
@@ -1653,7 +1653,7 @@ however the user should take care in some situations:</p>
     <strong>_bor (y)</strong>
     </dt>
     <dd>
-    Bitwise OR bigints (in-place).
+    Bitwise OR bints (in-place).
 
 
     <h3>Parameters:</h3>
@@ -1675,7 +1675,7 @@ however the user should take care in some situations:</p>
     <strong>__bor (x, y)</strong>
     </dt>
     <dd>
-    Bitwise OR two integers considering bigints.
+    Bitwise OR two integers considering bints.
 
 
     <h3>Parameters:</h3>
@@ -1700,7 +1700,7 @@ however the user should take care in some situations:</p>
     <strong>_bxor (y)</strong>
     </dt>
     <dd>
-    Bitwise XOR bigints (in-place).
+    Bitwise XOR bints (in-place).
 
 
     <h3>Parameters:</h3>
@@ -1722,7 +1722,7 @@ however the user should take care in some situations:</p>
     <strong>__bxor (x, y)</strong>
     </dt>
     <dd>
-    Bitwise XOR two integers considering bigints.
+    Bitwise XOR two integers considering bints.
 
 
     <h3>Parameters:</h3>
@@ -1747,7 +1747,7 @@ however the user should take care in some situations:</p>
     <strong>_bnot ()</strong>
     </dt>
     <dd>
-    Bitwise NOT a bigint (in-place).
+    Bitwise NOT a bint (in-place).
 
 
 
@@ -1761,7 +1761,7 @@ however the user should take care in some situations:</p>
     <strong>__bnot (x)</strong>
     </dt>
     <dd>
-    Bitwise NOT a bigint.
+    Bitwise NOT a bint.
 
 
     <h3>Parameters:</h3>
@@ -1783,7 +1783,7 @@ however the user should take care in some situations:</p>
     <strong>_unm ()</strong>
     </dt>
     <dd>
-    Negate a bigint (in-place).  This apply effectively apply two's complements.
+    Negate a bint (in-place).  This apply effectively apply two's complements.
 
 
 
@@ -1797,13 +1797,13 @@ however the user should take care in some situations:</p>
     <strong>__unm (x)</strong>
     </dt>
     <dd>
-    Negate a bigint.  This apply effectively apply two's complements.
+    Negate a bint.  This apply effectively apply two's complements.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint to perform negation.
+         A bint to perform negation.
         </li>
     </ul>
 
@@ -1817,16 +1817,16 @@ however the user should take care in some situations:</p>
     <strong>__eq (x, y)</strong>
     </dt>
     <dd>
-    Check if bigints are equal.
+    Check if bints are equal.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint to compare.
+         A bint to compare.
         </li>
         <li><span class="parameter">y</span>
-         A bigint to compare.
+         A bint to compare.
         </li>
     </ul>
 
@@ -1840,16 +1840,16 @@ however the user should take care in some situations:</p>
     <strong>eq (x, y)</strong>
     </dt>
     <dd>
-    Check if numbers are equal considering bigints.
+    Check if numbers are equal considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bigint or lua number to compare.
+         A bint or lua number to compare.
         </li>
         <li><span class="parameter">y</span>
-         A bigint or lua number to compare.
+         A bint or lua number to compare.
         </li>
     </ul>
 
@@ -1863,7 +1863,7 @@ however the user should take care in some situations:</p>
     <strong>ult (x, y)</strong>
     </dt>
     <dd>
-    Compare if integer x is less than y considering bigints (unsigned version).
+    Compare if integer x is less than y considering bints (unsigned version).
 
 
     <h3>Parameters:</h3>
@@ -1882,7 +1882,7 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#__lt">bigint.__lt</a>
+         <a href="index.html#__lt">bint.__lt</a>
     </ul>
 
 
@@ -1892,7 +1892,7 @@ however the user should take care in some situations:</p>
     <strong>ule (x, y)</strong>
     </dt>
     <dd>
-    Compare if bigint x is less or equal than y considering bigints (unsigned version).
+    Compare if bint x is less or equal than y considering bints (unsigned version).
 
 
     <h3>Parameters:</h3>
@@ -1911,7 +1911,7 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#__le">bigint.__le</a>
+         <a href="index.html#__le">bint.__le</a>
     </ul>
 
 
@@ -1921,16 +1921,16 @@ however the user should take care in some situations:</p>
     <strong>__lt (x, y)</strong>
     </dt>
     <dd>
-    Compare if number x is less than y considering bigints and signs.
+    Compare if number x is less than y considering bints and signs.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         Left value to compare, a bigint or lua number.
+         Left value to compare, a bint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         Right value to compare, a bigint or lua number.
+         Right value to compare, a bint or lua number.
         </li>
     </ul>
 
@@ -1938,7 +1938,7 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#ult">bigint.ult</a>
+         <a href="index.html#ult">bint.ult</a>
     </ul>
 
 
@@ -1948,16 +1948,16 @@ however the user should take care in some situations:</p>
     <strong>__le (x, y)</strong>
     </dt>
     <dd>
-    Compare if number x is less or equal than y considering bigints and signs.
+    Compare if number x is less or equal than y considering bints and signs.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         Left value to compare, a bigint or lua number.
+         Left value to compare, a bint or lua number.
         </li>
         <li><span class="parameter">y</span>
-         Right value to compare, a bigint or lua number.
+         Right value to compare, a bint or lua number.
         </li>
     </ul>
 
@@ -1965,7 +1965,7 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#ule">bigint.ule</a>
+         <a href="index.html#ule">bint.ule</a>
     </ul>
 
 
@@ -1975,7 +1975,7 @@ however the user should take care in some situations:</p>
     <strong>__tostring ()</strong>
     </dt>
     <dd>
-    Convert a bigint to a string on base 10.
+    Convert a bint to a string on base 10.
 
 
 
@@ -1983,7 +1983,7 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <a href="index.html#tobase">bigint.tobase</a>
+         <a href="index.html#tobase">bint.tobase</a>
     </ul>
 
 
@@ -1995,7 +1995,7 @@ however the user should take care in some situations:</p>
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-07-06 15:09:24 </i>
+<i style="float:right;">Last updated 2020-07-06 15:48:41 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

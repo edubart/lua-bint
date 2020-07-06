@@ -1,9 +1,9 @@
-local bigint = require 'bigint'
+local bint = require 'bint'
 
-bigint.scale(1024)
+bint.scale(1024)
 
 local function fibonacci(n)
-  local first, second = bigint.zero(), bigint.one()
+  local first, second = bint.zero(), bint.one()
   for _=0,n-1 do
     first, second = second, first
     second = second + first

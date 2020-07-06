@@ -1,9 +1,9 @@
-local bigint = require 'bigint'
+local bint = require 'bint'
 
-bigint.scale(512)
+bint.scale(512)
 
 local function gcd(a, b)
-  a, b = bigint.convert(a), bigint.convert(b)
+  a, b = bint.convert(a), bint.convert(b)
   while not b:iszero() do
     a, b = b, a % b
   end
@@ -11,7 +11,7 @@ local function gcd(a, b)
 end
 
 local function modinverse(a, m)
-  a, m = bigint.convert(a), bigint.convert(m)
+  a, m = bint.convert(a), bint.convert(m)
   assert(gcd(a, m):isone(), 'no inverse')
   if m:isone() then
     return m
@@ -28,29 +28,29 @@ local function modinverse(a, m)
   return inv
 end
 
-local p = bigint(7)
-local q = bigint(19)
+local p = bint(7)
+local q = bint(19)
 
 local n = p * q
-assert(n == bigint(133))
+assert(n == bint(133))
 
 local phi_n = (p-1)*(q-1)
-assert(phi_n == bigint(108))
+assert(phi_n == bint(108))
 
-local e = bigint(5)
+local e = bint(5)
 local d = modinverse(e, phi_n)
-assert(d == bigint(65))
+assert(d == bint(65))
 
 local function encrypt(msg)
-  return bigint.ipow(msg, e) % n
+  return bint.ipow(msg, e) % n
 end
 
 local function decrypt(msg)
-  return bigint.ipow(msg, d) % n
+  return bint.ipow(msg, d) % n
 end
 
 local function test(msg)
-  msg = bigint.convert(msg)
+  msg = bint.convert(msg)
   local emsg = encrypt(msg)
   print(msg, emsg)
   local dmsg = decrypt(emsg)

@@ -1,6 +1,6 @@
-local bigint = require 'bigint'
+local bint = require 'bint'
 
-bigint.scale(256)
+bint.scale(256)
 
 local function factorial(n)
   if n <= 0 then
@@ -10,7 +10,7 @@ local function factorial(n)
   end
 end
 
-local num = bigint(50)
+local num = bint(50)
 num = factorial(num)
 print(num)
 
