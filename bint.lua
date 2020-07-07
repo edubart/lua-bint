@@ -483,10 +483,10 @@ end
 -- @see bint.parse
 function bint.convert(x, clone)
   if isbint(x) then
-    if clone then
-      return bint.new(x)
-    else
+    if not clone then
       return x
+    else
+      return bint.new(x)
     end
   else
     return bint_fromvalue(x)
@@ -789,10 +789,9 @@ end
 function bint:_sub(y)
   y = bint_assert_convert(y)
   local borrow = 0
+  local wordmaxp1 = BIGINT_WORDMAX + 1
   for i=1,BIGINT_SIZE do
-    local tmp1 = self[i] + (BIGINT_WORDMAX + 1)
-    local tmp2 = y[i] + borrow
-    local res = tmp1 - tmp2
+    local res = (self[i] + wordmaxp1) - (y[i] + borrow)
     self[i] = res & BIGINT_WORDMAX
     borrow = res <= BIGINT_WORDMAX and 1 or 0
   end
@@ -838,19 +837,22 @@ function bint.__mul(x, y)
   end
 end
 
---- Perform unsigned division between two integers considering bints.
+--- Perform unsigned division and modulo operation between two integers considering bints.
+-- This is effectively the same of @{bint.udiv} and @{bint.umod}.
 -- @param x The numerator, must be a bint or a lua integer.
 -- @param y The denominator, must be a bint or a lua integer.
--- @return The quotient, a bint.
+-- @return The quotient following the remainder, both bints.
 -- @raise Asserts on attempt to divide by zero
 -- or if inputs are not convertible to integers.
-function bint.udiv(x, y)
+-- @see bint.udiv
+-- @see bint.umod
+function bint.udivmod(x, y)
   local current = bint.one()
-  local dividend = bint.new(x)
+  local rem = bint.new(x)
   local denom = bint.new(y)
   assert(not denom:iszero(), 'attempt to divide by zero')
   local overflow = false
-  while denom:ule(dividend) do
+  while denom:ule(rem) do
     if denom[BIGINT_SIZE] >= BIGINT_HALFMAX then
       overflow = true
       break
@@ -864,30 +866,24 @@ function bint.udiv(x, y)
   end
   local quot = bint.zero()
   while not current:iszero() do
-    if denom:ule(dividend) then
-      dividend:_sub(denom)
+    if denom:ule(rem) then
+      rem:_sub(denom)
       quot:_bor(current)
     end
     current:_shrone()
     denom:_shrone()
   end
-  return quot
+  return quot, rem
 end
 
---- Perform unsigned division and modulo operation between two integers considering bints.
--- This is effectively the same of @{bint.udiv} and @{bint.umod}.
+--- Perform unsigned division between two integers considering bints.
 -- @param x The numerator, must be a bint or a lua integer.
 -- @param y The denominator, must be a bint or a lua integer.
--- @return The quotient following the remainder, both bints.
+-- @return The quotient, a bint.
 -- @raise Asserts on attempt to divide by zero
 -- or if inputs are not convertible to integers.
--- @see bint.udiv
--- @see bint.umod
-function bint.udivmod(x, y)
-  x, y = bint_assert_convert(x), bint_assert_convert(y)
-  local quot = bint.udiv(x, y)
-  local rem = x - (quot * y)
-  return quot, rem
+function bint.udiv(x, y)
+  return (bint.udivmod(x, y))
 end
 
 --- Perform unsigned integer modulo operation between two integers considering bints.
@@ -899,44 +895,6 @@ end
 function bint.umod(x, y)
   local _, rem = bint.udivmod(x, y)
   return rem
-end
-
---- Perform floor division between two numbers considering bints.
--- Floor division is a division that rounds the quotient towards minus infinity,
--- resulting in the floor of the division of its operands.
--- @param x The numerator, a bint or lua number.
--- @param y The denominator, a bint or lua number.
--- @return The quotient, a bint or lua number.
--- @raise Asserts on attempt to divide by zero.
-function bint.__idiv(x, y)
-  local ix = bint.convert(x)
-  local iy = bint.convert(y)
-  if ix and iy then
-    if iy:isminusone() then
-      return -ix
-    end
-    local quot = bint.udiv(ix:abs(), iy:abs())
-    if ix:isneg() ~= iy:isneg() then
-      quot:_unm()
-      -- round quotient towards minus infinity
-      local rem = ix - (iy * quot)
-      if not rem:iszero() then
-        quot:_dec()
-      end
-    end
-    return quot
-  else
-    return bint.tonumber(x) // bint.tonumber(y)
-  end
-end
-
---- Perform division between two numbers considering bints.
--- This always cast inputs to floats, for integer division only use @{bint.__idiv}.
--- @param x The numerator, a bint or lua number.
--- @param y The denominator, a bint or lua number.
--- @return The quotient, a lua number.
-function bint.__div(x, y)
-  return bint.tonumber(x) / bint.tonumber(y)
 end
 
 --- Perform integer floor division and modulo operation between two numbers considering bints.
@@ -951,10 +909,53 @@ function bint.idivmod(x, y)
   local ix = bint.convert(x)
   local iy = bint.convert(y)
   if ix and iy then
-    return idivmod(ix, iy)
+    if iy:isminusone() then
+      return -ix, bint.zero()
+    end
+    local quot, rem = bint.udivmod(ix:abs(), iy:abs())
+    local isnumneg, isdenomneg = ix:isneg(), iy:isneg()
+    local remzero = rem:iszero()
+    if isnumneg ~= isdenomneg then
+      quot:_unm()
+      -- round quotient towards minus infinity
+      if not remzero then
+        quot:_dec()
+      end
+    end
+    -- adjust the remainder
+    if not remzero then
+      if isnumneg and isdenomneg then
+        rem:_unm()
+      elseif isnumneg and not isdenomneg then
+        rem:_unm():_add(y)
+      elseif isdenomneg and not isnumneg then
+        rem:_add(y)
+      end
+    end
+    return quot, rem
   else
     return idivmod(bint.tonumber(x), bint.tonumber(y))
   end
+end
+
+--- Perform floor division between two numbers considering bints.
+-- Floor division is a division that rounds the quotient towards minus infinity,
+-- resulting in the floor of the division of its operands.
+-- @param x The numerator, a bint or lua number.
+-- @param y The denominator, a bint or lua number.
+-- @return The quotient, a bint or lua number.
+-- @raise Asserts on attempt to divide by zero.
+function bint.__idiv(x, y)
+  return (bint.idivmod(x, y))
+end
+
+--- Perform division between two numbers considering bints.
+-- This always cast inputs to floats, for integer division only use @{bint.__idiv}.
+-- @param x The numerator, a bint or lua number.
+-- @param y The denominator, a bint or lua number.
+-- @return The quotient, a lua number.
+function bint.__div(x, y)
+  return bint.tonumber(x) / bint.tonumber(y)
 end
 
 --- Perform integer floor modulo operation between two numbers considering bints.

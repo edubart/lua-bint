@@ -286,16 +286,20 @@ however the user should take care in some situations:</p>
 	<td class="summary">Multiply two numbers considering bints.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#udiv">udiv (x, y)</a></td>
-	<td class="summary">Perform unsigned division between two integers considering bints.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#udivmod">udivmod (x, y)</a></td>
 	<td class="summary">Perform unsigned division and modulo operation between two integers considering bints.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#udiv">udiv (x, y)</a></td>
+	<td class="summary">Perform unsigned division between two integers considering bints.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#umod">umod (x, y)</a></td>
 	<td class="summary">Perform unsigned integer modulo operation between two integers considering bints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#idivmod">idivmod (x, y)</a></td>
+	<td class="summary">Perform integer floor division and modulo operation between two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__idiv">__idiv (x, y)</a></td>
@@ -304,10 +308,6 @@ however the user should take care in some situations:</p>
 	<tr>
 	<td class="name" nowrap><a href="#__div">__div (x, y)</a></td>
 	<td class="summary">Perform division between two numbers considering bints.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#idivmod">idivmod (x, y)</a></td>
-	<td class="summary">Perform integer floor division and modulo operation between two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__mod">__mod (x, y)</a></td>
@@ -319,7 +319,7 @@ however the user should take care in some situations:</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#upowmod">upowmod (x, y, m)</a></td>
-	<td class="summary">Perform integer modular power between two unsigned integers considering bints.</td>
+	<td class="summary">Perform integer power between two unsigned integers over a modulus considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#__pow">__pow (x, y)</a></td>
@@ -1250,37 +1250,6 @@ however the user should take care in some situations:</p>
 
 </dd>
     <dt>
-    <a name = "udiv"></a>
-    <strong>udiv (x, y)</strong>
-    </dt>
-    <dd>
-    Perform unsigned division between two integers considering bints.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         The numerator, must be a bint or a lua integer.
-        </li>
-        <li><span class="parameter">y</span>
-         The denominator, must be a bint or a lua integer.
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        The quotient, a bint.
-    </ol>
-
-    <h3>Raises:</h3>
-    Asserts on attempt to divide by zero
- or if inputs are not convertible to integers.
-
-
-
-</dd>
-    <dt>
     <a name = "udivmod"></a>
     <strong>udivmod (x, y)</strong>
     </dt>
@@ -1318,6 +1287,37 @@ however the user should take care in some situations:</p>
 
 </dd>
     <dt>
+    <a name = "udiv"></a>
+    <strong>udiv (x, y)</strong>
+    </dt>
+    <dd>
+    Perform unsigned division between two integers considering bints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The numerator, must be a bint or a lua integer.
+        </li>
+        <li><span class="parameter">y</span>
+         The denominator, must be a bint or a lua integer.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The quotient, a bint.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt to divide by zero
+ or if inputs are not convertible to integers.
+
+
+
+</dd>
+    <dt>
     <a name = "umod"></a>
     <strong>umod (x, y)</strong>
     </dt>
@@ -1345,6 +1345,42 @@ however the user should take care in some situations:</p>
     Asserts on attempt to divide by zero
  or if the inputs are not convertible to integers.
 
+
+
+</dd>
+    <dt>
+    <a name = "idivmod"></a>
+    <strong>idivmod (x, y)</strong>
+    </dt>
+    <dd>
+    Perform integer floor division and modulo operation between two numbers considering bints.
+ This is effectively the same of <a href="index.html#__idiv">bint.__idiv</a> and <a href="index.html#__mod">bint.__mod</a>.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         The numerator, a bint or lua number.
+        </li>
+        <li><span class="parameter">y</span>
+         The denominator, a bint or lua number.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        The quotient following the remainder, both bint or lua number.
+    </ol>
+
+    <h3>Raises:</h3>
+    Asserts on attempt to divide by zero.
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="index.html#__idiv">bint.__idiv</a></li>
+         <li><a href="index.html#__mod">bint.__mod</a></li>
+    </ul>
 
 
 </dd>
@@ -1406,42 +1442,6 @@ however the user should take care in some situations:</p>
     </ol>
 
 
-
-
-</dd>
-    <dt>
-    <a name = "idivmod"></a>
-    <strong>idivmod (x, y)</strong>
-    </dt>
-    <dd>
-    Perform integer floor division and modulo operation between two numbers considering bints.
- This is effectively the same of <a href="index.html#__idiv">bint.__idiv</a> and <a href="index.html#__mod">bint.__mod</a>.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         The numerator, a bint or lua number.
-        </li>
-        <li><span class="parameter">y</span>
-         The denominator, a bint or lua number.
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        The quotient following the remainder, both bint or lua number.
-    </ol>
-
-    <h3>Raises:</h3>
-    Asserts on attempt to divide by zero.
-
-    <h3>See also:</h3>
-    <ul>
-         <li><a href="index.html#__idiv">bint.__idiv</a></li>
-         <li><a href="index.html#__mod">bint.__mod</a></li>
-    </ul>
 
 
 </dd>
@@ -1518,7 +1518,7 @@ however the user should take care in some situations:</p>
     <strong>upowmod (x, y, m)</strong>
     </dt>
     <dd>
-    Perform integer modular power between two unsigned integers considering bints.
+    Perform integer power between two unsigned integers over a modulus considering bints.
 
 
     <h3>Parameters:</h3>
@@ -1543,6 +1543,11 @@ however the user should take care in some situations:</p>
     <h3>Raises:</h3>
     Asserts in case inputs are not convertible to integers.
 
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="index.html#__pow">bint.__pow</a></li>
+         <li><a href="index.html#ipow">bint.ipow</a></li>
+    </ul>
 
 
 </dd>
@@ -2033,7 +2038,7 @@ however the user should take care in some situations:</p>
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-07-06 23:11:53 </i>
+<i style="float:right;">Last updated 2020-07-07 11:18:23 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
