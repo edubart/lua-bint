@@ -514,6 +514,12 @@ local function test(bits)
     test_ops(0x769c99, 0x2cffda)
     test_ops(0xc19076, 0x31ffd4)
   end
+
+  do -- upowmod
+    assert_eq(bint.upowmod(65, 17, 3233):tointeger(), 2790)
+    assert_eq(bint.upowmod(2790, 413, 3233):tointeger(), 65)
+    assert_eq(bint.upowmod(2790, 413, 1):tointeger(), 0)
+  end
 end
 
 test(64, 4)

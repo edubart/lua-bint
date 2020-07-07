@@ -971,10 +971,11 @@ end
 --- Perform integer power between two integers considering bints.
 -- If y is negative then pow is performed as unsigned integers.
 -- @param x The base, an integer.
--- @param y The exponent, cannot be negative, an integer.
+-- @param y The exponent, an integer.
 -- @return The result of the pow operation, a bint.
 -- @raise Asserts in case inputs are not convertible to integers.
 -- @see bint.__pow
+-- @see bint.upowmod
 function bint.ipow(x, y)
   y = bint_assert_convert(y)
   if y:iszero() then
@@ -996,6 +997,33 @@ function bint.ipow(x, y)
     end
   until y:isone()
   return x * z
+end
+
+--- Perform integer power between two unsigned integers over a modulus considering bints.
+-- @param x The base, an integer.
+-- @param y The exponent, an integer.
+-- @param m The modulus, an integer.
+-- @return The result of the pow operation, a bint.
+-- @raise Asserts in case inputs are not convertible to integers.
+-- @see bint.__pow
+-- @see bint.ipow
+function bint.upowmod(x, y, m)
+  m = bint_assert_convert(m)
+  if m:isone() then
+    return bint.zero()
+  else
+    x, y = bint.new(x),  bint.new(y)
+    local z = bint.one()
+    x = bint.umod(x, m)
+    while not y:iszero() do
+      if y:isodd() then
+        z = bint.umod(z*x, m)
+      end
+      y:_shrone()
+      x = bint.umod(x*x, m)
+    end
+    return z
+  end
 end
 
 --- Perform numeric power between two numbers considering bints.
