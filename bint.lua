@@ -114,8 +114,7 @@ bint.__index = bint
 local BIGINT_SIZE
 local BIGINT_WORDBITS
 local BIGINT_WORDMAX
-local BIGINT_SIGNBIT
-local BIGINT_HALFMAX
+local BIGINT_WORDMSB
 local BIGINT_MATHMININTEGER
 local BIGINT_MATHMAXINTEGER
 
@@ -140,11 +139,10 @@ function bint.scale(bits, wordbits)
   assert(bits % wordbits == 0, 'bitsize is not multiple of word bitsize')
   assert(2*wordbits <= luainteger_bitsize(), 'word bitsize must be half of the lua integer bitsize')
   assert(bits >= 64, 'bitsize must be >= 64')
-  BIGINT_SIZE = bits / wordbits
+  BIGINT_SIZE = bits // wordbits
   BIGINT_WORDBITS = wordbits
   BIGINT_WORDMAX = (1 << BIGINT_WORDBITS) - 1
-  BIGINT_SIGNBIT = (1 << (BIGINT_WORDBITS - 1))
-  BIGINT_HALFMAX = 1 + BIGINT_WORDMAX // 2
+  BIGINT_WORDMSB = (1 << (BIGINT_WORDBITS - 1))
   BIGINT_MATHMININTEGER = bint.new(math.mininteger)
   BIGINT_MATHMAXINTEGER = bint.new(math.maxinteger)
 end
@@ -567,7 +565,7 @@ end
 -- @param x A bint or a lua number.
 function bint.isneg(x)
   if isbint(x) then
-    return x[BIGINT_SIZE] & BIGINT_SIGNBIT ~= 0
+    return x[BIGINT_SIZE] & BIGINT_WORDMSB ~= 0
   else
     return x < 0
   end
@@ -847,30 +845,32 @@ end
 -- @see bint.udiv
 -- @see bint.umod
 function bint.udivmod(x, y)
-  local current = bint.one()
+  local bit = 0
   local rem = bint.new(x)
   local denom = bint.new(y)
   assert(not denom:iszero(), 'attempt to divide by zero')
   local overflow = false
   while denom:ule(rem) do
-    if denom[BIGINT_SIZE] >= BIGINT_HALFMAX then
+    if denom[BIGINT_SIZE] & BIGINT_WORDMSB ~= 0 then
       overflow = true
       break
     end
-    current:_shlone()
+    bit = bit + 1
     denom:_shlone()
   end
   if not overflow then
-    current:_shrone()
+    bit = bit - 1
     denom:_shrone()
   end
   local quot = bint.zero()
-  while not current:iszero() do
+  while bit > -1 do
     if denom:ule(rem) then
       rem:_sub(denom)
-      quot:_bor(current)
+      -- set bit
+      local i = (bit // BIGINT_WORDBITS) + 1
+      quot[i] = quot[i] | (1 << (bit % BIGINT_WORDBITS))
     end
-    current:_shrone()
+    bit = bit - 1
     denom:_shrone()
   end
   return quot, rem
@@ -914,23 +914,21 @@ function bint.idivmod(x, y)
     end
     local quot, rem = bint.udivmod(ix:abs(), iy:abs())
     local isnumneg, isdenomneg = ix:isneg(), iy:isneg()
-    local remzero = rem:iszero()
     if isnumneg ~= isdenomneg then
       quot:_unm()
       -- round quotient towards minus infinity
-      if not remzero then
+      if not rem:iszero() then
         quot:_dec()
+        -- adjust the remainder
+        if isnumneg and not isdenomneg then
+          rem:_unm():_add(y)
+        elseif isdenomneg and not isnumneg then
+          rem:_add(y)
+        end
       end
-    end
-    -- adjust the remainder
-    if not remzero then
-      if isnumneg and isdenomneg then
-        rem:_unm()
-      elseif isnumneg and not isdenomneg then
-        rem:_unm():_add(y)
-      elseif isdenomneg and not isnumneg then
-        rem:_add(y)
-      end
+    elseif isnumneg then
+      -- adjust the remainder
+      rem:_unm()
     end
     return quot, rem
   else
