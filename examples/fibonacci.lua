@@ -15,6 +15,7 @@ local function fibonacci(n)
 end
 
 local x = fibonacci(1001)
+print('The 1000th fibonnaci number is:')
 print(x)
 
 assert(tostring(x) == '\z

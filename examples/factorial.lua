@@ -14,6 +14,7 @@ local function factorial(n)
 end
 
 local x = factorial(bint(100))
+print('The factorial of 100 is:')
 print(x)
 
 assert(tostring(x) == '\z

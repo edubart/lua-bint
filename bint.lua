@@ -41,7 +41,7 @@ integer overflow warps around,
 signed integers are implemented using two-complement arithmetic rules,
 integer division operations rounds towards minus infinity,
 any mixed operations with float numbers promotes the value to a float,
-and the usual division/power operation always promote floats.
+and the usual division/power operation always promote to floats.
 
 The library is designed to be possible to work with only unsigned integer arithmetic
 when using the proper methods.

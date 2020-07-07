@@ -23,7 +23,7 @@ integer overflow warps around,
 signed integers are implemented using two-complement arithmetic rules,
 integer division operations rounds towards minus infinity,
 any mixed operations with float numbers promotes the value to a float,
-and the usual division/power operation always promote floats.
+and the usual division/power operation always promote to floats.
 
 The library is designed to be possible to work with only unsigned integer arithmetic
 when using the proper methods.
@@ -59,7 +59,7 @@ luarocks install https://raw.githubusercontent.com/edubart/lua-bint/master/rocks
 
 Or just copy the `bint.lua` file, the library is self contained in this single file with no dependencies.
 
-## Example
+## Examples
 
 ```lua
 local bint = require 'bint'
@@ -71,6 +71,13 @@ print(x) -- outputs: 340282366920938463463374607431768211456
 
 For more usage examples check the
 [examples directory](https://github.com/edubart/lua-bint/tree/master/examples).
+
+Some interesting examples there:
+
+* [factorial.lua](https://github.com/edubart/lua-bint/blob/master/examples/factorial.lua) - calculate factorial of 100
+* [fibonnaci.lua](https://github.com/edubart/lua-bint/blob/master/examples/fibonnaci.lua) - calculate the 1001th fibonacci number
+* [pi.lua](https://github.com/edubart/lua-bint/blob/master/examples/pi.lua) - calculate the first 100 pi digits
+* [rsa.lua](https://github.com/edubart/lua-bint/blob/master/examples/rsa.lua) - simple RSA example for encrypting/decrypting messages
 
 ## Tests
 

@@ -16,7 +16,7 @@ local function lcm(a, b)
   return bint.abs(a * b) // gcd(a, b)
 end
 
-local function modinverse(a, m)
+local function modinv(a, m)
   assert(bint.isone(gcd(a, m)), 'no inverse')
   if bint.isone(m) then
     return m
@@ -55,7 +55,7 @@ local e = bint('65537')
 print('e = ' .. tostring(e))
 
 -- 5. Compute d, the modular multiplicative inverse
-local d = modinverse(e, phi_n)
+local d = modinv(e, phi_n)
 print('d = ' .. tostring(d))
 assert(d == bint('2768292749187922993934715143535384861582621221551460873'))
 
@@ -70,7 +70,7 @@ local function decrypt(msg)
 end
 
 -- Test encrypt and decrypt
-print('testing')
+print('Message encryption test:')
 local x = bint.frombase('thequickbrownfoxjumpsoverthelazydog', 36)
 assert(x < n)
 print('x = ' .. bint.tobase(x, 36))
