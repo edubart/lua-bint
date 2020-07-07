@@ -1,6 +1,9 @@
+-- Compute the factorial of 100
+-- See https://en.wikipedia.org/wiki/Factorial
+
 local bint = require 'bint'
 
-bint.scale(256)
+bint.scale(576)
 
 local function factorial(n)
   if n <= 0 then
@@ -10,8 +13,9 @@ local function factorial(n)
   end
 end
 
-local num = bint(50)
-num = factorial(num)
-print(num)
+local x = factorial(bint(100))
+print(x)
 
-assert(tostring(num) == '30414093201713378043612608166064768844377641568960512000000000000')
+assert(tostring(x) == '\z
+933262154439441526816992388562667004907159682643816214685929638952175999932299\z
+15608941463976156518286253697920827223758251185210916864000000000000000000000000')

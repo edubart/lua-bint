@@ -969,15 +969,14 @@ function bint.__mod(x, y)
 end
 
 --- Perform integer power between two integers considering bints.
+-- If y is negative then pow is performed as unsigned integers.
 -- @param x The base, an integer.
 -- @param y The exponent, cannot be negative, an integer.
 -- @return The result of the pow operation, a bint.
--- @raise Asserts on attempt to pow with a negative exponent
--- or if inputs are not convertible to integers.
+-- @raise Asserts in case inputs are not convertible to integers.
 -- @see bint.__pow
 function bint.ipow(x, y)
   y = bint_assert_convert(y)
-  assert(not y:isneg(), "attempt to pow to a negative power")
   if y:iszero() then
     return bint.one()
   elseif y:isone() then

@@ -3,6 +3,7 @@ test:
 	lua examples/simple.lua
 	lua examples/fibonacci.lua
 	lua examples/factorial.lua
+	lua examples/pi.lua
 	lua examples/rsa.lua
 
 docs:
