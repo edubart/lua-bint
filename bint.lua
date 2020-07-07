@@ -819,19 +819,20 @@ function bint.__mul(x, y)
   local ix = bint.convert(x)
   local iy = bint.convert(y)
   if ix and iy then
-    local row, tmp = bint_newempty(), bint_newempty()
-    local res = bint.zero()
+    local z = bint.zero()
     for i=1,BIGINT_SIZE do
-      row:_zero()
-      for j=1,BIGINT_SIZE do
-        local nshifts = i+j-2
-        if nshifts < BIGINT_SIZE then
-          row:_add(tmp:_fromuinteger(ix[i] * iy[j]):_shlwords(nshifts))
+      for j=1,BIGINT_SIZE-i+1 do
+        local a = ix[i] * iy[j]
+        local carry = 0
+        for k=i+j-1,BIGINT_SIZE do
+          local tmp = z[k] + (a & BIGINT_WORDMAX) + carry
+          carry = tmp > BIGINT_WORDMAX and 1 or 0
+          z[k] = tmp & BIGINT_WORDMAX
+          a = a >> BIGINT_WORDBITS
         end
       end
-      res:_add(row)
     end
-    return res
+    return z
   else
     return bint.tonumber(x) * bint.tonumber(y)
   end

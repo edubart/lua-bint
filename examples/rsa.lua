@@ -35,23 +35,29 @@ local function modinverse(a, m)
 end
 
 -- 1. Choose two distinct primes
-local p = bint(61)
-local q = bint(53)
+local p = bint('5011956100955230700919988831')
+local q = bint('5989833698158308593254005067')
+print('p = ' .. tostring(p))
+print('q = ' .. tostring(q))
 
 -- 2. Compute n = p * q
 local n = p * q
-assert(n == bint(3233))
+print('n = ' .. tostring(n))
+assert(n == bint('30020783547191766561527759475184666413598963507657406677'))
 
 -- 3. Compute the totient
 local phi_n = lcm(p - 1, q - 1)
-assert(phi_n == bint(780))
+print('phi_n = ' .. tostring(phi_n))
+assert(phi_n == bint('5003463924531961093587959910697146102414237368913902130'))
 
--- 4. Choose any number e that 1 < e < phi_n and is coprime to phi_n.
-local e = bint(17)
+-- 4. Choose any number e that 1 < e < phi_n and is coprime to phi_n
+local e = bint('65537')
+print('e = ' .. tostring(e))
 
 -- 5. Compute d, the modular multiplicative inverse
 local d = modinverse(e, phi_n)
-assert(d == bint(413))
+print('d = ' .. tostring(d))
+assert(d == bint('2768292749187922993934715143535384861582621221551460873'))
 
 -- The public key is (n, e), implement the encrypt function
 local function encrypt(msg)
@@ -64,23 +70,14 @@ local function decrypt(msg)
 end
 
 -- Test encrypt and decrypt
-print(encrypt(65))
-assert(encrypt(65) == bint(2790))
-
-print(decrypt(2790))
-assert(decrypt(2790) == bint(65))
-
-local function test(x)
-  local c = encrypt(x)
-  local m = decrypt(c)
-  print(m)
-  assert(bint.eq(m, x))
-end
-
--- More tests
-test(0)
-test(1)
-test(3)
-test(11)
-test(n // 2)
-test(n-1)
+print('testing')
+local x = bint.frombase('thequickbrownfoxjumpsoverthelazydog', 36)
+assert(x < n)
+print('x = ' .. bint.tobase(x, 36))
+local c = encrypt(x)
+print('c = ' .. bint.tobase(c, 36))
+assert(c == bint.frombase('9z4qp01to1q9203h34li5itqmoshbjqii6r9', 36))
+local m = decrypt(c)
+print('m = ' .. bint.tobase(m, 36))
+assert(m == x)
+print('success!')
