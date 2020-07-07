@@ -258,12 +258,16 @@ local function getbasestep(base)
 end
 
 -- Compute power with lua integers.
-local function ipow(x, y)
-  local r = 1
-  for _=1,y do
-    r = r * x
+local function ipow(y, x, n)
+  if n == 0 then
+    return y
+  elseif n == 1 then
+    return y * x
+  elseif n & 1 == 0 then --even
+    return ipow(y, x * x, n // 2)
+  else
+    return ipow(x * y, x * x, (n-1) // 2)
   end
-  return r
 end
 
 --- Create a bint from a string of the desired base.
@@ -296,7 +300,7 @@ function bint.frombase(s, base)
       -- invalid integer string representation
       return nil
     end
-    n = (n * ipow(base, #part)):_add(d)
+    n = (n * ipow(1, base, #part)):_add(d)
   end
   if sign == '-' then
     n:_unm()
@@ -414,7 +418,7 @@ function bint.tobase(x, base, unsigned)
     x = x:abs()
   end
   local step = getbasestep(base)
-  local divisor = ipow(base, step)
+  local divisor = ipow(1, base, step)
   local stop = x:iszero()
   if stop then
     return '0'
@@ -817,15 +821,26 @@ function bint.__mul(x, y)
   local iy = bint.convert(y)
   if ix and iy then
     local z = bint.zero()
+    local sizep1 = BIGINT_SIZE+1
+    local s = sizep1
+    local e = 0
     for i=1,BIGINT_SIZE do
-      for j=1,BIGINT_SIZE-i+1 do
+      if ix[i] ~= 0 or iy[i] ~= 0 then
+        e = math.max(e, i)
+        s = math.min(s, i)
+      end
+    end
+    for i=s,e do
+      for j=s,math.min(sizep1-i,e) do
         local a = ix[i] * iy[j]
-        local carry = 0
-        for k=i+j-1,BIGINT_SIZE do
-          local tmp = z[k] + (a & BIGINT_WORDMAX) + carry
-          carry = tmp > BIGINT_WORDMAX and 1 or 0
-          z[k] = tmp & BIGINT_WORDMAX
-          a = a >> BIGINT_WORDBITS
+        if a ~= 0 then
+          local carry = 0
+          for k=i+j-1,BIGINT_SIZE do
+            local tmp = z[k] + (a & BIGINT_WORDMAX) + carry
+            carry = tmp > BIGINT_WORDMAX and 1 or 0
+            z[k] = tmp & BIGINT_WORDMAX
+            a = a >> BIGINT_WORDBITS
+          end
         end
       end
     end
