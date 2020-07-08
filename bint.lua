@@ -276,19 +276,22 @@ function bint.frombase(s, base)
   if type(s) ~= 'string' then
     return nil
   end
-  s = s:lower()
   base = base or 10
   if not (base >= 2 and base <= 36) then
     -- number base is too large
     return nil
   end
-  local sign, int = s:match('^([+-]?)(%w+)$')
+  local step = getbasestep(base)
+  if #s < step then
+    -- string is small, use tonumber (faster)
+    return bint.frominteger(tonumber(s, base))
+  end
+  local sign, int = s:lower():match('^([+-]?)(%w+)$')
   if not (sign and int) then
     -- invalid integer string representation
     return nil
   end
   local n = bint.zero()
-  local step = getbasestep(base)
   for i=1,#int,step do
     local part = int:sub(i,i+step-1)
     local d = tonumber(part, base)
@@ -296,7 +299,12 @@ function bint.frombase(s, base)
       -- invalid integer string representation
       return nil
     end
-    n = (n * ipow(1, base, #part)):_add(d)
+    if i > 1 then
+      n = n * ipow(1, base, #part)
+    end
+    if d ~= 0 then
+      n:_add(d)
+    end
   end
   if sign == '-' then
     n:_unm()
@@ -404,6 +412,18 @@ function bint.tobase(x, base, unsigned)
   if not (base >= 2 and base <= 36) then
     -- number base is too large
     return nil
+  end
+  if base == 10 or base == 16 then
+    local inluarange = x >= BIGINT_MATHMININTEGER and x <= BIGINT_MATHMAXINTEGER
+    if inluarange then
+      -- integer is small, use tostring or string.format (faster)
+      local n = x:tointeger()
+      if base == 10 then
+        return tostring(n)
+      else
+        return string.format('%x', n)
+      end
+    end
   end
   local ss = {}
   if unsigned == nil then

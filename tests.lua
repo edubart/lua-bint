@@ -76,6 +76,10 @@ local function test(bits)
     assert(bint(1) <= 1.5 ==  true)
     assert(bint.isbint(1) == false)
     assert(bint.isbint(bint(1)) == true)
+    assert(tostring(bint.frombase('9223372036854775807')) == '9223372036854775807')
+    assert(tostring(bint.frombase('-9223372036854775808')) == '-9223372036854775808')
+    assert(bint.frombase('AAAAAAAAAAAAAAAAAAA') == nil)
+    assert(bint.frombase('AAAAAAAAAAAAAAAAAAA_') == nil)
 
     if bits > 96 then
       assert((bint(1) << 96):tonumber() > 1e28)

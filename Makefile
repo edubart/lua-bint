@@ -6,6 +6,7 @@ test:
 	lua examples/fibonacci.lua
 	lua examples/factorial.lua
 	lua examples/pi.lua
+	lua examples/e.lua
 	lua examples/rsa.lua
 
 docs:
