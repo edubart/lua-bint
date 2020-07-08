@@ -61,8 +61,8 @@ Then when you need create a bint, you can use one of the following functions:
 * @{bint.frominteger} (convert from lua integers, preserving the sign)
 * @{bint.fromnumber} (convert from lua floats, truncating the fractional part)
 * @{bint.frombase} (convert from arbitrary bases, like hexadecimal)
-* @{bint.new} (convert from anything, asserts on invalid values)
-* @{bint.convert} (convert form anything, returns nil on invalid values)
+* @{bint.new} (convert from anything, asserts on invalid integers)
+* @{bint.convert} (convert form anything, returns nil on invalid integers)
 * @{bint.parse} (convert from anything, returns a lua number as fallback)
 * @{bint.zero}
 * @{bint.one}
@@ -77,13 +77,12 @@ When you are done computing and need to get the result,
 get the output from one of the following functions:
 
 * @{bint.touinteger} (convert to a lua integer, wraps around as an unsigned integer)
-* @{bint.tointeger} (convert to a lua integer, always preserving the sign)
+* @{bint.tointeger} (convert to a lua integer, wraps around, preserves the sign)
 * @{bint.tonumber} (convert to lua float, losing precision)
 * @{bint.tobase} (convert to a string in any base)
 * @{bint.__tostring} (convert to a string in base 10)
 
-Note that outputting to a lua number will make the integer overflow and its value wraps around.
-To output very large integer with no loss of precision you probably want to use @{bint.tobase}
+To output very large integer with no loss you probably want to use @{bint.tobase}
 or call `tostring` to get a string representation.
 
 ## Precautions
@@ -258,9 +257,7 @@ end
 
 -- Compute power with lua integers.
 local function ipow(y, x, n)
-  if n == 0 then
-    return y
-  elseif n == 1 then
+  if n == 1 then
     return y * x
   elseif n & 1 == 0 then --even
     return ipow(y, x * x, n // 2)
@@ -463,11 +460,11 @@ end
 function bint.new(x)
   if isbint(x) then
     -- return a clone
-    local n = {}
+    local n = bint_newempty()
     for i=1,BIGINT_SIZE do
       n[i] = x[i]
     end
-    return setmetatable(n, bint)
+    return n
   else
     x = bint_fromvalue(x)
   end
@@ -563,6 +560,12 @@ function bint.isminusone(x)
   end
 end
 
+--- Check if the input is a bint.
+-- @param x Any lua value.
+function bint.isbint(x)
+  return isbint(x)
+end
+
 --- Check if a number is negative considering bints.
 -- Zero is guaranteed to never be negative for bints.
 -- @param x A bint or a lua number.
@@ -604,31 +607,23 @@ function bint.isodd(x)
   end
 end
 
---- Assign a bint to zero (in-place).
-function bint:_zero()
-  for i=1,BIGINT_SIZE do
-    self[i] = 0
-  end
-  return self
-end
-
 --- Create a new bint with 0 value.
 function bint.zero()
-  return bint_newempty():_zero()
-end
-
---- Assign a bint to 1 (in-place).
-function bint:_one()
-  self[1] = 1
-  for i=2,BIGINT_SIZE do
-    self[i] = 0
+  local x = bint_newempty()
+  for i=1,BIGINT_SIZE do
+    x[i] = 0
   end
-  return self
+  return x
 end
 
 --- Create a new bint with 1 value.
 function bint.one()
-  return bint_newempty():_one()
+  local x = bint_newempty()
+  x[1] = 1
+  for i=2,BIGINT_SIZE do
+    x[i] = 0
+  end
+  return x
 end
 
 --- Bitwise left shift a bint in one bit (in-place).
@@ -775,10 +770,17 @@ end
 -- @param x A bint or a lua number to be added.
 -- @param y A bint or a lua number to be added.
 function bint.__add(x, y)
-  local ix = bint.convert(x, true)
+  local ix = bint.convert(x)
   local iy = bint.convert(y)
   if ix and iy then
-    return ix:_add(iy)
+    local z = bint_newempty()
+    local carry = 0
+    for i=1,BIGINT_SIZE do
+      local tmp = ix[i] + iy[i] + carry
+      carry = tmp > BIGINT_WORDMAX and 1 or 0
+      z[i] = tmp & BIGINT_WORDMAX
+    end
+    return z
   else
     return bint.tonumber(x) + bint.tonumber(y)
   end
@@ -803,10 +805,18 @@ end
 -- @param x A bint or a lua number to be subtract from.
 -- @param y A bint or a lua number to subtract.
 function bint.__sub(x, y)
-  local ix = bint.convert(x, true)
+  local ix = bint.convert(x)
   local iy = bint.convert(y)
   if ix and iy then
-    return ix:_sub(iy)
+    local z = bint_newempty()
+    local borrow = 0
+    local wordmaxp1 = BIGINT_WORDMAX + 1
+    for i=1,BIGINT_SIZE do
+      local res = (ix[i] + wordmaxp1) - (iy[i] + borrow)
+      z[i] = res & BIGINT_WORDMAX
+      borrow = res <= BIGINT_WORDMAX and 1 or 0
+    end
+    return z
   else
     return bint.tonumber(x) - bint.tonumber(y)
   end
@@ -873,19 +883,18 @@ end
 -- @see bint.udiv
 -- @see bint.umod
 function bint.udivmod(x, y)
-  local dividend = bint.convert(x, true)
-  local divisor = bint.convert(y)
+  local dividend = bint.new(x)
+  local divisor = bint_assert_convert(y)
+  local quot = bint.zero()
   assert(not divisor:iszero(), 'attempt to divide by zero')
   if dividend:ult(divisor) then
-    return bint.zero(), dividend
+    return quot, dividend
   end
   -- align leftmost digits in dividend and divisor
   local divisorlbit = findleftbit(divisor)
   local divdendlbit, size = findleftbit(dividend)
   local bit = divdendlbit - divisorlbit
   divisor = divisor << bit
-  -- set quotient to 0
-  local quot = bint.zero()
   local wordmaxp1 = BIGINT_WORDMAX + 1
   local wordbitsm1 = BIGINT_WORDBITS - 1
   while bit >= 0 do
@@ -1202,7 +1211,11 @@ end
 -- @param x An integer to perform bitwise NOT.
 -- @raise Asserts in case inputs are not convertible to integers.
 function bint.__bnot(x)
-  return bint.new(x):_bnot()
+  local y = bint_newempty()
+  for i=1,BIGINT_SIZE do
+    y[i] = (~x[i]) & BIGINT_WORDMAX
+  end
+  return y
 end
 
 --- Negate a bint (in-place). This apply effectively apply two's complements.
@@ -1213,7 +1226,7 @@ end
 --- Negate a bint. This apply effectively apply two's complements.
 -- @param x A bint to perform negation.
 function bint.__unm(x)
-  return bint.new(x):_unm()
+  return (~x):_inc()
 end
 
 --- Check if bints are equal.
@@ -1232,13 +1245,7 @@ end
 -- @param x A bint or lua number to compare.
 -- @param y A bint or lua number to compare.
 function bint.eq(x, y)
-  local ix = bint.convert(x)
-  local iy = bint.convert(y)
-  if ix and iy then
-    return ix == iy
-  else
-    return x == y
-  end
+  return bint.convert(x) == bint.convert(y)
 end
 
 --- Compare if integer x is less than y considering bints (unsigned version).
@@ -1278,12 +1285,18 @@ end
 -- @param y Right value to compare, a bint or lua number.
 -- @see bint.ult
 function bint.__lt(x, y)
-  local ix = bint.convert(x)
-  local iy = bint.convert(y)
+  local ix, iy = bint.convert(x), bint.convert(y)
   if ix and iy then
-    local xneg, yneg = ix:isneg(), iy:isneg()
+    local xneg = ix[BIGINT_SIZE] & BIGINT_WORDMSB ~= 0
+    local yneg = iy[BIGINT_SIZE] & BIGINT_WORDMSB ~= 0
     if xneg == yneg then
-      return bint.ult(ix, iy)
+      for i=BIGINT_SIZE,1,-1 do
+        local a, b = ix[i], iy[i]
+        if a ~= b then
+          return a < b
+        end
+      end
+      return false
     else
       return xneg and not yneg
     end
@@ -1297,12 +1310,18 @@ end
 -- @param y Right value to compare, a bint or lua number.
 -- @see bint.ule
 function bint.__le(x, y)
-  local ix = bint.convert(x)
-  local iy = bint.convert(y)
+  local ix, iy = bint.convert(x), bint.convert(y)
   if ix and iy then
-    local xneg, yneg = ix:isneg(), iy:isneg()
+    local xneg = ix[BIGINT_SIZE] & BIGINT_WORDMSB ~= 0
+    local yneg = iy[BIGINT_SIZE] & BIGINT_WORDMSB ~= 0
     if xneg == yneg then
-      return bint.ule(ix, iy)
+      for i=BIGINT_SIZE,1,-1 do
+        local a, b = ix[i], iy[i]
+        if a ~= b then
+          return a < b
+        end
+      end
+      return true
     else
       return xneg and not yneg
     end

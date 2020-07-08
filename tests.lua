@@ -72,8 +72,10 @@ local function test(bits)
     assert(bint.eq(1.5, 1.5) == true)
     assert(bint.eq(1.5, 1) == false)
 
-    assert(bint(1) < 1.5, true)
-    assert(bint(1) <= 1.5, true)
+    assert(bint(1) < 1.5 == true)
+    assert(bint(1) <= 1.5 ==  true)
+    assert(bint.isbint(1) == false)
+    assert(bint.isbint(bint(1)) == true)
 
     if bits > 96 then
       assert((bint(1) << 96):tonumber() > 1e28)
@@ -155,6 +157,7 @@ local function test(bits)
     assert_eq(bint.parse(1.5), 1.5)
 
     assert_eq(bint.tobase(1, 10), '1')
+    assert_eq(bint.tobase(8, 7), '11')
     assert_eq(bint.tobase(1, 37), nil)
     assert_eq(bint.tobase(1.5, 10), nil)
 
@@ -173,10 +176,12 @@ local function test(bits)
   do -- add/sub/mul/band/bor/bxor/eq/lt/le
     local function test_add(x, y)
       assert_eq((bint(x) + bint(y)):tointeger(), x + y)
+      assert_eq((bint(x):_add(y)):tointeger(), x + y)
       assert_eq(bint(x) + (y+0.5), x + (y+0.5))
     end
     local function test_sub(x, y)
       assert_eq((bint(x) - bint(y)):tointeger(), x - y)
+      assert_eq((bint(x):_sub(y)):tointeger(), x - y)
       assert_eq(bint(x) - (y+0.5), x - (y+0.5))
     end
     local function test_mul(x, y)
@@ -195,11 +200,17 @@ local function test(bits)
     local function test_eq(x, y)
       assert_eq(bint(x) == bint(y), x == y)
     end
+    local function test_lt(x, y)
+      assert_eq(bint(x) < bint(y), x < y)
+    end
+    local function test_ult(x, y)
+      assert_eq(bint.ult(bint(x), bint(y)), math.ult(x, y))
+    end
     local function test_le(x, y)
       assert_eq(bint(x) <= bint(y), x <= y)
     end
-    local function test_lt(x, y)
-      assert_eq(bint(x) < bint(y), x < y)
+    local function test_ule(x, y)
+      assert_eq(bint.ule(bint(x), bint(y)), x == y or math.ult(x, y))
     end
     local function test_ops2(x, y)
       test_add(x, y)
@@ -210,7 +221,9 @@ local function test(bits)
       test_bxor(x, y)
       test_eq(x, y) test_eq(y, x) test_eq(x, x) test_eq(y, y)
       test_lt(x, y) test_lt(y, x) test_lt(x, x) test_lt(y, y)
+      test_ult(x, y) test_ult(y, x) test_ult(x, x) test_ult(y, y)
       test_le(x, y) test_le(y, x) test_le(x, x) test_le(y, y)
+      test_ule(x, y) test_ule(y, x) test_ule(x, x) test_ule(y, y)
     end
     local function test_ops(x, y)
       test_ops2(x, y)
@@ -291,9 +304,17 @@ local function test(bits)
     local function test_shr(x, y)
       assert_eq((bint(x) >> y):tointeger(), x >> y)
     end
+    local function test_shlone(x, y)
+      assert_eq(bint(x):_shlone():tointeger(), x << 1)
+    end
+    local function test_shrone(x, y)
+      assert_eq(bint(x):_shrone():tointeger(), x >> 1)
+    end
     local function test_ops(x, y)
       test_shl(x, y) test_shl(x, -y)
       test_shr(x, y) test_shr(x, -y)
+      test_shlone(x) test_shlone(y)
+      test_shrone(x) test_shrone(y)
     end
     test_ops(0, 0)
     test_ops(1, 0)
