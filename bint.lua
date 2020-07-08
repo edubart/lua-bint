@@ -34,7 +34,6 @@ using strings or large tables, so regarding that aspect this library should be m
 
 The main design goal of this library is to be small, correct, self contained and use few
 resources while retaining acceptable performance and feature completeness.
-Clarity of the code is also highly valued.
 
 The library is designed to follow recent Lua integer semantics, this means that
 integer overflow warps around,
@@ -859,7 +858,7 @@ local function findleftbit(x)
         v = v >> 1
         j = j + 1
       until v == 0
-      return (i-1)*BIGINT_WORDBITS + j - 1
+      return (i-1)*BIGINT_WORDBITS + j - 1, i
     end
   end
 end
@@ -881,25 +880,46 @@ function bint.udivmod(x, y)
     return bint.zero(), dividend
   end
   -- align leftmost digits in dividend and divisor
-  local bit = findleftbit(dividend) - findleftbit(divisor)
+  local divisorlbit = findleftbit(divisor)
+  local divdendlbit, size = findleftbit(dividend)
+  local bit = divdendlbit - divisorlbit
   divisor = divisor << bit
   -- set quotient to 0
   local quot = bint.zero()
+  local wordmaxp1 = BIGINT_WORDMAX + 1
+  local wordbitsm1 = BIGINT_WORDBITS - 1
   while bit >= 0 do
+    -- compute divisor <= dividend
+    local le = true
+    for i=size,1,-1 do
+      local a, b = divisor[i], dividend[i]
+      if a ~= b then
+        le = a < b
+        break
+      end
+    end
     -- if the portion of the dividend above the divisor is greater or equal than to the divisor
-    if divisor:ule(dividend) then
+    if le then
       -- subtract divisor from the portion of the dividend
-      dividend:_sub(divisor)
+      local borrow = 0
+      for i=1,size do
+        local res = (dividend[i] + wordmaxp1) - (divisor[i] + borrow)
+        dividend[i] = res & BIGINT_WORDMAX
+        borrow = res <= BIGINT_WORDMAX and 1 or 0
+      end
       -- concatenate 1 to the right bit of the quotient
       local i = (bit // BIGINT_WORDBITS) + 1
       quot[i] = quot[i] | (1 << (bit % BIGINT_WORDBITS))
     end
-    -- shift current set bit for the quotient
-    bit = bit - 1
     -- shift right the divisor in one bit
-    divisor:_shrone()
+    for i=1,size-1 do
+      divisor[i] = ((divisor[i] >> 1) | (divisor[i+1] << wordbitsm1)) & BIGINT_WORDMAX
+    end
+    divisor[size] = divisor[size] >> 1
+    -- decrement current set bit for the quotient
+    bit = bit - 1
   end
-  -- the left dividend is the remainder
+  -- the remaining dividend is the remainder
   return quot, dividend
 end
 

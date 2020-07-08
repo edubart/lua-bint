@@ -16,7 +16,6 @@ Bint stands for Big Integer.
 
 The main design goal of this library is to be small, correct, self contained and use few
 resources while retaining acceptable performance and feature completeness.
-Clarity of the code is also highly valued.
 
 The library is designed to follow recent Lua integer semantics, this means that
 integer overflow warps around,
