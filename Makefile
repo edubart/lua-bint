@@ -1,3 +1,5 @@
+ROCKSPEC=rockspecs/bint-0.*.rockspec
+
 test:
 	lua tests.lua
 	lua examples/simple.lua
@@ -16,5 +18,11 @@ coverage:
 
 clean:
 	rm -f *.out
+
+install:
+	luarocks make --local $(ROCKSPEC)
+
+upload:
+	luarocks upload --api-key=$(LUAROCKS_APIKEY) $(ROCKSPEC)
 
 .PHONY: test docs coverage clean

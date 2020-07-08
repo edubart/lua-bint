@@ -53,7 +53,7 @@ The full API reference and documentation can viewed in the
 You can use luarocks to install quickly:
 
 ```bash
-luarocks install https://raw.githubusercontent.com/edubart/lua-bint/master/rockspecs/bint-dev-1.rockspec
+luarocks install bint
 ```
 
 Or just copy the `bint.lua` file, the library is self contained in this single file with no dependencies.
