@@ -418,7 +418,7 @@ function bint.tobase(x, base, unsigned)
     x = x:abs()
   end
   local step = getbasestep(base)
-  local divisor = ipow(1, base, step)
+  local divisor = bint.new(ipow(1, base, step))
   local stop = x:iszero()
   if stop then
     return '0'
@@ -850,6 +850,20 @@ function bint.__mul(x, y)
   end
 end
 
+local function findleftbit(x)
+  for i=BIGINT_SIZE,1,-1 do
+    local v = x[i]
+    if v ~= 0 then
+      local j = 0
+      repeat
+        v = v >> 1
+        j = j + 1
+      until v == 0
+      return (i-1)*BIGINT_WORDBITS + j - 1
+    end
+  end
+end
+
 --- Perform unsigned division and modulo operation between two integers considering bints.
 -- This is effectively the same of @{bint.udiv} and @{bint.umod}.
 -- @param x The numerator, must be a bint or a lua integer.
@@ -860,35 +874,33 @@ end
 -- @see bint.udiv
 -- @see bint.umod
 function bint.udivmod(x, y)
-  local bit = 0
-  local rem = bint.new(x)
-  local denom = bint.new(y)
-  assert(not denom:iszero(), 'attempt to divide by zero')
-  local overflow = false
-  while denom:ule(rem) do
-    if denom[BIGINT_SIZE] & BIGINT_WORDMSB ~= 0 then
-      overflow = true
-      break
-    end
-    bit = bit + 1
-    denom:_shlone()
+  local dividend = bint.convert(x, true)
+  local divisor = bint.convert(y)
+  assert(not divisor:iszero(), 'attempt to divide by zero')
+  if dividend:ult(divisor) then
+    return bint.zero(), dividend
   end
-  if not overflow then
-    bit = bit - 1
-    denom:_shrone()
-  end
+  -- align leftmost digits in dividend and divisor
+  local bit = findleftbit(dividend) - findleftbit(divisor)
+  divisor = divisor << bit
+  -- set quotient to 0
   local quot = bint.zero()
-  while bit > -1 do
-    if denom:ule(rem) then
-      rem:_sub(denom)
-      -- set bit
+  while bit >= 0 do
+    -- if the portion of the dividend above the divisor is greater or equal than to the divisor
+    if divisor:ule(dividend) then
+      -- subtract divisor from the portion of the dividend
+      dividend:_sub(divisor)
+      -- concatenate 1 to the right bit of the quotient
       local i = (bit // BIGINT_WORDBITS) + 1
       quot[i] = quot[i] | (1 << (bit % BIGINT_WORDBITS))
     end
+    -- shift current set bit for the quotient
     bit = bit - 1
-    denom:_shrone()
+    -- shift right the divisor in one bit
+    divisor:_shrone()
   end
-  return quot, rem
+  -- the left dividend is the remainder
+  return quot, dividend
 end
 
 --- Perform unsigned division between two integers considering bints.
@@ -1217,10 +1229,9 @@ end
 function bint.ult(x, y)
   x, y = bint_assert_convert(x), bint_assert_convert(y)
   for i=BIGINT_SIZE,1,-1 do
-    if x[i] < y[i] then
-      return true
-    elseif x[i] > y[i] then
-      return false
+    local a, b = x[i], y[i]
+    if a ~= b then
+      return a < b
     end
   end
   return false
@@ -1234,10 +1245,9 @@ end
 function bint.ule(x, y)
   x, y = bint_assert_convert(x), bint_assert_convert(y)
   for i=BIGINT_SIZE,1,-1 do
-    if x[i] < y[i] then
-      return true
-    elseif x[i] ~= y[i] then
-      return false
+    local a, b = x[i], y[i]
+    if a ~= b then
+      return a < b
     end
   end
   return true
