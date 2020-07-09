@@ -21,7 +21,7 @@ end
 
 local function bench2(n, name, f, a, b)
   local tluan = bench(n, string.format('luan %8s', name), f, a, b)
-  local tbint = bench(n, string.format('bint %8s', name), f, bint.convert(a), bint.convert(b))
+  local tbint = bench(n, string.format('bint %8s', name), f, bint.tobint(a), bint.tobint(b))
   local factor = tbint/tluan
   print(string.format('fact %8s %10.02fx', name, factor))
 end

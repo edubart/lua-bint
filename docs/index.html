@@ -82,10 +82,10 @@ By default bint uses 256 bits integers in case you never call scale.</p>
 <ul>
     <li><a href="index.html#fromuinteger">bint.fromuinteger</a> (convert from lua integers, but read as unsigned integer)</li>
     <li><a href="index.html#frominteger">bint.frominteger</a> (convert from lua integers, preserving the sign)</li>
-    <li><a href="index.html#fromnumber">bint.fromnumber</a> (convert from lua floats, truncating the fractional part)</li>
     <li><a href="index.html#frombase">bint.frombase</a> (convert from arbitrary bases, like hexadecimal)</li>
+    <li><a href="index.html#trunc">bint.trunc</a> (convert from lua numbers, truncating the fractional part)</li>
     <li><a href="index.html#new">bint.new</a> (convert from anything, asserts on invalid integers)</li>
-    <li><a href="index.html#convert">bint.convert</a> (convert form anything, returns nil on invalid integers)</li>
+    <li><a href="index.html#tobint">bint.tobint</a> (convert form anything, returns nil on invalid integers)</li>
     <li><a href="index.html#parse">bint.parse</a> (convert from anything, returns a lua number as fallback)</li>
     <li><a href="index.html#zero">bint.zero</a></li>
     <li><a href="index.html#one">bint.one</a></li>
@@ -148,10 +148,6 @@ however the user should take care in some situations:</p>
 	<td class="summary">Create a bint from a signed integer.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#fromnumber">fromnumber (x)</a></td>
-	<td class="summary">Create a bint from a number.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#frombase">frombase (s[, base])</a></td>
 	<td class="summary">Create a bint from a string of the desired base.</td>
 	</tr>
@@ -165,7 +161,7 @@ however the user should take care in some situations:</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#tonumber">tonumber (x)</a></td>
-	<td class="summary">Convert a bint to a lua number.</td>
+	<td class="summary">Convert a bint to a lua float in case integer would wrap around or lua integer otherwise.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#tobase">tobase (x[, base[, unsigned]])</a></td>
@@ -176,7 +172,7 @@ however the user should take care in some situations:</p>
 	<td class="summary">Create a new bint from a value.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#convert">convert (x[, clone])</a></td>
+	<td class="name" nowrap><a href="#tobint">tobint (x[, clone])</a></td>
 	<td class="summary">Convert a value to a bint if possible.</td>
 	</tr>
 	<tr>
@@ -198,6 +194,14 @@ however the user should take care in some situations:</p>
 	<tr>
 	<td class="name" nowrap><a href="#isbint">isbint (x)</a></td>
 	<td class="summary">Check if the input is a bint.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#isinteger">isinteger (x)</a></td>
+	<td class="summary">Check if the input is a lua integer or a bint.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#type">type (x)</a></td>
+	<td class="summary">Check the number type of the input (bint, integer or float).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#isneg">isneg (x)</a></td>
@@ -222,6 +226,14 @@ however the user should take care in some situations:</p>
 	<tr>
 	<td class="name" nowrap><a href="#one">one ()</a></td>
 	<td class="summary">Create a new bint with 1 value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#maxinteger">maxinteger ()</a></td>
+	<td class="summary">Create a new bint with the maximum possible integer value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#mininteger">mininteger ()</a></td>
+	<td class="summary">Create a new bint with the minimum possible integer value.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_shlone">_shlone ()</a></td>
@@ -258,6 +270,26 @@ however the user should take care in some situations:</p>
 	<tr>
 	<td class="name" nowrap><a href="#abs">abs (x)</a></td>
 	<td class="summary">Take absolute of a number considering bints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#floor">floor (x)</a></td>
+	<td class="summary">Take floor of a number considering bints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#ceil">ceil (x)</a></td>
+	<td class="summary">Take ceil of a number considering bints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#trunc">trunc (x)</a></td>
+	<td class="summary">Truncate a lua number to a bint.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#max">max (x, y)</a></td>
+	<td class="summary">Take maximum between two numbers considering bints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#min">min (x, y)</a></td>
+	<td class="summary">Take minimum between two numbers considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#_add">_add (y)</a></td>
@@ -490,32 +522,6 @@ however the user should take care in some situations:</p>
 
 </dd>
     <dt>
-    <a name = "fromnumber"></a>
-    <strong>fromnumber (x)</strong>
-    </dt>
-    <dd>
-    Create a bint from a number.
- Floats values are truncated, that is, the fractional port is discarded.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         A value to initialize from convertible to a lua number.
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        A new bint or nil in case the input cannot be represented by an integer.
-    </ol>
-
-
-
-
-</dd>
-    <dt>
     <a name = "frombase"></a>
     <strong>frombase (s[, base])</strong>
     </dt>
@@ -615,22 +621,22 @@ however the user should take care in some situations:</p>
     <strong>tonumber (x)</strong>
     </dt>
     <dd>
-    Convert a bint to a lua number.
+    Convert a bint to a lua float in case integer would wrap around or lua integer otherwise.
  Different from <a href="index.html#tointeger">bint.tointeger</a> the operation does not wraps around integers,
- but digits precision may be lost in the process of converting to a float.
+ but digits precision are lost in the process of converting to a float.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bint or value to be converted into a number.
+         A bint or value to be converted into a lua number.
         </li>
     </ul>
 
     <h3>Returns:</h3>
     <ol>
 
-        An integer or nil in case the input cannot be represented by a number.
+        A lua number or nil in case the input cannot be represented by a number.
     </ol>
 
 
@@ -704,15 +710,15 @@ however the user should take care in some situations:</p>
 
     <h3>See also:</h3>
     <ul>
-         <li><a href="index.html#convert">bint.convert</a></li>
+         <li><a href="index.html#tobint">bint.tobint</a></li>
          <li><a href="index.html#parse">bint.parse</a></li>
     </ul>
 
 
 </dd>
     <dt>
-    <a name = "convert"></a>
-    <strong>convert (x[, clone])</strong>
+    <a name = "tobint"></a>
+    <strong>tobint (x[, clone])</strong>
     </dt>
     <dd>
     Convert a value to a bint if possible.
@@ -776,7 +782,7 @@ however the user should take care in some situations:</p>
     <h3>See also:</h3>
     <ul>
          <li><a href="index.html#new">bint.new</a></li>
-         <li><a href="index.html#convert">bint.convert</a></li>
+         <li><a href="index.html#tobint">bint.tobint</a></li>
     </ul>
 
 
@@ -853,6 +859,48 @@ however the user should take care in some situations:</p>
     <ul>
         <li><span class="parameter">x</span>
          Any lua value.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "isinteger"></a>
+    <strong>isinteger (x)</strong>
+    </dt>
+    <dd>
+    Check if the input is a lua integer or a bint.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         Any lua value.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "type"></a>
+    <strong>type (x)</strong>
+    </dt>
+    <dd>
+    Check the number type of the input (bint, integer or float).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         Any lua value.
+ Returns "bint" for bints, "integer" fot lua integers,
+ "float" from lua floats or nil otherwise.
         </li>
     </ul>
 
@@ -962,6 +1010,34 @@ however the user should take care in some situations:</p>
     </dt>
     <dd>
     Create a new bint with 1 value.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "maxinteger"></a>
+    <strong>maxinteger ()</strong>
+    </dt>
+    <dd>
+    Create a new bint with the maximum possible integer value.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "mininteger"></a>
+    <strong>mininteger ()</strong>
+    </dt>
+    <dd>
+    Create a new bint with the minimum possible integer value.
 
 
 
@@ -1117,6 +1193,128 @@ however the user should take care in some situations:</p>
         </li>
     </ul>
 
+
+
+
+
+</dd>
+    <dt>
+    <a name = "floor"></a>
+    <strong>floor (x)</strong>
+    </dt>
+    <dd>
+    Take floor of a number considering bints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bint or a lua number to perform the floor.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "ceil"></a>
+    <strong>ceil (x)</strong>
+    </dt>
+    <dd>
+    Take ceil of a number considering bints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bint or a lua number to perform the ceil.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "trunc"></a>
+    <strong>trunc (x)</strong>
+    </dt>
+    <dd>
+    Truncate a lua number to a bint.
+ Floats numbers are truncated, that is, the fractional port is discarded.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to initialize from convertible to a lua number.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A new bint or nil in case the input cannot be represented by an integer.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "max"></a>
+    <strong>max (x, y)</strong>
+    </dt>
+    <dd>
+    Take maximum between two numbers considering bints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bint or lua number to compare.
+        </li>
+        <li><span class="parameter">y</span>
+         A bint or lua number to compare.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A bint or a lua number. Guarantees to return a new bint for integer values.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "min"></a>
+    <strong>min (x, y)</strong>
+    </dt>
+    <dd>
+    Take minimum between two numbers considering bints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bint or lua number to compare.
+        </li>
+        <li><span class="parameter">y</span>
+         A bint or lua number to compare.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A bint or a lua number. Guarantees to return a new bint for integer values.
+    </ol>
 
 
 
@@ -2024,7 +2222,7 @@ however the user should take care in some situations:</p>
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-07-08 10:57:04 </i>
+<i style="float:right;">Last updated 2020-07-09 09:15:25 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
