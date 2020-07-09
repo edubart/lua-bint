@@ -109,6 +109,7 @@ local bint = {}
 bint.__index = bint
 
 -- Constants used internally and modified by bint.scale
+local BIGINT_BITS
 local BIGINT_SIZE
 local BIGINT_WORDBITS
 local BIGINT_WORDMAX
@@ -137,6 +138,7 @@ function bint.scale(bits, wordbits)
   assert(bits % wordbits == 0, 'bitsize is not multiple of word bitsize')
   assert(2*wordbits <= luainteger_bitsize(), 'word bitsize must be half of the lua integer bitsize')
   assert(bits >= 64, 'bitsize must be >= 64')
+  BIGINT_BITS = bits
   BIGINT_SIZE = bits // wordbits
   BIGINT_WORDBITS = wordbits
   BIGINT_WORDMAX = (1 << BIGINT_WORDBITS) - 1
@@ -388,7 +390,8 @@ end
 -- @param[opt] base Base to be represented, defaults to 10.
 -- Must be at least 2 and at most 36.
 -- @param[opt] unsigned Whether to output as unsigned integer.
--- Defaults to true for base 10 and false for others.
+-- Defaults to false for base 10 and true for others.
+-- When unsigned is false the symbol '-' is prepended in negative values.
 -- @return A string representing the input.
 -- @raise An assert is thrown in case the base is invalid.
 function bint.tobase(x, base, unsigned)
@@ -402,6 +405,9 @@ function bint.tobase(x, base, unsigned)
     -- number base is too large
     return nil
   end
+  if unsigned == nil then
+    unsigned = base ~= 10
+  end
   if base == 10 or base == 16 then
     local inluarange = x >= BIGINT_MATHMININTEGER and x <= BIGINT_MATHMAXINTEGER
     if inluarange then
@@ -409,15 +415,12 @@ function bint.tobase(x, base, unsigned)
       local n = x:tointeger()
       if base == 10 then
         return tostring(n)
-      else
+      elseif unsigned then
         return string.format('%x', n)
       end
     end
   end
   local ss = {}
-  if unsigned == nil then
-    unsigned = base ~= 10
-  end
   local neg = not unsigned and x:isneg()
   if neg then
     x = x:abs()
@@ -577,8 +580,14 @@ end
 
 --- Check if the input is a lua integer or a bint.
 -- @param x Any lua value.
-function bint.isinteger(x)
+function bint.isintegral(x)
   return isbint(x) or math.type(x) == 'integer'
+end
+
+--- Check if the input is a bint or a lua number.
+-- @param x Any lua value.
+function bint.isnumeric(x)
+  return isbint(x) or type(x) == 'number'
 end
 
 --- Check the number type of the input (bint, integer or float).
@@ -819,10 +828,24 @@ function bint.ceil(x)
   end
 end
 
---- Truncate a lua number to a bint.
+-- Wrap around bits of an integer (discarding left bits) considering bints.
+-- @param x A bint or a lua integer.
+-- @param y Number of right bits to preserve.
+function bint.bwrap(x, y)
+  x = bint_assert_convert(x)
+  if y <= 0 then
+    return bint.zero()
+  elseif y < BIGINT_BITS then
+    return x & (bint.one() << y):_dec()
+  else
+    return bint.new(x)
+  end
+end
+
+--- Truncate a number to a bint.
 -- Floats numbers are truncated, that is, the fractional port is discarded.
--- @param x A value to initialize from convertible to a lua number.
--- @return A new bint or nil in case the input cannot be represented by an integer.
+-- @param x A number to truncate.
+-- @return A new bint or nil in case the input does not fit in a bint or is not a number.
 function bint.trunc(x)
   if not isbint(x) then
     x = tonumber(x)

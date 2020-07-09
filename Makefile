@@ -21,7 +21,7 @@ clean:
 	rm -f *.out
 
 install:
-	luarocks make --local $(ROCKSPEC)
+	luarocks make --local
 
 upload:
 	luarocks upload --api-key=$(LUAROCKS_APIKEY) $(ROCKSPEC)
