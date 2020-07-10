@@ -839,7 +839,7 @@ function bint.ceil(x)
   end
 end
 
--- Wrap around bits of an integer (discarding left bits) considering bints.
+--- Wrap around bits of an integer (discarding left bits) considering bints.
 -- @param x A bint or a lua integer.
 -- @param y Number of right bits to preserve.
 function bint.bwrap(x, y)
@@ -853,7 +853,7 @@ function bint.bwrap(x, y)
   end
 end
 
--- Rotate left integer x by y bits considering bints.
+--- Rotate left integer x by y bits considering bints.
 -- @param x A bint or a lua integer.
 -- @param y Number of bits to rotate.
 function bint.brol(x, y)
@@ -867,7 +867,7 @@ function bint.brol(x, y)
   end
 end
 
--- Rotate right integer x by y bits considering bints.
+--- Rotate right integer x by y bits considering bints.
 -- @param x A bint or a lua integer.
 -- @param y Number of bits to rotate.
 function bint.bror(x, y)
