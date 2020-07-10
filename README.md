@@ -1,11 +1,11 @@
 # Lua Bint
 
-Small portable arbitrary precision integer arithmetic library in pure Lua for
+Small portable arbitrary-precision integer arithmetic library in pure Lua for
 computing with large integers.
 
 Different from most arbitrary-precision integer libraries in pure Lua out there this one
 uses an array of lua integers as underlying data-type in its implementation instead of
-using strings or large tables, so regarding that aspect this library should be more efficient.
+using strings or tables of digits, so regarding that aspect this library should be more efficient.
 
 The library implementation was highly inspired by
 [tiny-bignum-c](https://github.com/kokke/tiny-bignum-c).
@@ -29,6 +29,11 @@ when using the proper methods.
 
 All the lua arithmetic operators (+, -, *, //, /, %) and bitwise operators (&, |, ~, <<, >>)
 are implemented as metamethods.
+
+The integer size must be fixed in advance and the library is designed to be efficient only when
+working with integers of sizes between 64-4096 bits. If you need to work with really huge numbers
+without size restrictions then use other library. This choice has been made to have more efficiency
+in that specific size range.
 
 ## Features
 
@@ -85,8 +90,9 @@ To check if everything is working as expected under your machine run `lua tests.
 
 ## Limitations
 
-It is intended only to be used in Lua 5.3 and 5.4. The library can theoretically be backported
-to Lua 5.1/LuaJIT but there is no plan at the moment.
+It is intended only to be used in Lua 5.3+.
+The library can theoretically be backported to Lua 5.1/LuaJIT but there is no plan at the moment.
+The integer size is limited in advance, this is a design choice.
 
 ## License
 

@@ -48,6 +48,11 @@ when using the proper methods.
 All the lua arithmetic operators (+, -, *, //, /, %) and bitwise operators (&, |, ~, <<, >>)
 are implemented as metamethods.
 
+The integer size must be fixed in advance and the library is designed to be efficient only when
+working with integers of sizes between 64-4096 bits. If you need to work with really huge numbers
+without size restrictions then use other library. This choice has been made to have more efficiency
+in that specific size range.
+
 ## Usage
 
 First on you should require the bint file including how many bits the bint module will work with,
