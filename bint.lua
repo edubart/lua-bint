@@ -1065,19 +1065,23 @@ function bint.udivmod(x, y)
   local divisor = bint_assert_convert(y)
   local quot = bint.zero()
   assert(not divisor:iszero(), 'attempt to divide by zero')
-  if dividend:ult(divisor) then
+  if divisor:isone() then
+    return dividend, bint.zero()
+  elseif dividend:ult(divisor) then
     return quot, dividend
   end
   -- align leftmost digits in dividend and divisor
   local divisorlbit = findleftbit(divisor)
-  local divdendlbit, size = findleftbit(dividend)
+  local divdendlbit, divdendsize = findleftbit(dividend)
   local bit = divdendlbit - divisorlbit
   divisor = divisor << bit
   local wordmaxp1 = BINT_WORDMAX + 1
   local wordbitsm1 = BINT_WORDBITS - 1
+  local divisorsize = divdendsize
   while bit >= 0 do
     -- compute divisor <= dividend
     local le = true
+    local size = math.max(divdendsize, divisorsize)
     for i=size,1,-1 do
       local a, b = divisor[i], dividend[i]
       if a ~= b then
@@ -1099,10 +1103,20 @@ function bint.udivmod(x, y)
       quot[i] = quot[i] | (1 << (bit % BINT_WORDBITS))
     end
     -- shift right the divisor in one bit
-    for i=1,size-1 do
+    for i=1,divisorsize-1 do
       divisor[i] = ((divisor[i] >> 1) | (divisor[i+1] << wordbitsm1)) & BINT_WORDMAX
     end
-    divisor[size] = divisor[size] >> 1
+    local lastdivisorword = divisor[divisorsize] >> 1
+    divisor[divisorsize] = lastdivisorword
+    -- recalculate divisor size (optimization)
+    if lastdivisorword == 0 then
+      while divisor[divisorsize] == 0 do
+        divisorsize = divisorsize - 1
+      end
+      if divisorsize == 0 then
+        break
+      end
+    end
     -- decrement current set bit for the quotient
     bit = bit - 1
   end
