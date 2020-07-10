@@ -30,6 +30,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Fields">Fields</a></li>
 </ul>
 
 
@@ -72,12 +73,17 @@ are implemented as metamethods.</p>
 
 <h2>Usage</h2>
 
-<p>First on you should configure how many bits the library will work with,
-to do that call <a href="index.html#scale">bint.scale</a> once on startup with the desired number of bits in multiples of 32,
-for example bint.scale(1024).
-By default bint uses 256 bits integers in case you never call scale.</p>
+<p>First on you should require the bint file including how many bits the bint module will work with,
+by calling the returned function from the require, for example:</p>
 
-<p>Then when you need create a bint, you can use one of the following functions:</p>
+
+<pre>
+<span class="keyword">local</span> bint = <span class="global">require</span> <span class="string">'bint'</span>(<span class="number">1024</span>)
+</pre>
+
+
+<p>For more information about its arguments see <a href="index.html#newmodule">newmodule</a>.
+Then when you need create a bint, you can use one of the following functions:</p>
 
 <ul>
     <li><a href="index.html#fromuinteger">bint.fromuinteger</a> (convert from lua integers, but read as unsigned integer)</li>
@@ -126,9 +132,9 @@ however the user should take care in some situations:</p>
     as this will throw assertions.</li>
     <li>Remember that casting back to lua integers or numbers precision can be lost.</li>
     <li>For dividing while preserving integers use the <a href="index.html#__idiv">bint.__idiv</a> (the '//' operator).</li>
-    <li>For doing power operation preserving integers use the <a href="index.html#ipow">bint.ipow</a> function.</li>
-    <li>Configure the internal integer fixed width using <a href="index.html#scale">bint.scale</a>
+    <li>For doing power operation preserving integers use the <a href="index.html#ipow">bint.ipow</a> function.
     to the proper size you intend to work with, otherwise large integers may wraps around.</li>
+    <li>Never mix operations between bint classes of different bit sizes</li>
 </ul>
 </p>
 
@@ -136,8 +142,8 @@ however the user should take care in some situations:</p>
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#scale">scale (bits[, wordbits])</a></td>
-	<td class="summary">Scale bint's integer width to represent integers of the desired bit size.</td>
+	<td class="name" nowrap><a href="#newmodule">newmodule (bits[, wordbits])</a></td>
+	<td class="summary">Create a new bint module representing integers of the desired bit size.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#fromuinteger">fromuinteger (x)</a></td>
@@ -205,7 +211,7 @@ however the user should take care in some situations:</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#type">type (x)</a></td>
-	<td class="summary">Check the number type of the input (bint, integer or float).</td>
+	<td class="summary">Get the number type of the input (bint, integer or float).</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#isneg">isneg (x)</a></td>
@@ -432,6 +438,13 @@ however the user should take care in some situations:</p>
 	<td class="summary">Convert a bint to a string on base 10.</td>
 	</tr>
 </table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#bits">bits</a></td>
+	<td class="summary">Number of bits representing a bint instance.</td>
+	</tr>
+</table>
 
 <br/>
 <br/>
@@ -441,12 +454,12 @@ however the user should take care in some situations:</p>
 
     <dl class="function">
     <dt>
-    <a name = "scale"></a>
-    <strong>scale (bits[, wordbits])</strong>
+    <a name = "newmodule"></a>
+    <strong>newmodule (bits[, wordbits])</strong>
     </dt>
     <dd>
-    Scale bint's integer width to represent integers of the desired bit size.
- Must be called only once on startup.
+    Create a new bint module representing integers of the desired bit size.
+ This is the returned function when <code>require &apos;bint&apos;</code> is called.
 
 
     <h3>Parameters:</h3>
@@ -456,7 +469,7 @@ however the user should take care in some situations:</p>
  at least 64.
         </li>
         <li><span class="parameter">wordbits</span>
-         Number of the bits for the internal world, defaults to 32.
+         Number of the bits for the internal word, defaults to 32.
          (<em>optional</em>)
         </li>
     </ul>
@@ -917,18 +930,22 @@ however the user should take care in some situations:</p>
     <strong>type (x)</strong>
     </dt>
     <dd>
-    Check the number type of the input (bint, integer or float).
+    Get the number type of the input (bint, integer or float).
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
          Any lua value.
- Returns "bint" for bints, "integer" fot lua integers,
- "float" from lua floats or nil otherwise.
         </li>
     </ul>
 
+    <h3>Returns:</h3>
+    <ol>
+
+        Returns "bint" for bints, "integer" for lua integers,
+ "float" from lua floats or nil otherwise.
+    </ol>
 
 
 
@@ -2241,13 +2258,31 @@ however the user should take care in some situations:</p>
 
 </dd>
 </dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "bits"></a>
+    <strong>bits</strong>
+    </dt>
+    <dd>
+    Number of bits representing a bint instance.
+
+
+
+
+
+
+
+</dd>
+</dl>
 
 
 </div> <!-- id="content" -->
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-07-09 17:52:38 </i>
+<i style="float:right;">Last updated 2020-07-10 09:41:24 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>

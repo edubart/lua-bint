@@ -1,7 +1,5 @@
-local bint = require 'bint'
-
 local function test(bits)
-  bint.scale(bits)
+  local bint = require 'bint'(bits)
 
   local function assert_eq(a , b)
     if a ~= b then --luacov:disable

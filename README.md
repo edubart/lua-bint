@@ -32,7 +32,7 @@ are implemented as metamethods.
 
 ## Features
 
-* Small and simple
+* Small, simple and self contained
 * Efficient (for a pure Lua integer library)
 * Works with a fixed width integer
 * Follows Lua 5.3+ integer arithmetic semantics by default

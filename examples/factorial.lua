@@ -1,9 +1,7 @@
 -- Compute the factorial of 100
 -- See https://en.wikipedia.org/wiki/Factorial
 
-local bint = require 'bint'
-
-bint.scale(576)
+local bint = require 'bint'(576)
 
 local function factorial(n)
   if n <= 0 then

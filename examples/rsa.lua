@@ -1,9 +1,7 @@
 -- Simple RSA cryptosystem example
 -- See https://en.wikipedia.org/wiki/RSA_(cryptosystem)
 
-local bint = require 'bint'
-
-bint.scale(512)
+local bint = require 'bint'(512)
 
 local function gcd(a, b)
   while not bint.iszero(b) do

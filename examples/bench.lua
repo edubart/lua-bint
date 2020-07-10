@@ -1,9 +1,7 @@
 -- Perform some benchmarks to compare bint and lua number speed
 
-local bint = require 'bint'
+local bint = require 'bint'(256)
 local os_clock = os.clock
-
-bint.scale(256)
 
 local function bench(n, name, f, a, b)
   -- warmup

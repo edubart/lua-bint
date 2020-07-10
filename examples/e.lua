@@ -1,9 +1,7 @@
 -- Compute the first 100 digits of Euler's number
 -- See https://en.wikipedia.org/wiki/E_(mathematical_constant)
 
-local bint = require 'bint'
-
-bint.scale(512)
+local bint = require 'bint'(512)
 
 local digits = 100
 local e = bint.zero()

@@ -1,9 +1,7 @@
 -- Compute the first 100 digits on pi using the Machin-like formula
 -- See https://en.wikipedia.org/wiki/Machin-like_formula
 
-local bint = require 'bint'
-
-bint.scale(512)
+local bint = require 'bint'(512)
 
 local function arctan_denom(x, ndigits)
   local sum = bint.zero()

@@ -1,9 +1,7 @@
 -- Compute the 1000th Fibonacci number
 -- See https://en.wikipedia.org/wiki/Fibonacci_number
 
-local bint = require 'bint'
-
-bint.scale(768)
+local bint = require 'bint'(768)
 
 local function fibonacci(n)
   local first, second = bint.zero(), bint.one()
