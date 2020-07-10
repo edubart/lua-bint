@@ -1,5 +1,5 @@
-local function test(bits)
-  local bint = require 'bint'(bits)
+local function test(bits, wordbits)
+  local bint = require 'bint'(bits, wordbits)
 
   local function assert_eq(a , b)
     if a ~= b then --luacov:disable
@@ -340,6 +340,12 @@ local function test(bits)
     local function test_shr(x, y)
       assert_eq((bint(x) >> y):tointeger(), x >> y)
     end
+    local function test_brol(x, y)
+      assert_eq(bint(x):brol(y):tointeger(), (x << y) | (x >> (64 - y)))
+    end
+    local function test_bror(x, y)
+      assert_eq(bint(x):bror(y):tointeger(), (x >> y) | (x << (64 - y)))
+    end
     local function test_shlone(x)
       assert_eq(bint(x):_shlone():tointeger(), x << 1)
     end
@@ -355,6 +361,10 @@ local function test(bits)
       test_bwrap(x, y) test_bwrap(x, -y) test_bwrap(-x, y)
       test_shlone(x) test_shlone(y)
       test_shrone(x) test_shrone(y)
+      if bits == 64 then
+        test_brol(x, y)
+        test_bror(x, y)
+      end
     end
     test_ops(0, 0)
     test_ops(1, 0)
@@ -413,6 +423,10 @@ local function test(bits)
     test_ops( 524288, 19)
     test_ops(1048576, 20)
     test_ops(1048576, 100)
+    assert_eq(bint.brol(1, -1), bint.mininteger())
+    assert_eq(bint.bror(1, 1), bint.mininteger())
+    assert_eq(bint.brol(bint.mininteger(), 1), bint(1))
+    assert_eq(bint.bror(bint.mininteger(), -1), bint(1))
   end
 
   do -- pow

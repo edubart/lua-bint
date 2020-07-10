@@ -134,7 +134,9 @@ wordbits = wordbits or 32
 
 -- Memoize bint modules
 local memoindex = bits * 64 + wordbits
-if memo[memoindex] then return memo[memoindex] end
+if memo[memoindex] then
+  return memo[memoindex]
+end
 
 -- Validate
 assert(bits % wordbits == 0, 'bitsize is not multiple of word bitsize')
@@ -725,10 +727,10 @@ end
 -- Bitwise right shift words of a bint (in-place). Used only internally.
 function bint:_shrwords(n)
   if n < BINT_SIZE then
-    for i=1,BINT_SIZE-n+1 do
+    for i=1,BINT_SIZE-n do
       self[i] = self[i + n]
     end
-    for i=BINT_SIZE-n,BINT_SIZE do
+    for i=BINT_SIZE-n+1,BINT_SIZE do
       self[i] = 0
     end
   else
@@ -848,6 +850,34 @@ function bint.bwrap(x, y)
     return x & (bint.one() << y):_dec()
   else
     return bint.new(x)
+  end
+end
+
+-- Rotate left integer x by y bits considering bints.
+-- @param x A bint or a lua integer.
+-- @param y Number of bits to rotate.
+function bint.brol(x, y)
+  x, y = bint_assert_convert(x), bint_assert_tointeger(y)
+  if y > 0 then
+    return (x << y) | (x >> (BINT_BITS - y))
+  elseif y < 0 then
+    return x:bror(-y)
+  else
+    return x
+  end
+end
+
+-- Rotate right integer x by y bits considering bints.
+-- @param x A bint or a lua integer.
+-- @param y Number of bits to rotate.
+function bint.bror(x, y)
+  x, y = bint_assert_convert(x), bint_assert_tointeger(y)
+  if y > 0 then
+    return (x >> y) | (x << (BINT_BITS - y))
+  elseif y < 0 then
+    return x:brol(-y)
+  else
+    return x
   end
 end
 
