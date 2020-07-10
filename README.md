@@ -74,7 +74,7 @@ For more usage examples check the
 Some interesting examples there:
 
 * [factorial.lua](https://github.com/edubart/lua-bint/blob/master/examples/factorial.lua) - calculate factorial of 100
-* [fibonnaci.lua](https://github.com/edubart/lua-bint/blob/master/examples/fibonnaci.lua) - calculate the 1001th number of the Fibonacci sequence
+* [fibonacci.lua](https://github.com/edubart/lua-bint/blob/master/examples/fiboncaci.lua) - calculate the 1001th number of the Fibonacci sequence
 * [pi.lua](https://github.com/edubart/lua-bint/blob/master/examples/pi.lua) - calculate the first 100 digits of Pi
 * [e.lua](https://github.com/edubart/lua-bint/blob/master/examples/e.lua) - calculate the first 100 digits of Euler's number
 * [rsa.lua](https://github.com/edubart/lua-bint/blob/master/examples/rsa.lua) - simple RSA example for encrypting/decrypting messages
