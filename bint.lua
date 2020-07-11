@@ -394,18 +394,18 @@ do
   end
 end
 
--- Get the quotient and remainder for base digits
-local function xremainder(dividend, divisor)
-  local quo = bint_newempty()
-  local rem
+-- Single word division modulus
+local function sudivmod(nume, deno)
+  local quot = bint_newempty()
+  local rema
   local carry = 0
   for i=BINT_SIZE,1,-1 do
-    carry = carry | dividend[i]
-    quo[i] = carry // divisor
-    rem = carry % divisor
-    carry = rem << BINT_WORDBITS
+    carry = carry | nume[i]
+    quot[i] = carry // deno
+    rema = carry % deno
+    carry = rema << BINT_WORDBITS
   end
-  return quo, rem
+  return quot, rema
 end
 
 --- Convert a bint to a string in the desired base.
@@ -462,7 +462,7 @@ function bint.tobase(x, base, unsigned)
   -- spit out base digits
   while not stop do
     local xd
-    x, xd = xremainder(x, basepow)
+    x, xd = sudivmod(x, basepow)
     stop = x:iszero()
     for _=1,step do
       local d
@@ -1073,67 +1073,87 @@ end
 -- @see bint.udiv
 -- @see bint.umod
 function bint.udivmod(x, y)
-  local dividend = bint.new(x)
-  local divisor = bint_assert_convert(y)
-  local quo = bint.zero()
-  assert(not divisor:iszero(), 'attempt to divide by zero')
-  if divisor:isone() then
-    return dividend, bint.zero()
-  elseif dividend:ult(divisor) then
-    return quo, dividend
+  local nume = bint.new(x)
+  local deno = bint_assert_convert(y)
+  -- compute if high bits of denominator are all zeros
+  local ishighzero = true
+  for i=BINT_SIZE,2,-1 do
+    if deno[i] ~= 0 then
+      ishighzero = false
+      break
+    end
   end
-  -- align leftmost digits in dividend and divisor
-  local divisorlbit = findleftbit(divisor)
-  local divdendlbit, divdendsize = findleftbit(dividend)
-  local bit = divdendlbit - divisorlbit
-  divisor = divisor << bit
+  if ishighzero then
+    -- try to divide by a single word (optimization)
+    local low = deno[1]
+    assert(low ~= 0, 'attempt to divide by zero')
+    if low == 1 then
+      -- denominator is one
+      return nume, bint.zero()
+    elseif low <= (BINT_WORDMSB - 1) then
+      -- can do single word division
+      local rema
+      nume, rema = sudivmod(nume, low)
+      return nume, bint.new(rema)
+    end
+  end
+  if nume:ult(deno) then
+    -- denominator is greater than denominator
+    return bint.zero(), nume
+  end
+  -- align leftmost digits in numerator and denominator
+  local denolbit = findleftbit(deno)
+  local numelbit, numesize = findleftbit(nume)
+  local bit = numelbit - denolbit
+  deno = deno << bit
   local wordmaxp1 = BINT_WORDMAX + 1
   local wordbitsm1 = BINT_WORDBITS - 1
-  local divisorsize = divdendsize
+  local denosize = numesize
+  local quot = bint.zero()
   while bit >= 0 do
-    -- compute divisor <= dividend
+    -- compute denominator <= numerator
     local le = true
-    local size = math.max(divdendsize, divisorsize)
+    local size = math.max(numesize, denosize)
     for i=size,1,-1 do
-      local a, b = divisor[i], dividend[i]
+      local a, b = deno[i], nume[i]
       if a ~= b then
         le = a < b
         break
       end
     end
-    -- if the portion of the dividend above the divisor is greater or equal than to the divisor
+    -- if the portion of the numerator above the denominator is greater or equal than to the denominator
     if le then
-      -- subtract divisor from the portion of the dividend
+      -- subtract denominator from the portion of the numerator
       local borrow = 0
       for i=1,size do
-        local res = (dividend[i] + wordmaxp1) - (divisor[i] + borrow)
-        dividend[i] = res & BINT_WORDMAX
+        local res = (nume[i] + wordmaxp1) - (deno[i] + borrow)
+        nume[i] = res & BINT_WORDMAX
         borrow = res <= BINT_WORDMAX and 1 or 0
       end
       -- concatenate 1 to the right bit of the quotient
       local i = (bit // BINT_WORDBITS) + 1
-      quo[i] = quo[i] | (1 << (bit % BINT_WORDBITS))
+      quot[i] = quot[i] | (1 << (bit % BINT_WORDBITS))
     end
-    -- shift right the divisor in one bit
-    for i=1,divisorsize-1 do
-      divisor[i] = ((divisor[i] >> 1) | (divisor[i+1] << wordbitsm1)) & BINT_WORDMAX
+    -- shift right the denominator in one bit
+    for i=1,denosize-1 do
+      deno[i] = ((deno[i] >> 1) | (deno[i+1] << wordbitsm1)) & BINT_WORDMAX
     end
-    local lastdivisorword = divisor[divisorsize] >> 1
-    divisor[divisorsize] = lastdivisorword
-    -- recalculate divisor size (optimization)
-    if lastdivisorword == 0 then
-      while divisor[divisorsize] == 0 do
-        divisorsize = divisorsize - 1
+    local lastdenoword = deno[denosize] >> 1
+    deno[denosize] = lastdenoword
+    -- recalculate denominator size (optimization)
+    if lastdenoword == 0 then
+      while deno[denosize] == 0 do
+        denosize = denosize - 1
       end
-      if divisorsize == 0 then
+      if denosize == 0 then
         break
       end
     end
     -- decrement current set bit for the quotient
     bit = bit - 1
   end
-  -- the remaining dividend is the remainder
-  return quo, dividend
+  -- the remaining numerator is the remainder
+  return quot, nume
 end
 
 --- Perform unsigned division between two integers considering bints.
@@ -1153,8 +1173,8 @@ end
 -- @raise Asserts on attempt to divide by zero
 -- or if the inputs are not convertible to integers.
 function bint.umod(x, y)
-  local _, rem = bint.udivmod(x, y)
-  return rem
+  local _, rema = bint.udivmod(x, y)
+  return rema
 end
 
 --- Perform integer floor division and modulo operation between two numbers considering bints.
@@ -1171,25 +1191,25 @@ function bint.idivmod(x, y)
     if iy:isminusone() then
       return -ix, bint.zero()
     end
-    local quo, rem = bint.udivmod(ix:abs(), iy:abs())
+    local quot, rema = bint.udivmod(ix:abs(), iy:abs())
     local isnumneg, isdenomneg = ix:isneg(), iy:isneg()
     if isnumneg ~= isdenomneg then
-      quo:_unm()
+      quot:_unm()
       -- round quotient towards minus infinity
-      if not rem:iszero() then
-        quo:_dec()
+      if not rema:iszero() then
+        quot:_dec()
         -- adjust the remainder
         if isnumneg and not isdenomneg then
-          rem:_unm():_add(y)
+          rema:_unm():_add(y)
         elseif isdenomneg and not isnumneg then
-          rem:_add(y)
+          rema:_add(y)
         end
       end
     elseif isnumneg then
       -- adjust the remainder
-      rem:_unm()
+      rema:_unm()
     end
-    return quo, rem
+    return quot, rema
   else
     local nx, ny = bint.tonumber(x), bint.tonumber(y)
     return nx // ny, nx % ny
@@ -1204,7 +1224,23 @@ end
 -- @return The quotient, a bint or lua number.
 -- @raise Asserts on attempt to divide by zero.
 function bint.__idiv(x, y)
-  return (bint.idivmod(x, y))
+  local ix, iy = bint.tobint(x), bint.tobint(y)
+  if ix and iy then
+    if iy:isminusone() then
+      return -ix, bint.zero()
+    end
+    local quot, rema = bint.udivmod(ix:abs(), iy:abs())
+    if ix:isneg() ~= iy:isneg() then
+      quot:_unm()
+      -- round quotient towards minus infinity
+      if not rema:iszero() then
+        quot:_dec()
+      end
+    end
+    return quot, rema
+  else
+    return bint.tonumber(x) // bint.tonumber(y)
+  end
 end
 
 --- Perform division between two numbers considering bints.
@@ -1224,8 +1260,8 @@ end
 -- @return The remainder, a bint or lua number.
 -- @raise Asserts on attempt to divide by zero.
 function bint.__mod(x, y)
-  local _, rem = bint.idivmod(x, y)
-  return rem
+  local _, rema = bint.idivmod(x, y)
+  return rema
 end
 
 --- Perform integer power between two integers considering bints.
