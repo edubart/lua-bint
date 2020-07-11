@@ -614,9 +614,9 @@ local function test(bits, wordbits)
   end
 end
 
+test(64)
+test(64, 16)
 test(64, 4)
 test(64, 8)
-test(64, 16)
-test(64)
 test(128)
 test(256)

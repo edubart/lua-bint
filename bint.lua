@@ -245,7 +245,7 @@ end
 
 local basesteps = {}
 
--- Compute the read/write step for frombase/tobase functions.
+-- Compute the read step for frombase function
 local function getbasestep(base)
   local step = basesteps[base]
   if step then
@@ -394,11 +394,18 @@ do
   end
 end
 
--- Get the quotient and remainder for a lua integer division
-local function idivmod(x, y)
-  local quot = x // y
-  local rem = x - (quot * y)
-  return quot, rem
+-- Get the quotient and remainder for base digits
+local function xremainder(dividend, divisor)
+  local quo = bint_newempty()
+  local rem
+  local carry = 0
+  for i=BINT_SIZE,1,-1 do
+    carry = carry | dividend[i]
+    quo[i] = carry // divisor
+    rem = carry % divisor
+    carry = rem << BINT_WORDBITS
+  end
+  return quo, rem
 end
 
 --- Convert a bint to a string in the desired base.
@@ -441,26 +448,13 @@ function bint.tobase(x, base, unsigned)
   if neg then
     x = x:abs()
   end
-  local step = getbasestep(base)
-  local divisor = bint.new(ipow(1, base, step))
-  local stop = x:iszero()
-  if stop then
-    return '0'
+  while not x:iszero() do
+    local d
+    x, d = xremainder(x, base)
+    table.insert(ss, 1, BASE_LETTERS[d])
   end
-  while not stop do
-    local ix
-    x, ix = bint.udivmod(x, divisor)
-    ix = ix:tointeger()
-    stop = x:iszero()
-    for _=1,step do
-      local d
-      ix, d = idivmod(ix, base)
-      if stop and ix == 0 and d == 0 then
-        -- stop on leading zeros
-        break
-      end
-      table.insert(ss, 1, BASE_LETTERS[d])
-    end
+  if #ss == 0 then
+    return '0'
   end
   if neg then
     table.insert(ss, 1, '-')
@@ -1063,12 +1057,12 @@ end
 function bint.udivmod(x, y)
   local dividend = bint.new(x)
   local divisor = bint_assert_convert(y)
-  local quot = bint.zero()
+  local quo = bint.zero()
   assert(not divisor:iszero(), 'attempt to divide by zero')
   if divisor:isone() then
     return dividend, bint.zero()
   elseif dividend:ult(divisor) then
-    return quot, dividend
+    return quo, dividend
   end
   -- align leftmost digits in dividend and divisor
   local divisorlbit = findleftbit(divisor)
@@ -1100,7 +1094,7 @@ function bint.udivmod(x, y)
       end
       -- concatenate 1 to the right bit of the quotient
       local i = (bit // BINT_WORDBITS) + 1
-      quot[i] = quot[i] | (1 << (bit % BINT_WORDBITS))
+      quo[i] = quo[i] | (1 << (bit % BINT_WORDBITS))
     end
     -- shift right the divisor in one bit
     for i=1,divisorsize-1 do
@@ -1121,7 +1115,7 @@ function bint.udivmod(x, y)
     bit = bit - 1
   end
   -- the remaining dividend is the remainder
-  return quot, dividend
+  return quo, dividend
 end
 
 --- Perform unsigned division between two integers considering bints.
@@ -1159,13 +1153,13 @@ function bint.idivmod(x, y)
     if iy:isminusone() then
       return -ix, bint.zero()
     end
-    local quot, rem = bint.udivmod(ix:abs(), iy:abs())
+    local quo, rem = bint.udivmod(ix:abs(), iy:abs())
     local isnumneg, isdenomneg = ix:isneg(), iy:isneg()
     if isnumneg ~= isdenomneg then
-      quot:_unm()
+      quo:_unm()
       -- round quotient towards minus infinity
       if not rem:iszero() then
-        quot:_dec()
+        quo:_dec()
         -- adjust the remainder
         if isnumneg and not isdenomneg then
           rem:_unm():_add(y)
@@ -1177,9 +1171,10 @@ function bint.idivmod(x, y)
       -- adjust the remainder
       rem:_unm()
     end
-    return quot, rem
+    return quo, rem
   else
-    return idivmod(bint.tonumber(x), bint.tonumber(y))
+    local nx, ny = bint.tonumber(x), bint.tonumber(y)
+    return nx // ny, nx % ny
   end
 end
 
