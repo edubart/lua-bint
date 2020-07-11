@@ -394,20 +394,6 @@ do
   end
 end
 
--- Single word division modulus
-local function sudivmod(nume, deno)
-  local quot = bint_newempty()
-  local rema
-  local carry = 0
-  for i=BINT_SIZE,1,-1 do
-    carry = carry | nume[i]
-    quot[i] = carry // deno
-    rema = carry % deno
-    carry = rema << BINT_WORDBITS
-  end
-  return quot, rema
-end
-
 --- Convert a bint to a string in the desired base.
 -- @param x The bint to be converted from.
 -- @param[opt] base Base to be represented, defaults to 10.
@@ -446,9 +432,11 @@ function bint.tobase(x, base, unsigned)
   local neg = not unsigned and x:isneg()
   if neg then
     x = x:abs()
+  else
+    x = bint.new(x)
   end
-  local stop = x:iszero()
-  if stop then
+  local xiszero = x:iszero()
+  if xiszero then
     return '0'
   end
   -- calculate basepow
@@ -459,21 +447,33 @@ function bint.tobase(x, base, unsigned)
     step = step + 1
     basepow = basepow * base
   until basepow >= limit
-  -- spit out base digits
-  while not stop do
-    local xd
-    x, xd = sudivmod(x, basepow)
-    stop = x:iszero()
+  -- serialize base digits
+  local size = BINT_SIZE
+  local xd, carry, d
+  repeat
+    -- single word division
+    carry = 0
+    xiszero = true
+    for i=size,1,-1 do
+      carry = carry | x[i]
+      d, xd = carry // basepow, carry % basepow
+      if xiszero and d ~= 0 then
+        size = i
+        xiszero = false
+      end
+      x[i] = d
+      carry = xd << BINT_WORDBITS
+    end
+    -- digit division
     for _=1,step do
-      local d
       xd, d = xd // base, xd % base
-      if stop and xd == 0 and d == 0 then
+      if xiszero and xd == 0 and d == 0 then
         -- stop on leading zeros
         break
       end
       table.insert(ss, 1, BASE_LETTERS[d])
     end
-  end
+  until xiszero
   if neg then
     table.insert(ss, 1, '-')
   end
@@ -1063,6 +1063,19 @@ local function findleftbit(x)
   end
 end
 
+-- Single word division modulus
+local function sudivmod(nume, deno)
+  local rema
+  local carry = 0
+  for i=BINT_SIZE,1,-1 do
+    carry = carry | nume[i]
+    nume[i] = carry // deno
+    rema = carry % deno
+    carry = rema << BINT_WORDBITS
+  end
+  return rema
+end
+
 --- Perform unsigned division and modulo operation between two integers considering bints.
 -- This is effectively the same of @{bint.udiv} and @{bint.umod}.
 -- @param x The numerator, must be a bint or a lua integer.
@@ -1077,7 +1090,7 @@ function bint.udivmod(x, y)
   local deno = bint_assert_convert(y)
   -- compute if high bits of denominator are all zeros
   local ishighzero = true
-  for i=BINT_SIZE,2,-1 do
+  for i=2,BINT_SIZE do
     if deno[i] ~= 0 then
       ishighzero = false
       break
@@ -1092,9 +1105,8 @@ function bint.udivmod(x, y)
       return nume, bint.zero()
     elseif low <= (BINT_WORDMSB - 1) then
       -- can do single word division
-      local rema
-      nume, rema = sudivmod(nume, low)
-      return nume, bint.new(rema)
+      local rema = sudivmod(nume, low)
+      return nume, bint.fromuinteger(rema)
     end
   end
   if nume:ult(deno) then
@@ -1188,9 +1200,6 @@ end
 function bint.idivmod(x, y)
   local ix, iy = bint.tobint(x), bint.tobint(y)
   if ix and iy then
-    if iy:isminusone() then
-      return -ix, bint.zero()
-    end
     local quot, rema = bint.udivmod(ix:abs(), iy:abs())
     local isnumneg, isdenomneg = ix:isneg(), iy:isneg()
     if isnumneg ~= isdenomneg then
@@ -1226,9 +1235,6 @@ end
 function bint.__idiv(x, y)
   local ix, iy = bint.tobint(x), bint.tobint(y)
   if ix and iy then
-    if iy:isminusone() then
-      return -ix, bint.zero()
-    end
     local quot, rema = bint.udivmod(ix:abs(), iy:abs())
     if ix:isneg() ~= iy:isneg() then
       quot:_unm()
