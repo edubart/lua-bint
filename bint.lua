@@ -376,7 +376,7 @@ end
 -- @see bint.tointeger
 function bint.tonumber(x)
   if isbint(x) then
-    if x >= BINT_MATHMININTEGER and x <= BINT_MATHMAXINTEGER then
+    if x <= BINT_MATHMAXINTEGER and x >= BINT_MATHMININTEGER then
       return x:tointeger()
     else
       return tonumber(tostring(x))
@@ -431,9 +431,8 @@ function bint.tobase(x, base, unsigned)
   if unsigned == nil then
     unsigned = base ~= 10
   end
-  if base == 10 or base == 16 then
-    local inluarange = x >= BINT_MATHMININTEGER and x <= BINT_MATHMAXINTEGER
-    if inluarange then
+  if (base == 10 and not unsigned) or (base == 16 and unsigned) then
+    if x <= BINT_MATHMAXINTEGER and x >= BINT_MATHMININTEGER then
       -- integer is small, use tostring or string.format (faster)
       local n = x:tointeger()
       if base == 10 then
@@ -448,13 +447,32 @@ function bint.tobase(x, base, unsigned)
   if neg then
     x = x:abs()
   end
-  while not x:iszero() do
-    local d
-    x, d = xremainder(x, base)
-    table.insert(ss, 1, BASE_LETTERS[d])
-  end
-  if #ss == 0 then
+  local stop = x:iszero()
+  if stop then
     return '0'
+  end
+  -- calculate basepow
+  local step = 0
+  local basepow = 1
+  local limit = (BINT_WORDMSB - 1) // base
+  repeat
+    step = step + 1
+    basepow = basepow * base
+  until basepow >= limit
+  -- spit out base digits
+  while not stop do
+    local xd
+    x, xd = xremainder(x, basepow)
+    stop = x:iszero()
+    for _=1,step do
+      local d
+      xd, d = xd // base, xd % base
+      if stop and xd == 0 and d == 0 then
+        -- stop on leading zeros
+        break
+      end
+      table.insert(ss, 1, BASE_LETTERS[d])
+    end
   end
   if neg then
     table.insert(ss, 1, '-')

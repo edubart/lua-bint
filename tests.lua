@@ -186,13 +186,15 @@ local function test(bits, wordbits)
     assert_eq(bint.parse(1), bint(1))
     assert_eq(bint.parse(1.5), 1.5)
 
+    assert_eq(bint.tobase(math.mininteger, 10), tostring(math.mininteger))
+    assert_eq(bint.tobase(math.maxinteger, 10), tostring(math.maxinteger))
     assert_eq(bint.tobase(1, 10), '1')
     assert_eq(bint.tobase(8, 7), '11')
     assert_eq(bint.tobase(1, 37), nil)
     assert_eq(bint.tobase(1.5, 10), nil)
     assert_eq(bint.tobase(0xff, 16, true), 'ff')
     assert_eq(bint.tobase(-0xff, 16, false), '-ff')
-    if bits > 64 then
+    if bits == 64 then
       assert_eq(bint.tobase(-1, 16, true), 'ffffffffffffffff')
       assert_eq(bint.tobase(-2, 16, true), 'fffffffffffffffe')
     end
@@ -616,7 +618,7 @@ end
 
 test(64)
 test(64, 16)
-test(64, 4)
 test(64, 8)
+test(64, 4)
 test(128)
 test(256)
