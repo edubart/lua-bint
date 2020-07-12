@@ -5,12 +5,13 @@ computing with large integers.
 
 Different from most arbitrary-precision integer libraries in pure Lua out there this one
 uses an array of lua integers as underlying data-type in its implementation instead of
-using strings or tables of digits, so regarding that aspect this library should be more efficient.
+using strings or large tables, this make it efficient for working with fixed width integers
+and to make bitwise operations.
+
+Bint stands for Big Integer.
 
 The library implementation was highly inspired by
 [tiny-bignum-c](https://github.com/kokke/tiny-bignum-c).
-
-Bint stands for Big Integer.
 
 ## Design goals
 
@@ -22,7 +23,7 @@ integer overflow warps around,
 signed integers are implemented using two-complement arithmetic rules,
 integer division operations rounds towards minus infinity,
 any mixed operations with float numbers promotes the value to a float,
-and the usual division/power operation always promote to floats.
+and the usual division/power operation always promotes to floats.
 
 The library is designed to be possible to work with only unsigned integer arithmetic
 when using the proper methods.
@@ -30,27 +31,28 @@ when using the proper methods.
 All the lua arithmetic operators (+, -, *, //, /, %) and bitwise operators (&, |, ~, <<, >>)
 are implemented as metamethods.
 
-The integer size must be fixed in advance and the library is designed to be efficient only when
+The integer size must be fixed in advance and the library is designed to be more efficient when
 working with integers of sizes between 64-4096 bits. If you need to work with really huge numbers
-without size restrictions then use other library. This choice has been made to have more efficiency
+without size restrictions then use another library. This choice has been made to have more efficiency
 in that specific size range.
 
 ## Features
 
-* Small, simple and self contained
-* Efficient (for a pure Lua integer library)
-* Works with a fixed width integer
-* Follows Lua 5.3+ integer arithmetic semantics by default
-* All integer overflows wraps around
-* Can work with large integer widths with reasonable speed (such as 1024bit integers)
-* Implements all lua arithmetic metamethods
-* Provide methods to work with unsigned arithmetic only
-* Supports signed integers by default using two-complement arithmetic rules on unsigned operations
-* Allow to mix any operation with lua numbers, promoting to lua floats where needed
+* Small, simple and self contained.
+* Efficient (for a pure Lua integer library).
+* Works with fixed width integers.
+* Follows Lua 5.3+ integer arithmetic semantics by default.
+* All integer overflows wraps around.
+* Can work with large integer widths with reasonable speed (such as 1024bit integers).
+* Implements all lua arithmetic metamethods.
+* Provide methods to work with unsigned arithmetic only.
+* Supports signed integers by default using two-complement arithmetic rules on unsigned operations.
+* Allow to mix any operation with lua numbers, promoting to lua floats where needed.
+* Can perform bitwise operations.
 
 ## Documentation
 
-The full API reference and documentation can viewed in the
+The full API reference and documentation can be viewed in the
 [documentation website](https://edubart.github.io/lua-bint/).
 
 ## Install

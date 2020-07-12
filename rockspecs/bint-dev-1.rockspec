@@ -6,7 +6,7 @@ source = {
 }
 description = {
   summary = "Arbitrary precision integer arithmetic library in pure Lua",
-  detailed = [[Small portable arbitrary precision integer arithmetic library in pure Lua for
+  detailed = [[Small portable arbitrary-precision integer arithmetic library in pure Lua for
 computing with large integers.
   ]],
   homepage = "https://github.com/edubart/lua-bint",

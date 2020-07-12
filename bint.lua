@@ -26,9 +26,10 @@ SOFTWARE.
 Small portable arbitrary-precision integer arithmetic library in pure Lua for
 computing with large integers.
 
-Different from most arbitrary precision integer libraries in pure Lua out there this one
+Different from most arbitrary-precision integer libraries in pure Lua out there this one
 uses an array of lua integers as underlying data-type in its implementation instead of
-using strings or large tables, so regarding that aspect this library should be more efficient.
+using strings or large tables, this make it efficient for working with fixed width integers
+and to make bitwise operations.
 
 ## Design goals
 
@@ -40,7 +41,7 @@ integer overflow warps around,
 signed integers are implemented using two-complement arithmetic rules,
 integer division operations rounds towards minus infinity,
 any mixed operations with float numbers promotes the value to a float,
-and the usual division/power operation always promote to floats.
+and the usual division/power operation always promotes to floats.
 
 The library is designed to be possible to work with only unsigned integer arithmetic
 when using the proper methods.
@@ -48,9 +49,9 @@ when using the proper methods.
 All the lua arithmetic operators (+, -, *, //, /, %) and bitwise operators (&, |, ~, <<, >>)
 are implemented as metamethods.
 
-The integer size must be fixed in advance and the library is designed to be efficient only when
+The integer size must be fixed in advance and the library is designed to be more efficient when
 working with integers of sizes between 64-4096 bits. If you need to work with really huge numbers
-without size restrictions then use other library. This choice has been made to have more efficiency
+without size restrictions then use another library. This choice has been made to have more efficiency
 in that specific size range.
 
 ## Usage
@@ -90,7 +91,7 @@ get the output from one of the following functions:
 * @{bint.tobase} (convert to a string in any base)
 * @{bint.__tostring} (convert to a string in base 10)
 
-To output very large integer with no loss you probably want to use @{bint.tobase}
+To output a very large integer with no loss you probably want to use @{bint.tobase}
 or call `tostring` to get a string representation.
 
 ## Precautions
@@ -102,14 +103,14 @@ however the user should take care in some situations:
 * Don't mix integers and float operations if you want to work with integers only.
 * Don't use the regular equal operator ('==') to compare values from this library,
 unless you know in advance that both values are of the same primitive type,
-otherwise it will always returns false, use @{bint.eq} to be safe.
+otherwise it will always return false, use @{bint.eq} to be safe.
 * Don't pass fractional numbers to functions that an integer is expected
+* Don't mix operations between bint classes with different sizes as this is not supported.
 as this will throw assertions.
 * Remember that casting back to lua integers or numbers precision can be lost.
 * For dividing while preserving integers use the @{bint.__idiv} (the '//' operator).
 * For doing power operation preserving integers use the @{bint.ipow} function.
-to the proper size you intend to work with, otherwise large integers may wraps around.
-* Never mix operations between bint classes of different bit sizes
+* Configure the proper integer size you intend to work with, otherwise large integers may wrap around.
 
 ]]
 
@@ -322,7 +323,7 @@ end
 --- Convert a bint to an unsigned integer.
 -- Note that large unsigned integers may be represented as negatives in lua integers.
 -- Note that lua cannot represent values larger than 64 bits,
--- in that case integer values wraps around.
+-- in that case integer values wrap around.
 -- @param x A bint or a number to be converted into an unsigned integer.
 -- @return An integer or nil in case the input cannot be represented by an integer.
 -- @see bint.tointeger
@@ -341,7 +342,7 @@ end
 --- Convert a bint to a signed integer.
 -- It works by taking absolute values then applying the sign bit in case needed.
 -- Note that lua cannot represent values larger than 64 bits,
--- in that case integer values wraps around.
+-- in that case integer values wrap around.
 -- @param x A bint or value to be converted into an unsigned integer.
 -- @return An integer or nil in case the input cannot be represented by an integer.
 -- @see bint.touinteger
@@ -369,7 +370,7 @@ local function bint_assert_tointeger(x)
 end
 
 --- Convert a bint to a lua float in case integer would wrap around or lua integer otherwise.
--- Different from @{bint.tointeger} the operation does not wraps around integers,
+-- Different from @{bint.tointeger} the operation does not wrap around integers,
 -- but digits precision are lost in the process of converting to a float.
 -- @param x A bint or value to be converted into a lua number.
 -- @return A lua number or nil in case the input cannot be represented by a number.
@@ -398,7 +399,7 @@ end
 -- @param x The bint to be converted from.
 -- @param[opt] base Base to be represented, defaults to 10.
 -- Must be at least 2 and at most 36.
--- @param[opt] unsigned Whether to output as unsigned integer.
+-- @param[opt] unsigned Whether to output as an unsigned integer.
 -- Defaults to false for base 10 and true for others.
 -- When unsigned is false the symbol '-' is prepended in negative values.
 -- @return A string representing the input.
@@ -536,7 +537,7 @@ local function bint_assert_convert(x)
 end
 
 --- Convert a value to a bint if possible otherwise to a lua number.
--- Useful to prepare values that you are unsure if its going to be a integer or float.
+-- Useful to prepare values that you are unsure if it's going to be an integer or float.
 -- @param x A value to be converted (string, number or another bint).
 -- @param[opt] clone A boolean that tells if a new bint reference should be returned.
 -- Defaults to false.
@@ -836,8 +837,8 @@ function bint.abs(x)
   end
 end
 
---- Take floor of a number considering bints.
--- @param x A bint or a lua number to perform the floor.
+--- Take the floor of a number considering bints.
+-- @param x A bint or a lua number to perform the floor operation.
 function bint.floor(x)
   if isbint(x) then
     return bint.new(x)
@@ -847,7 +848,7 @@ function bint.floor(x)
 end
 
 --- Take ceil of a number considering bints.
--- @param x A bint or a lua number to perform the ceil.
+-- @param x A bint or a lua number to perform the ceil operation.
 function bint.ceil(x)
   if isbint(x) then
     return bint.new(x)
@@ -994,7 +995,7 @@ function bint:_sub(y)
 end
 
 --- Subtract two numbers considering bints.
--- @param x A bint or a lua number to be subtract from.
+-- @param x A bint or a lua number to be subtracted from.
 -- @param y A bint or a lua number to subtract.
 function bint.__sub(x, y)
   local ix, iy = bint.tobint(x), bint.tobint(y)
@@ -1265,7 +1266,7 @@ function bint.__idiv(x, y)
 end
 
 --- Perform division between two numbers considering bints.
--- This always cast inputs to floats, for integer division only use @{bint.__idiv}.
+-- This always casts inputs to floats, for integer division only use @{bint.__idiv}.
 -- @param x The numerator, a bint or lua number.
 -- @param y The denominator, a bint or lua number.
 -- @return The quotient, a lua number.
@@ -1286,7 +1287,7 @@ function bint.__mod(x, y)
 end
 
 --- Perform integer power between two integers considering bints.
--- If y is negative then pow is performed as unsigned integers.
+-- If y is negative then pow is performed as an unsigned integer.
 -- @param x The base, an integer.
 -- @param y The exponent, an integer.
 -- @return The result of the pow operation, a bint.
@@ -1344,7 +1345,7 @@ function bint.upowmod(x, y, m)
 end
 
 --- Perform numeric power between two numbers considering bints.
--- This always cast inputs to floats, for integer power only use @{bint.ipow}.
+-- This always casts inputs to floats, for integer power only use @{bint.ipow}.
 -- @param x The base, a bint or lua number.
 -- @param y The exponent, a bint or lua number.
 -- @return The result of the pow operation, a lua number.
@@ -1479,12 +1480,12 @@ function bint.__bnot(x)
   return y
 end
 
---- Negate a bint (in-place). This apply effectively apply two's complements.
+--- Negate a bint (in-place). This effectively applies two's complements.
 function bint:_unm()
   return self:_bnot():_inc()
 end
 
---- Negate a bint. This apply effectively apply two's complements.
+--- Negate a bint. This effectively applies two's complements.
 -- @param x A bint to perform negation.
 function bint.__unm(x)
   return (~x):_inc()

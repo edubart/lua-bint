@@ -49,9 +49,10 @@ computing with large integers.</p>
 <p>
 
 
-<p>Different from most arbitrary precision integer libraries in pure Lua out there this one
+<p>Different from most arbitrary-precision integer libraries in pure Lua out there this one
 uses an array of lua integers as underlying data-type in its implementation instead of
-using strings or large tables, so regarding that aspect this library should be more efficient.</p>
+using strings or large tables, this make it efficient for working with fixed width integers
+and to make bitwise operations.</p>
 
 <h2>Design goals</h2>
 
@@ -63,7 +64,7 @@ integer overflow warps around,
 signed integers are implemented using two-complement arithmetic rules,
 integer division operations rounds towards minus infinity,
 any mixed operations with float numbers promotes the value to a float,
-and the usual division/power operation always promote to floats.</p>
+and the usual division/power operation always promotes to floats.</p>
 
 <p>The library is designed to be possible to work with only unsigned integer arithmetic
 when using the proper methods.</p>
@@ -71,9 +72,9 @@ when using the proper methods.</p>
 <p>All the lua arithmetic operators (+, -, *, //, /, %) and bitwise operators (&amp;, |, ~, &lt;<, >>)
 are implemented as metamethods.</p>
 
-<p>The integer size must be fixed in advance and the library is designed to be efficient only when
+<p>The integer size must be fixed in advance and the library is designed to be more efficient when
 working with integers of sizes between 64-4096 bits. If you need to work with really huge numbers
-without size restrictions then use other library. This choice has been made to have more efficiency
+without size restrictions then use another library. This choice has been made to have more efficiency
 in that specific size range.</p>
 
 <h2>Usage</h2>
@@ -119,7 +120,7 @@ get the output from one of the following functions:</p>
     <li><a href="index.html#__tostring">bint.__tostring</a> (convert to a string in base 10)</li>
 </ul>
 
-<p>To output very large integer with no loss you probably want to use <a href="index.html#tobase">bint.tobase</a>
+<p>To output a very large integer with no loss you probably want to use <a href="index.html#tobase">bint.tobase</a>
 or call <a href="https://www.lua.org/manual/5.3/manual.html#pdf-tostring">tostring</a> to get a string representation.</p>
 
 <h2>Precautions</h2>
@@ -132,14 +133,14 @@ however the user should take care in some situations:</p>
     <li>Don't mix integers and float operations if you want to work with integers only.</li>
     <li>Don't use the regular equal operator ('==') to compare values from this library,
     unless you know in advance that both values are of the same primitive type,
-    otherwise it will always returns false, use <a href="index.html#eq">bint.eq</a> to be safe.</li>
-    <li>Don't pass fractional numbers to functions that an integer is expected
+    otherwise it will always return false, use <a href="index.html#eq">bint.eq</a> to be safe.</li>
+    <li>Don't pass fractional numbers to functions that an integer is expected</li>
+    <li>Don't mix operations between bint classes with different sizes as this is not supported.
     as this will throw assertions.</li>
     <li>Remember that casting back to lua integers or numbers precision can be lost.</li>
     <li>For dividing while preserving integers use the <a href="index.html#__idiv">bint.__idiv</a> (the '//' operator).</li>
-    <li>For doing power operation preserving integers use the <a href="index.html#ipow">bint.ipow</a> function.
-    to the proper size you intend to work with, otherwise large integers may wraps around.</li>
-    <li>Never mix operations between bint classes of different bit sizes</li>
+    <li>For doing power operation preserving integers use the <a href="index.html#ipow">bint.ipow</a> function.</li>
+    <li>Configure the proper integer size you intend to work with, otherwise large integers may wrap around.</li>
 </ul>
 </p>
 
@@ -288,7 +289,7 @@ however the user should take care in some situations:</p>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#floor">floor (x)</a></td>
-	<td class="summary">Take floor of a number considering bints.</td>
+	<td class="summary">Take the floor of a number considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#ceil">ceil (x)</a></td>
@@ -594,7 +595,7 @@ however the user should take care in some situations:</p>
     Convert a bint to an unsigned integer.
  Note that large unsigned integers may be represented as negatives in lua integers.
  Note that lua cannot represent values larger than 64 bits,
- in that case integer values wraps around.
+ in that case integer values wrap around.
 
 
     <h3>Parameters:</h3>
@@ -626,7 +627,7 @@ however the user should take care in some situations:</p>
     Convert a bint to a signed integer.
  It works by taking absolute values then applying the sign bit in case needed.
  Note that lua cannot represent values larger than 64 bits,
- in that case integer values wraps around.
+ in that case integer values wrap around.
 
 
     <h3>Parameters:</h3>
@@ -656,7 +657,7 @@ however the user should take care in some situations:</p>
     </dt>
     <dd>
     Convert a bint to a lua float in case integer would wrap around or lua integer otherwise.
- Different from <a href="index.html#tointeger">bint.tointeger</a> the operation does not wraps around integers,
+ Different from <a href="index.html#tointeger">bint.tointeger</a> the operation does not wrap around integers,
  but digits precision are lost in the process of converting to a float.
 
 
@@ -700,7 +701,7 @@ however the user should take care in some situations:</p>
          (<em>optional</em>)
         </li>
         <li><span class="parameter">unsigned</span>
-         Whether to output as unsigned integer.
+         Whether to output as an unsigned integer.
  Defaults to false for base 10 and true for others.
  When unsigned is false the symbol '-' is prepended in negative values.
          (<em>optional</em>)
@@ -792,7 +793,7 @@ however the user should take care in some situations:</p>
     </dt>
     <dd>
     Convert a value to a bint if possible otherwise to a lua number.
- Useful to prepare values that you are unsure if its going to be a integer or float.
+ Useful to prepare values that you are unsure if it's going to be an integer or float.
 
 
     <h3>Parameters:</h3>
@@ -1262,13 +1263,13 @@ however the user should take care in some situations:</p>
     <strong>floor (x)</strong>
     </dt>
     <dd>
-    Take floor of a number considering bints.
+    Take the floor of a number considering bints.
 
 
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bint or a lua number to perform the floor.
+         A bint or a lua number to perform the floor operation.
         </li>
     </ul>
 
@@ -1288,7 +1289,7 @@ however the user should take care in some situations:</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bint or a lua number to perform the ceil.
+         A bint or a lua number to perform the ceil operation.
         </li>
     </ul>
 
@@ -1526,7 +1527,7 @@ however the user should take care in some situations:</p>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">x</span>
-         A bint or a lua number to be subtract from.
+         A bint or a lua number to be subtracted from.
         </li>
         <li><span class="parameter">y</span>
          A bint or a lua number to subtract.
@@ -1734,7 +1735,7 @@ however the user should take care in some situations:</p>
     </dt>
     <dd>
     Perform division between two numbers considering bints.
- This always cast inputs to floats, for integer division only use <a href="index.html#__idiv">bint.__idiv</a>.
+ This always casts inputs to floats, for integer division only use <a href="index.html#__idiv">bint.__idiv</a>.
 
 
     <h3>Parameters:</h3>
@@ -1795,7 +1796,7 @@ however the user should take care in some situations:</p>
     </dt>
     <dd>
     Perform integer power between two integers considering bints.
- If y is negative then pow is performed as unsigned integers.
+ If y is negative then pow is performed as an unsigned integer.
 
 
     <h3>Parameters:</h3>
@@ -1869,7 +1870,7 @@ however the user should take care in some situations:</p>
     </dt>
     <dd>
     Perform numeric power between two numbers considering bints.
- This always cast inputs to floats, for integer power only use <a href="index.html#ipow">bint.ipow</a>.
+ This always casts inputs to floats, for integer power only use <a href="index.html#ipow">bint.ipow</a>.
 
 
     <h3>Parameters:</h3>
@@ -2138,7 +2139,7 @@ however the user should take care in some situations:</p>
     <strong>_unm ()</strong>
     </dt>
     <dd>
-    Negate a bint (in-place).  This apply effectively apply two's complements.
+    Negate a bint (in-place).  This effectively applies two's complements.
 
 
 
@@ -2152,7 +2153,7 @@ however the user should take care in some situations:</p>
     <strong>__unm (x)</strong>
     </dt>
     <dd>
-    Negate a bint.  This apply effectively apply two's complements.
+    Negate a bint.  This effectively applies two's complements.
 
 
     <h3>Parameters:</h3>
@@ -2368,7 +2369,7 @@ however the user should take care in some situations:</p>
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-07-11 10:34:28 </i>
+<i style="float:right;">Last updated 2020-07-12 15:11:47 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
