@@ -953,7 +953,7 @@ function bint:_add(y)
   local carry = 0
   for i=1,BINT_SIZE do
     local tmp = self[i] + y[i] + carry
-    carry = tmp > BINT_WORDMAX and 1 or 0
+    carry = tmp >> BINT_WORDBITS
     self[i] = tmp & BINT_WORDMAX
   end
   return self
@@ -969,7 +969,7 @@ function bint.__add(x, y)
     local carry = 0
     for i=1,BINT_SIZE do
       local tmp = ix[i] + iy[i] + carry
-      carry = tmp > BINT_WORDMAX and 1 or 0
+      carry = tmp >> BINT_WORDBITS
       z[i] = tmp & BINT_WORDMAX
     end
     return z
@@ -986,9 +986,9 @@ function bint:_sub(y)
   local borrow = 0
   local wordmaxp1 = BINT_WORDMAX + 1
   for i=1,BINT_SIZE do
-    local res = (self[i] + wordmaxp1) - (y[i] + borrow)
+    local res = self[i] + wordmaxp1 - y[i] - borrow
     self[i] = res & BINT_WORDMAX
-    borrow = res <= BINT_WORDMAX and 1 or 0
+    borrow = (res >> BINT_WORDBITS) ~ 1
   end
   return self
 end
@@ -1003,9 +1003,9 @@ function bint.__sub(x, y)
     local borrow = 0
     local wordmaxp1 = BINT_WORDMAX + 1
     for i=1,BINT_SIZE do
-      local res = (ix[i] + wordmaxp1) - (iy[i] + borrow)
+      local res = ix[i] + wordmaxp1 - iy[i] - borrow
       z[i] = res & BINT_WORDMAX
-      borrow = res <= BINT_WORDMAX and 1 or 0
+      borrow = (res >> BINT_WORDBITS) ~ 1
     end
     return z
   else
@@ -1036,7 +1036,7 @@ function bint.__mul(x, y)
           local carry = 0
           for k=i+j-1,BINT_SIZE do
             local tmp = z[k] + (a & BINT_WORDMAX) + carry
-            carry = tmp > BINT_WORDMAX and 1 or 0
+            carry = tmp >> BINT_WORDBITS
             z[k] = tmp & BINT_WORDMAX
             a = a >> BINT_WORDBITS
           end
@@ -1138,9 +1138,9 @@ function bint.udivmod(x, y)
       -- subtract denominator from the portion of the numerator
       local borrow = 0
       for i=1,size do
-        local res = (nume[i] + wordmaxp1) - (deno[i] + borrow)
+        local res = nume[i] + wordmaxp1 - deno[i] - borrow
         nume[i] = res & BINT_WORDMAX
-        borrow = res <= BINT_WORDMAX and 1 or 0
+        borrow = (res >> BINT_WORDBITS) ~ 1
       end
       -- concatenate 1 to the right bit of the quotient
       local i = (bit // BINT_WORDBITS) + 1
@@ -1200,21 +1200,28 @@ end
 function bint.idivmod(x, y)
   local ix, iy = bint.tobint(x), bint.tobint(y)
   if ix and iy then
-    local quot, rema = bint.udivmod(ix:abs(), iy:abs())
-    local isnumneg, isdenomneg = ix:isneg(), iy:isneg()
-    if isnumneg ~= isdenomneg then
+    local isnumeneg = ix[BINT_SIZE] & BINT_WORDMSB ~= 0
+    local isdenoneg = iy[BINT_SIZE] & BINT_WORDMSB ~= 0
+    if isnumeneg then
+      ix = -ix
+    end
+    if isdenoneg then
+      iy = -iy
+    end
+    local quot, rema = bint.udivmod(ix, iy)
+    if isnumeneg ~= isdenoneg then
       quot:_unm()
       -- round quotient towards minus infinity
       if not rema:iszero() then
         quot:_dec()
         -- adjust the remainder
-        if isnumneg and not isdenomneg then
+        if isnumeneg and not isdenoneg then
           rema:_unm():_add(y)
-        elseif isdenomneg and not isnumneg then
+        elseif isdenoneg and not isnumeneg then
           rema:_add(y)
         end
       end
-    elseif isnumneg then
+    elseif isnumeneg then
       -- adjust the remainder
       rema:_unm()
     end
@@ -1235,8 +1242,16 @@ end
 function bint.__idiv(x, y)
   local ix, iy = bint.tobint(x), bint.tobint(y)
   if ix and iy then
-    local quot, rema = bint.udivmod(ix:abs(), iy:abs())
-    if ix:isneg() ~= iy:isneg() then
+    local isnumeneg = ix[BINT_SIZE] & BINT_WORDMSB ~= 0
+    local isdenoneg = iy[BINT_SIZE] & BINT_WORDMSB ~= 0
+    if isnumeneg then
+      ix = -ix
+    end
+    if isdenoneg then
+      iy = -iy
+    end
+    local quot, rema = bint.udivmod(ix, iy)
+    if isnumeneg ~= isdenoneg then
       quot:_unm()
       -- round quotient towards minus infinity
       if not rema:iszero() then
