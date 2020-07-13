@@ -1111,7 +1111,7 @@ function bint.udivmod(x, y)
     end
   end
   if nume:ult(deno) then
-    -- denominator is greater than denominator
+    -- denominator is greater than numerator
     return bint.zero(), nume
   end
   -- align leftmost digits in numerator and denominator
