@@ -13,6 +13,10 @@ Bint stands for Big Integer.
 The library implementation was highly inspired by
 [tiny-bignum-c](https://github.com/kokke/tiny-bignum-c).
 
+This library was created to be used in the
+[Nelua programming language](https://github.com/edubart/nelua-lang) compiler.
+It is successfully used there to handle compile time operations on signed and unsigned integers.
+
 ## Design goals
 
 The main design goal of this library is to be small, correct, self contained and use few
