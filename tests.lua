@@ -197,6 +197,8 @@ local function test(bits, wordbits)
     if bits == 64 then
       assert_eq(bint.tobase(-1, 16, true), 'ffffffffffffffff')
       assert_eq(bint.tobase(-2, 16, true), 'fffffffffffffffe')
+    elseif bits == 128 then
+      assert_eq(bint.tobase('-1', 16, true), ('f'):rep(32))
     end
 
     test_ops(0)

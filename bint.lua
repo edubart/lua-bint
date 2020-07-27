@@ -418,7 +418,8 @@ function bint.tobase(x, base, unsigned)
   if unsigned == nil then
     unsigned = base ~= 10
   end
-  if (base == 10 and not unsigned) or (base == 16 and unsigned) then
+  local isxneg = x:isneg()
+  if (base == 10 and not unsigned) or (base == 16 and unsigned and not isxneg) then
     if x <= BINT_MATHMAXINTEGER and x >= BINT_MATHMININTEGER then
       -- integer is small, use tostring or string.format (faster)
       local n = x:tointeger()
@@ -430,7 +431,7 @@ function bint.tobase(x, base, unsigned)
     end
   end
   local ss = {}
-  local neg = not unsigned and x:isneg()
+  local neg = not unsigned and isxneg
   if neg then
     x = x:abs()
   else
