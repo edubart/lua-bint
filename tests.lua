@@ -1,5 +1,14 @@
+local function luainteger_bitsize()
+  local n, i = -1, 0
+  repeat
+    n, i = n >> 16, i + 16
+  until n==0
+  return i
+end
+
 local function test(bits, wordbits)
   local bint = require 'bint'(bits, wordbits)
+  local luabits = luainteger_bitsize()
 
   local function assert_eq(a , b)
     if a ~= b then --luacov:disable
@@ -23,7 +32,7 @@ local function test(bits, wordbits)
     assert(bint(0):isone() == false)
     assert(bint(1):isone() == true)
     assert(bint(2):isone() == false)
-    assert(bint(1 | (1 << 32)):isone() == false)
+    assert(bint(1 | (1 << 31)):isone() == false)
     assert(bint.isone(1) == true)
 
     assert(bint(-1):isminusone() == true)
@@ -143,7 +152,7 @@ local function test(bits, wordbits)
       test_num2num(-x)
       test_num2hex(x)
       test_num2oct(x)
-      if bits == 64 then
+      if bits == luabits then
         test_num2hex(-x)
         test_num2oct(-x)
       end
@@ -203,10 +212,12 @@ local function test(bits, wordbits)
 
     test_ops(0)
     test_ops(1)
-    test_ops(0xfffffffffe)
-    test_ops(0xffffffff)
-    test_ops(0xffffffff)
-    test_ops(0x123456789abc)
+    if luabits >= 64 then
+      test_ops(0xfffffffffe)
+      test_ops(0x123456789abc)
+    end
+    test_ops(0xfffffff)
+    test_ops(0xfffffff)
     test_ops(0xf505c2)
     test_ops(0x9f735a)
     test_ops(0xcf7810)
@@ -597,9 +608,9 @@ local function test(bits, wordbits)
     test_ops(1024, 1000)
     test_ops(12345678, 16384)
     test_ops(0xffffff, 1234)
-    test_ops(0xffffffff, 1)
-    test_ops(0xffffffff, 0xef)
-    test_ops(0xffffffff, 0x10000)
+    test_ops(0xfffffff, 1)
+    test_ops(0xfffffff, 0xef)
+    test_ops(0xfffffff, 0x10000)
     test_ops(0xb36627, 0x0dff95)
     test_ops(0xe5a18e, 0x09ff82)
     test_ops(0x45edd0, 0x04ff1a)
