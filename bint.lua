@@ -1508,7 +1508,12 @@ end
 -- @param x A bint or lua number to compare.
 -- @param y A bint or lua number to compare.
 function bint.eq(x, y)
-  return bint.tobint(x) == bint.tobint(y)
+  local ix, iy = bint.tobint(x), bint.tobint(y)
+  if ix and iy then
+    return ix == iy
+  else
+    return x == y
+  end
 end
 
 --- Compare if integer x is less than y considering bints (unsigned version).

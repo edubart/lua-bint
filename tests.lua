@@ -78,6 +78,7 @@ local function test(bits, wordbits)
     assert(bint.eq(1, 0) == false)
     assert(bint.eq(1.5, 1.5) == true)
     assert(bint.eq(1.5, 1) == false)
+    assert(bint.eq(1.5, 2.5) == false)
 
     assert(bint(1) < 1.5 == true)
     assert(bint(1) <= 1.5 ==  true)
