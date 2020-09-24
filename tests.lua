@@ -10,13 +10,17 @@ local function test(bits, wordbits)
   local bint = require 'bint'(bits, wordbits)
   local luabits = luainteger_bitsize()
 
-  local function assert_eq(a , b)
+  local function assert_eq(a, b)
     if a ~= b then --luacov:disable
       local msg = string.format(
         "assertion failed:\n  expected '%s' of type '%s',\n  but got '%s' of type '%s'",
         b, type(b), a, type(a))
       error(msg)
     end --luacov:enable
+  end
+
+  local function assert_eqf(a, b)
+    assert(bint.abs(a - b) <= 1e-6, 'assertion failed')
   end
 
   do --utils
@@ -621,6 +625,31 @@ local function test(bits, wordbits)
     test_ops(0xdc2254, 0x517fea)
     test_ops(0x769c99, 0x2cffda)
     test_ops(0xc19076, 0x31ffd4)
+  end
+
+  do --tdivmod
+    assert_eq(bint.tdiv( 7,  3  ):tointeger(),  2)
+    assert_eq(bint.tdiv(-7,  3  ):tointeger(), -2)
+    assert_eq(bint.tdiv( 7, -3  ):tointeger(), -2)
+    assert_eq(bint.tdiv(-7, -3  ):tointeger(),  2)
+    assert_eq(bint.tdiv( 6,  3  ):tointeger(),  2)
+    assert_eq(bint.tdiv(-6,  3  ):tointeger(), -2)
+    assert_eq(bint.tdiv( 6, -3  ):tointeger(), -2)
+    assert_eq(bint.tdiv(-6, -3  ):tointeger(),  2)
+
+    assert_eq(bint.tmod( 7,  3  ):tointeger(),  1)
+    assert_eq(bint.tmod(-7,  3  ):tointeger(), -1)
+    assert_eq(bint.tmod( 7, -3  ):tointeger(),  1)
+    assert_eq(bint.tmod(-7, -3  ):tointeger(), -1)
+    assert_eq(bint.tmod( 6,  3  ):tointeger(), 0)
+    assert_eq(bint.tmod(-6,  3  ):tointeger(), 0)
+    assert_eq(bint.tmod( 6, -3  ):tointeger(), 0)
+    assert_eq(bint.tmod(-6, -3  ):tointeger(), 0)
+
+    assert_eqf(bint.tdiv(7.5, 2.2), 3.0) assert_eqf(bint.tmod(7.5, 2.2), 0.9)
+    assert_eqf(bint.tdiv(-7.5, 2.2), -3.0) assert_eqf(bint.tmod(-7.5, 2.2), -0.9)
+    assert_eqf(bint.tdiv(7.5, -2.2), -3.0) assert_eqf(bint.tmod(7.5, -2.2), 0.9)
+    assert_eqf(bint.tdiv(-7.5, -2.2), 3.0) assert_eqf(bint.tmod(-7.5, -2.2), -0.9)
   end
 
   do -- upowmod

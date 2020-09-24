@@ -163,6 +163,7 @@ local BINT_SIZE = BINT_BITS // BINT_WORDBITS
 local BINT_WORDMAX = (1 << BINT_WORDBITS) - 1
 local BINT_WORDMSB = (1 << (BINT_WORDBITS - 1))
 local BINT_MATHMININTEGER, BINT_MATHMAXINTEGER
+local BINT_MININTEGER
 
 -- Create a new bint without initializing.
 local function bint_newempty()
@@ -1191,6 +1192,56 @@ function bint.umod(x, y)
   return rema
 end
 
+--- Perform integer truncate division and modulo operation between two numbers considering bints.
+-- This is effectively the same of @{bint.__tdiv} and @{bint.__tmod}.
+-- @param x The numerator, a bint or lua number.
+-- @param y The denominator, a bint or lua number.
+-- @return The quotient following the remainder, both bint or lua number.
+-- @raise Asserts on attempt to divide by zero or on division overflow.
+-- @see bint.__tdiv
+-- @see bint.__tmod
+function bint.tdivmod(x, y)
+  local ax, ay = bint.abs(x), bint.abs(y)
+  local ix, iy = bint.tobint(ax), bint.tobint(ay)
+  local quot, rema
+  if ix and iy then
+    assert(not (bint.eq(x, BINT_MININTEGER) and bint.isminusone(y)), 'division overflow')
+    quot, rema = bint.udivmod(ix, iy)
+  else
+    quot, rema = ax // ay, ax % ay
+  end
+  local isxneg, isyneg = bint.isneg(x), bint.isneg(y)
+  if isxneg ~= isyneg then
+    quot = -quot
+  end
+  if isxneg then
+    rema = -rema
+  end
+  return quot, rema
+end
+
+--- Perform truncate division between two numbers considering bints.
+-- Truncate division is a division that rounds the quotient towards zero.
+-- @param x The numerator, a bint or lua number.
+-- @param y The denominator, a bint or lua number.
+-- @return The quotient, a bint or lua number.
+-- @raise Asserts on attempt to divide by zero or on division overflow.
+function bint.tdiv(x, y)
+  return (bint.tdivmod(x, y))
+end
+
+--- Perform integer truncate modulo operation between two numbers considering bints.
+-- The operation is defined as the remainder of the truncate division
+-- (division that rounds the quotient towards zero).
+-- @param x The numerator, a bint or lua number.
+-- @param y The denominator, a bint or lua number.
+-- @return The remainder, a bint or lua number.
+-- @raise Asserts on attempt to divide by zero or on division overflow.
+function bint.tmod(x, y)
+  local _, rema = bint.tdivmod(x, y)
+  return rema
+end
+
 --- Perform integer floor division and modulo operation between two numbers considering bints.
 -- This is effectively the same of @{bint.__idiv} and @{bint.__mod}.
 -- @param x The numerator, a bint or lua number.
@@ -1612,6 +1663,7 @@ setmetatable(bint, {
 })
 
 BINT_MATHMININTEGER, BINT_MATHMAXINTEGER = bint.new(math.mininteger), bint.new(math.maxinteger)
+BINT_MININTEGER = bint.mininteger()
 memo[memoindex] = bint
 
 return bint
