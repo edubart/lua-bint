@@ -156,6 +156,14 @@ however the user should take care in some situations:</p>
 	<td class="summary">Create a new bint module representing integers of the desired bit size.</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#zero">zero ()</a></td>
+	<td class="summary">Create a new bint with 0 value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#one">one ()</a></td>
+	<td class="summary">Create a new bint with 1 value.</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#fromuinteger">fromuinteger (x)</a></td>
 	<td class="summary">Create a bint from an unsigned integer.</td>
 	</tr>
@@ -166,6 +174,18 @@ however the user should take care in some situations:</p>
 	<tr>
 	<td class="name" nowrap><a href="#frombase">frombase (s[, base])</a></td>
 	<td class="summary">Create a bint from a string of the desired base.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#new">new (x)</a></td>
+	<td class="summary">Create a new bint from a value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#tobint">tobint (x[, clone])</a></td>
+	<td class="summary">Convert a value to a bint if possible.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#parse">parse (x[, clone])</a></td>
+	<td class="summary">Convert a value to a bint if possible otherwise to a lua number.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#touinteger">touinteger (x)</a></td>
@@ -182,18 +202,6 @@ however the user should take care in some situations:</p>
 	<tr>
 	<td class="name" nowrap><a href="#tobase">tobase (x[, base[, unsigned]])</a></td>
 	<td class="summary">Convert a bint to a string in the desired base.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#new">new (x)</a></td>
-	<td class="summary">Create a new bint from a value.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#tobint">tobint (x[, clone])</a></td>
-	<td class="summary">Convert a value to a bint if possible.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#parse">parse (x[, clone])</a></td>
-	<td class="summary">Convert a value to a bint if possible otherwise to a lua number.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#iszero">iszero (x)</a></td>
@@ -238,14 +246,6 @@ however the user should take care in some situations:</p>
 	<tr>
 	<td class="name" nowrap><a href="#isodd">isodd (x)</a></td>
 	<td class="summary">Check if a number is odd considering bints.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#zero">zero ()</a></td>
-	<td class="summary">Create a new bint with 0 value.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#one">one ()</a></td>
-	<td class="summary">Create a new bint with 1 value.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#maxinteger">maxinteger ()</a></td>
@@ -342,6 +342,14 @@ however the user should take care in some situations:</p>
 	<tr>
 	<td class="name" nowrap><a href="#__mul">__mul (x, y)</a></td>
 	<td class="summary">Multiply two numbers considering bints.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#__eq">__eq (x, y)</a></td>
+	<td class="summary">Check if bints are equal.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#eq">eq (x, y)</a></td>
+	<td class="summary">Check if numbers are equal considering bints.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#udivmod">udivmod (x, y)</a></td>
@@ -444,14 +452,6 @@ however the user should take care in some situations:</p>
 	<td class="summary">Negate a bint.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#__eq">__eq (x, y)</a></td>
-	<td class="summary">Check if bints are equal.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#eq">eq (x, y)</a></td>
-	<td class="summary">Check if numbers are equal considering bints.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#ult">ult (x, y)</a></td>
 	<td class="summary">Compare if integer x is less than y considering bints (unsigned version).</td>
 	</tr>
@@ -508,6 +508,34 @@ however the user should take care in some situations:</p>
          (<em>optional</em>)
         </li>
     </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "zero"></a>
+    <strong>zero ()</strong>
+    </dt>
+    <dd>
+    Create a new bint with 0 value.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "one"></a>
+    <strong>one ()</strong>
+    </dt>
+    <dd>
+    Create a new bint with 1 value.
+
+
 
 
 
@@ -601,6 +629,109 @@ however the user should take care in some situations:</p>
     </ol>
 
 
+
+
+</dd>
+    <dt>
+    <a name = "new"></a>
+    <strong>new (x)</strong>
+    </dt>
+    <dd>
+    Create a new bint from a value.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value convertible to a bint (string, number or another bint).
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A new bint, guaranteed to be a new reference in case needed.
+    </ol>
+
+    <h3>Raises:</h3>
+    An assert is thrown in case x is not convertible to a bint.
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="index.html#tobint">bint.tobint</a></li>
+         <li><a href="index.html#parse">bint.parse</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "tobint"></a>
+    <strong>tobint (x[, clone])</strong>
+    </dt>
+    <dd>
+    Convert a value to a bint if possible.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to be converted (string, number or another bint).
+        </li>
+        <li><span class="parameter">clone</span>
+         A boolean that tells if a new bint reference should be returned.
+ Defaults to false.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A bint or nil in case the conversion failed.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="index.html#new">bint.new</a></li>
+         <li><a href="index.html#parse">bint.parse</a></li>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "parse"></a>
+    <strong>parse (x[, clone])</strong>
+    </dt>
+    <dd>
+    Convert a value to a bint if possible otherwise to a lua number.
+ Useful to prepare values that you are unsure if it's going to be an integer or float.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A value to be converted (string, number or another bint).
+        </li>
+        <li><span class="parameter">clone</span>
+         A boolean that tells if a new bint reference should be returned.
+ Defaults to false.
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A bint or a lua number or nil in case the conversion failed.
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <li><a href="index.html#new">bint.new</a></li>
+         <li><a href="index.html#tobint">bint.tobint</a></li>
+    </ul>
 
 
 </dd>
@@ -734,109 +865,6 @@ however the user should take care in some situations:</p>
     <h3>Raises:</h3>
     An assert is thrown in case the base is invalid.
 
-
-
-</dd>
-    <dt>
-    <a name = "new"></a>
-    <strong>new (x)</strong>
-    </dt>
-    <dd>
-    Create a new bint from a value.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         A value convertible to a bint (string, number or another bint).
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        A new bint, guaranteed to be a new reference in case needed.
-    </ol>
-
-    <h3>Raises:</h3>
-    An assert is thrown in case x is not convertible to a bint.
-
-    <h3>See also:</h3>
-    <ul>
-         <li><a href="index.html#tobint">bint.tobint</a></li>
-         <li><a href="index.html#parse">bint.parse</a></li>
-    </ul>
-
-
-</dd>
-    <dt>
-    <a name = "tobint"></a>
-    <strong>tobint (x[, clone])</strong>
-    </dt>
-    <dd>
-    Convert a value to a bint if possible.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         A value to be converted (string, number or another bint).
-        </li>
-        <li><span class="parameter">clone</span>
-         A boolean that tells if a new bint reference should be returned.
- Defaults to false.
-         (<em>optional</em>)
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        A bint or nil in case the conversion failed.
-    </ol>
-
-
-    <h3>See also:</h3>
-    <ul>
-         <li><a href="index.html#new">bint.new</a></li>
-         <li><a href="index.html#parse">bint.parse</a></li>
-    </ul>
-
-
-</dd>
-    <dt>
-    <a name = "parse"></a>
-    <strong>parse (x[, clone])</strong>
-    </dt>
-    <dd>
-    Convert a value to a bint if possible otherwise to a lua number.
- Useful to prepare values that you are unsure if it's going to be an integer or float.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         A value to be converted (string, number or another bint).
-        </li>
-        <li><span class="parameter">clone</span>
-         A boolean that tells if a new bint reference should be returned.
- Defaults to false.
-         (<em>optional</em>)
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        A bint or a lua number or nil in case the conversion failed.
-    </ol>
-
-
-    <h3>See also:</h3>
-    <ul>
-         <li><a href="index.html#new">bint.new</a></li>
-         <li><a href="index.html#tobint">bint.tobint</a></li>
-    </ul>
 
 
 </dd>
@@ -1061,34 +1089,6 @@ however the user should take care in some situations:</p>
          A bint or a lua number.
         </li>
     </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "zero"></a>
-    <strong>zero ()</strong>
-    </dt>
-    <dd>
-    Create a new bint with 0 value.
-
-
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "one"></a>
-    <strong>one ()</strong>
-    </dt>
-    <dd>
-    Create a new bint with 1 value.
-
-
 
 
 
@@ -1571,6 +1571,52 @@ however the user should take care in some situations:</p>
         </li>
         <li><span class="parameter">y</span>
          A bint or a lua number to multiply.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "__eq"></a>
+    <strong>__eq (x, y)</strong>
+    </dt>
+    <dd>
+    Check if bints are equal.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bint to compare.
+        </li>
+        <li><span class="parameter">y</span>
+         A bint to compare.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "eq"></a>
+    <strong>eq (x, y)</strong>
+    </dt>
+    <dd>
+    Check if numbers are equal considering bints.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">x</span>
+         A bint or lua number to compare.
+        </li>
+        <li><span class="parameter">y</span>
+         A bint or lua number to compare.
         </li>
     </ul>
 
@@ -2285,52 +2331,6 @@ however the user should take care in some situations:</p>
 
 </dd>
     <dt>
-    <a name = "__eq"></a>
-    <strong>__eq (x, y)</strong>
-    </dt>
-    <dd>
-    Check if bints are equal.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         A bint to compare.
-        </li>
-        <li><span class="parameter">y</span>
-         A bint to compare.
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "eq"></a>
-    <strong>eq (x, y)</strong>
-    </dt>
-    <dd>
-    Check if numbers are equal considering bints.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         A bint or lua number to compare.
-        </li>
-        <li><span class="parameter">y</span>
-         A bint or lua number to compare.
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
     <a name = "ult"></a>
     <strong>ult (x, y)</strong>
     </dt>
@@ -2485,7 +2485,7 @@ however the user should take care in some situations:</p>
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2021-01-20 07:05:31 </i>
+<i style="float:right;">Last updated 2021-01-28 17:35:54 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
