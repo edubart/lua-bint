@@ -1,5 +1,5 @@
 --[[--
-lua-bint - v0.4.1 - 28/Jan/2022
+lua-bint - v0.4.1 - 28/Jan/2021
 Eduardo Bart - edub4rt@gmail.com
 https://github.com/edubart/lua-bint
 
