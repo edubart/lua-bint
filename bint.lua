@@ -49,6 +49,7 @@ Then when you need create a bint, you can use one of the following functions:
 * @{bint.fromuinteger} (convert from lua integers, but read as unsigned integer)
 * @{bint.frominteger} (convert from lua integers, preserving the sign)
 * @{bint.frombase} (convert from arbitrary bases, like hexadecimal)
+* @{bint.fromstring} (convert from arbitrary string, support binary/hexadecimal/decimal)
 * @{bint.trunc} (convert from lua numbers, truncating the fractional part)
 * @{bint.new} (convert from anything, asserts on invalid integers)
 * @{bint.tobint} (convert from anything, returns nil on invalid integers)
@@ -324,6 +325,25 @@ function bint.frombase(s, base)
 end
 local bint_frombase = bint.frombase
 
+--- Create a new bint from a string.
+-- The string can by a decimal number, binary number prefixed with '0b' or hexadecimal number prefixed with '0x'.
+-- @param s A string convertible to a bint.
+-- @return A new bint or nil in case the conversion failed.
+-- @see bint.frombase
+function bint.fromstring(s)
+  if type(s) ~= 'string' then
+    return
+  end
+  if s:find('^[+-]?[0-9]+$') then
+    return bint_frombase(s, 10)
+  elseif s:find('^[+-]?0[xX][0-9a-fA-F]+$') then
+    return bint_frombase(s:gsub('0[xX]', '', 1), 16)
+  elseif s:find('^[+-]?0[bB][01]+$') then
+    return bint_frombase(s:gsub('0[bB]', '', 1), 2)
+  end
+end
+local bint_fromstring = bint.fromstring
+
 --- Create a new bint from a value.
 -- @param x A value convertible to a bint (string, number or another bint).
 -- @return A new bint, guaranteed to be a new reference in case needed.
@@ -334,11 +354,12 @@ function bint.new(x)
   if getmetatable(x) ~= bint then
     local ty = type(x)
     if ty == 'number' then
-      return bint_frominteger(x)
+      x = bint_frominteger(x)
     elseif ty == 'string' then
-      return bint_frombase(x, 10)
+      x = bint_fromstring(x)
     end
-    error('value cannot be represented by a bint')
+    assert(x, 'value cannot be represented by a bint')
+    return x
   end
   -- return a clone
   local n = setmetatable({}, bint)
@@ -372,7 +393,7 @@ function bint.tobint(x, clone)
   if ty == 'number' then
     return bint_frominteger(x)
   elseif ty == 'string' then
-    return bint_frombase(x, 10)
+    return bint_fromstring(x)
   end
 end
 local tobint = bint.tobint
