@@ -1,8 +1,8 @@
 package = "bint"
-version = "0.4.0-1"
+version = "0.4.1-1"
 source = {
   url = "git://github.com/edubart/lua-bint.git",
-  tag = "v0.4.0"
+  tag = "v0.4.1"
 }
 description = {
   summary = "Arbitrary precision integer arithmetic library in pure Lua",
