@@ -142,6 +142,8 @@ end
 assert(bits % wordbits == 0, 'bitsize is not multiple of word bitsize')
 assert(2*wordbits <= intbits, 'word bitsize must be half of the lua integer bitsize')
 assert(bits >= 64, 'bitsize must be >= 64')
+assert(bits % 8 == 0, 'bitsize must be multiple of 8')
+local bytes = bits // 8
 
 -- Create bint module
 local bint = {}
@@ -343,6 +345,64 @@ function bint.fromstring(s)
   end
 end
 local bint_fromstring = bint.fromstring
+
+local function getendianstep()
+  if intbits >= 64 and bytes % 8 == 0 then
+    return 8
+  elseif bytes % 4 == 0 then
+    return 4
+  elseif bytes % 2 == 0 then
+    return 2
+  else
+    return 1
+  end
+end
+
+--- Create a new bint from a buffer of little-endian bytes.
+-- @param buffer Buffer of bytes, extra bytes are trimmed from the right, missing bytes are padded to the left.
+-- @raise An assert is thrown in case buffer is not an string.
+-- @return A bint.
+function bint.fromle(buffer)
+  assert(type(buffer) == 'string', 'buffer is not a string')
+  if #buffer > bytes then -- trim extra bytes from the right
+    buffer = buffer:sub(1, bytes)
+  elseif #buffer < bytes then -- add missing bytes to the right
+    buffer = buffer..string.rep('\x00', bytes - #buffer)
+  end
+  local step = getendianstep()
+  local v = bint.zero()
+  local nmax = bytes//step-1
+  for n=0,nmax do
+    local i = 1+n*step
+    local d = bint_fromuinteger(('<I'..step):unpack(buffer:sub(i, i+step)))
+    d = d << (n*step*8)
+    v = v + d
+  end
+  return v
+end
+
+--- Create a new bint from a buffer of big-endian bytes.
+-- @param buffer Buffer of bytes, extra bytes are trimmed from the left, missing bytes are padded to the right.
+-- @raise An assert is thrown in case buffer is not an string.
+-- @return A bint.
+function bint.frombe(buffer)
+  assert(type(buffer) == 'string', 'buffer is not a string')
+  if #buffer > bytes then -- trim extra bytes from the left
+    buffer = buffer:sub(-bytes, #buffer)
+  elseif #buffer < bytes then -- add missing bytes to the left
+    buffer = string.rep('\x00', bytes - #buffer)..buffer
+  end
+  local step = getendianstep()
+  local v = bint.zero()
+  local nmax = bytes//step-1
+  for n=0,nmax do
+    local i = 1+(nmax-n)*step
+    local d = bint_fromuinteger(('>I'..step):unpack(buffer:sub(i, i+step)))
+    d = d << (n*step*8)
+    v = v + d
+  end
+  return v
+end
 
 --- Create a new bint from a value.
 -- @param x A value convertible to a bint (string, number or another bint).
@@ -575,9 +635,54 @@ function bint.tobase(x, base, unsigned)
   return table_concat(ss)
 end
 
-
 local function bint_assert_convert(x)
   return assert(tobint(x), 'value has not integer representation')
+end
+
+--- Convert a bint to a buffer of little-endian bytes.
+-- @param x A bint or lua integer.
+-- @param[opt] trim If true, zero bytes on the right are trimmed.
+-- @return A buffer of bytes representing the input.
+-- @raise Asserts in case input is not convertible to an integer.
+function bint.tole(x, trim)
+  x = bint_assert_convert(x)
+  local s = x:tobase(16, true)
+  if #s < 2*bytes then
+    s = string.rep('0', 2*bytes - #s)..s
+  end
+  s = s:gsub('..', function(c)
+    return string.char(tonumber(c, 16))
+  end):reverse()
+  if trim then
+    s = s:gsub('\x00+$', '')
+    if s == '' then
+      s = '\x00'
+    end
+  end
+  return s
+end
+
+--- Convert a bint to a buffer of big-endian bytes.
+-- @param x A bint or lua integer.
+-- @param[opt] trim If true, zero bytes on the left are trimmed.
+-- @return A buffer of bytes representing the input.
+-- @raise Asserts in case input is not convertible to an integer.
+function bint.tobe(x, trim)
+  x = bint_assert_convert(x)
+  local s = x:tobase(16, true)
+  if #s < 2*bytes then
+    s = string.rep('0', 2*bytes - #s)..s
+  end
+  s = s:gsub('..', function(c)
+    return string.char(tonumber(c, 16))
+  end)
+  if trim then
+    s = s:gsub('^\x00+', '')
+    if s == '' then
+      s = '\x00'
+    end
+  end
+  return s
 end
 
 --- Check if a number is 0 considering bints.

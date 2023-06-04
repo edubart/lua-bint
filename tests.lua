@@ -9,6 +9,7 @@ end
 local function test(bits, wordbits)
   local bint = require 'bint'(bits, wordbits)
   local luabits = luainteger_bitsize()
+  local bytes = bits // 8
 
   local function assert_eq(a, b)
     if a ~= b then --luacov:disable
@@ -116,6 +117,51 @@ local function test(bits, wordbits)
     assert(bint.eq(bint.fromstring('0'), 0))
     assert(bint.eq(bint.fromstring('-1'), -1))
     assert(bint.eq(bint.fromstring('1234'), 1234))
+
+    assert(bint.fromle('\x00') == bint.zero())
+    assert(bint.fromle('\x01') == bint.one())
+    assert(bint.fromle('\x01\x02\x03') == bint.frombase('030201', 16))
+    assert(bint.fromle(string.rep('\x00', bytes)) == bint.zero())
+    assert(bint.fromle(string.rep('\x01', bytes)) == bint.frombase(string.rep('01', bytes), 16))
+    assert(bint.fromle(string.rep('\x01', bytes+32)) == bint.frombase(string.rep('01', bytes), 16))
+    assert(bint.fromle(string.rep('\xff', bytes)) == bint.frombase(string.rep('ff', bytes), 16))
+    assert(bint.fromle(string.rep('\xff', bytes+32)) == bint.frombase(string.rep('ff', bytes), 16))
+
+    assert(bint.frombe('\x00') == bint.zero())
+    assert(bint.frombe('\x01') == bint.one())
+    assert(bint.frombe('\x03\x02\x01') == bint.frombase('030201', 16))
+    assert(bint.frombe(string.rep('\x00', bytes)) == bint.zero())
+    assert(bint.frombe(string.rep('\x01', bytes)) == bint.frombase(string.rep('01', bytes), 16))
+    assert(bint.frombe(string.rep('\x01', bytes+32)) == bint.frombase(string.rep('01', bytes), 16))
+    assert(bint.frombe(string.rep('\xff', bytes)) == bint.frombase(string.rep('ff', bytes), 16))
+    assert(bint.frombe(string.rep('\xff', bytes+32)) == bint.frombase(string.rep('ff', bytes), 16))
+
+    if bits == 160 then
+      local x = bint.new('0x4340ac4FcdFC5eF8d34930C96BBac2Af1301DF40')
+      local x_be = '\x43\x40\xac\x4F\xcd\xFC\x5e\xF8\xd3\x49\x30\xC9\x6B\xBa\xc2\xAf\x13\x01\xDF\x40'
+      assert(bint.frombe(bint.tobe(x)) == x)
+      assert(bint.fromle(bint.tole(x)) == x)
+      assert(bint.tobe(bint.frombe(x_be)) == x_be)
+      assert(bint.tole(bint.fromle(x_be:reverse())) == x_be:reverse())
+    end
+
+    assert(bint.tole(0) == string.rep('\x00', bytes))
+    assert(bint.tole(0, true) == '\x00')
+    assert(bint.tole(1) == '\x01'..string.rep('\x00', bytes-1))
+    assert(bint.tole(1, true) == '\x01')
+    assert(bint.tole(0x010203) == '\x03\x02\x01'..string.rep('\x00', bytes-3))
+    assert(bint.tole(0x010203, true) == '\x03\x02\x01')
+    assert(bint.tole(-1) == string.rep('\xff', bytes))
+    assert(bint.tole(-1, true) == string.rep('\xff', bytes))
+
+    assert(bint.tobe(0) == string.rep('\x00', bytes))
+    assert(bint.tobe(0, true) == '\x00')
+    assert(bint.tobe(1) == string.rep('\x00', bytes-1)..'\x01')
+    assert(bint.tobe(1, true) == '\x01')
+    assert(bint.tobe(0x010203) == string.rep('\x00', bytes-3)..'\x01\x02\x03')
+    assert(bint.tobe(0x010203, true) == '\x01\x02\x03')
+    assert(bint.tobe(-1) == string.rep('\xff', bytes))
+    assert(bint.tobe(-1, true) == string.rep('\xff', bytes))
 
     assert((bint.maxinteger() + 1) == bint.mininteger())
     assert((bint.mininteger() - 1) == bint.maxinteger())
@@ -688,6 +734,9 @@ end
 test(64)
 test(64, 16)
 test(64, 8)
+test(72, 8)
 test(64, 4)
+test(80, 4)
 test(128)
+test(160)
 test(256)
