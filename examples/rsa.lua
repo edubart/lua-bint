@@ -67,42 +67,20 @@ local function decrypt(msg)
   return bint.upowmod(msg, d, n)
 end
 
--- Converts a buffer of bytes to a big number.
-local function text2bn(msg)
-  local num = bint(0)
-  local exp = bint(1)
-  for i=1,#msg do
-    num = num + string.byte(msg, i) * exp
-    exp = exp * 256
-  end
-  return num
-end
-
--- Converts a big number into a buffer of bytes.
-local function bn2text(num)
-  local bytes = {}
-  while num > 0 do
-    local c = string.char((num % 256):tonumber())
-    table.insert(bytes, c)
-    num = num // 256
-  end
-  return table.concat(bytes)
-end
-
 -- Test encrypt and decrypt
 print('Message encryption test:')
 local msg = 'Hello world!'
 print('Message: '..msg)
-local x = text2bn(msg, 36)
+local x = bint.frombe(msg)
 assert(x < n)
 print('x = 0x' .. bint.tobase(x, 16))
 local c = encrypt(x)
 print('c = 0x' .. bint.tobase(c, 16))
-assert(c == bint.frombase('33f037cdce6e7da0d7e652ea577b235f8a15ed63060d7e', 16))
+assert(c == bint.frombase('81fa941a0bf7a387f0ad060b90a5cd251be4031b4df39a', 16))
 local m = decrypt(c)
 print('m = 0x' .. bint.tobase(m, 16))
 assert(m == x)
-local decoded = bn2text(m)
+local decoded = bint.tobe(m, true)
 print('Decoded: '..decoded)
 assert(decoded == msg)
 print('success!')
