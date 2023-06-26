@@ -116,6 +116,7 @@ local math_min = math.min
 local string_format = string.format
 local table_insert = table.insert
 local table_concat = table.concat
+local table_unpack = table.unpack
 
 local memo = {}
 
@@ -142,8 +143,8 @@ end
 assert(bits % wordbits == 0, 'bitsize is not multiple of word bitsize')
 assert(2*wordbits <= intbits, 'word bitsize must be half of the lua integer bitsize')
 assert(bits >= 64, 'bitsize must be >= 64')
+assert(wordbits >= 8, 'wordbits must be at least 8')
 assert(bits % 8 == 0, 'bitsize must be multiple of 8')
-local bytes = bits // 8
 
 -- Create bint module
 local bint = {}
@@ -154,10 +155,12 @@ bint.bits = bits
 
 -- Constants used internally
 local BINT_BITS = bits
+local BINT_BYTES = bits // 8
 local BINT_WORDBITS = wordbits
 local BINT_SIZE = BINT_BITS // BINT_WORDBITS
 local BINT_WORDMAX = (1 << BINT_WORDBITS) - 1
 local BINT_WORDMSB = (1 << (BINT_WORDBITS - 1))
+local BINT_LEPACKFMT = '<'..('I'..(wordbits // 8)):rep(BINT_SIZE)
 local BINT_MATHMININTEGER, BINT_MATHMAXINTEGER
 local BINT_MININTEGER
 
@@ -346,62 +349,32 @@ function bint.fromstring(s)
 end
 local bint_fromstring = bint.fromstring
 
-local function getendianstep()
-  if intbits >= 64 and bytes % 8 == 0 then
-    return 8
-  elseif bytes % 4 == 0 then
-    return 4
-  elseif bytes % 2 == 0 then
-    return 2
-  else
-    return 1
-  end
-end
-
 --- Create a new bint from a buffer of little-endian bytes.
--- @param buffer Buffer of bytes, extra bytes are trimmed from the right, missing bytes are padded to the left.
+-- @param buffer Buffer of bytes, extra bytes are trimmed from the right, missing bytes are padded to the right.
 -- @raise An assert is thrown in case buffer is not an string.
 -- @return A bint.
 function bint.fromle(buffer)
   assert(type(buffer) == 'string', 'buffer is not a string')
-  if #buffer > bytes then -- trim extra bytes from the right
-    buffer = buffer:sub(1, bytes)
-  elseif #buffer < bytes then -- add missing bytes to the right
-    buffer = buffer..string.rep('\x00', bytes - #buffer)
+  if #buffer > BINT_BYTES then -- trim extra bytes from the right
+    buffer = buffer:sub(1, BINT_BYTES)
+  elseif #buffer < BINT_BYTES then -- add missing bytes to the right
+    buffer = buffer..('\x00'):rep(BINT_BYTES - #buffer)
   end
-  local step = getendianstep()
-  local v = bint.zero()
-  local nmax = bytes//step-1
-  for n=0,nmax do
-    local i = 1+n*step
-    local d = bint_fromuinteger(('<I'..step):unpack(buffer:sub(i, i+step)))
-    d = d << (n*step*8)
-    v = v + d
-  end
-  return v
+  return setmetatable({BINT_LEPACKFMT:unpack(buffer)}, bint)
 end
 
 --- Create a new bint from a buffer of big-endian bytes.
--- @param buffer Buffer of bytes, extra bytes are trimmed from the left, missing bytes are padded to the right.
+-- @param buffer Buffer of bytes, extra bytes are trimmed from the left, missing bytes are padded to the left.
 -- @raise An assert is thrown in case buffer is not an string.
 -- @return A bint.
 function bint.frombe(buffer)
   assert(type(buffer) == 'string', 'buffer is not a string')
-  if #buffer > bytes then -- trim extra bytes from the left
-    buffer = buffer:sub(-bytes, #buffer)
-  elseif #buffer < bytes then -- add missing bytes to the left
-    buffer = string.rep('\x00', bytes - #buffer)..buffer
+  if #buffer > BINT_BYTES then -- trim extra bytes from the left
+    buffer = buffer:sub(-BINT_BYTES, #buffer)
+  elseif #buffer < BINT_BYTES then -- add missing bytes to the left
+    buffer = ('\x00'):rep(BINT_BYTES - #buffer)..buffer
   end
-  local step = getendianstep()
-  local v = bint.zero()
-  local nmax = bytes//step-1
-  for n=0,nmax do
-    local i = 1+(nmax-n)*step
-    local d = bint_fromuinteger(('>I'..step):unpack(buffer:sub(i, i+step)))
-    d = d << (n*step*8)
-    v = v + d
-  end
-  return v
+  return setmetatable({BINT_LEPACKFMT:unpack(buffer:reverse())}, bint)
 end
 
 --- Create a new bint from a value.
@@ -646,13 +619,7 @@ end
 -- @raise Asserts in case input is not convertible to an integer.
 function bint.tole(x, trim)
   x = bint_assert_convert(x)
-  local s = x:tobase(16, true)
-  if #s < 2*bytes then
-    s = string.rep('0', 2*bytes - #s)..s
-  end
-  s = s:gsub('..', function(c)
-    return string.char(tonumber(c, 16))
-  end):reverse()
+  local s = BINT_LEPACKFMT:pack(table_unpack(x))
   if trim then
     s = s:gsub('\x00+$', '')
     if s == '' then
@@ -669,13 +636,7 @@ end
 -- @raise Asserts in case input is not convertible to an integer.
 function bint.tobe(x, trim)
   x = bint_assert_convert(x)
-  local s = x:tobase(16, true)
-  if #s < 2*bytes then
-    s = string.rep('0', 2*bytes - #s)..s
-  end
-  s = s:gsub('..', function(c)
-    return string.char(tonumber(c, 16))
-  end)
+  local s = BINT_LEPACKFMT:pack(table_unpack(x)):reverse()
   if trim then
     s = s:gsub('^\x00+', '')
     if s == '' then
@@ -895,7 +856,7 @@ function bint:_dec()
     local tmp = self[i]
     local v = (tmp - 1) & BINT_WORDMAX
     self[i] = v
-    if not (v > tmp) then
+    if v <= tmp then
       break
     end
   end
