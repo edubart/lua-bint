@@ -1,3 +1,6 @@
+local tl = require("tl")
+tl.loader()
+
 local function luainteger_bitsize()
   local n, i = -1, 0
   repeat
