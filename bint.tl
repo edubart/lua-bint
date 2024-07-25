@@ -24,13 +24,13 @@ global record BigInteger
     -- Convert a value to a bint if possible, otherwise to a lua number
     parse: function(x: number | string | BigInteger, clone: boolean): BigInteger
     -- Convert a bint to an unsigned integer
-    touinteger: function(x: BigInteger): integer
+    touinteger: function(x: BigInteger | number): integer
     -- Convert a bint to a signed integer
-    tointeger: function(x: BigInteger): integer | nil
+    tointeger: function(x: BigInteger | number): integer
     -- Convert a bint to a lua float or integer
     tonumber: function(x: BigInteger): number
     -- Convert a bint to a string in the desired base
-    tobase: function(x: number | string | BigInteger, base: integer, unsigned: boolean): string
+    tobase: function(x: BigInteger, base: integer, unsigned: boolean): string
     -- Convert a bint to a buffer of little-endian bytes
     tole: function(x: BigInteger, trim: boolean): string
     -- Convert a bint to a buffer of big-endian bytes
@@ -103,7 +103,7 @@ global record BigInteger
     -- Perform integer power between two BigIntegers
     ipow: function(x: BigInteger, y: BigInteger): BigInteger
     -- Perform integer power between two unsigned integers over a modulus considering bints
-    upowmod: function(x: integer, y: integer, m: integer): BigInteger
+    upowmod: function(x: BigInteger, y: BigInteger, m: BigInteger): BigInteger
   
     -- Compare if integer x is less than y considering bints (unsigned version)
     ult: function(x: BigInteger, y: BigInteger): boolean
@@ -134,7 +134,7 @@ global record BigInteger
     -- Bitwise right shift words of a bint (in-place)
     _shrwords: function(self: BigInteger, n: integer): BigInteger
     -- Bitwise AND bints (in-place)
-    _band: function(self: BigInteger, y: BigInteger): BigInteger
+    _band: function(self: BigInteger, y: integer): BigInteger
     -- Bitwise OR bints (in-place)
     _bor: function(self: BigInteger, y: BigInteger): BigInteger
     -- Bitwise XOR bints (in-place)
@@ -156,8 +156,6 @@ global record BigInteger
     __idiv: function(self: BigInteger, y: BigInteger): BigInteger, BigInteger
     -- Perform integer floor modulo operation between two numbers considering bints
     __mod: function(self: BigInteger, y: BigInteger): BigInteger
-    -- Perform numeric power between two numbers considering bints
-    __pow: function(self: BigInteger, y: BigInteger): BigInteger
     -- Negate a bint
     __unm: function(self: BigInteger): BigInteger
     -- Bitwise AND two integers considering bints
@@ -174,11 +172,9 @@ global record BigInteger
     __shr: function(self: BigInteger, y: integer): BigInteger
     -- Compare if number x is less than y considering bints and signs
     lt: function(self: BigInteger, y: BigInteger): boolean
-    __lt: function(self: BigInteger, y: BigInteger): boolean
     gt: function(self: BigInteger, y: BigInteger): boolean
     -- Compare if number x is less or equal than y considering bints and signs
     le: function(self: BigInteger, y: BigInteger): boolean
-    __le: function(self: BigInteger, y: BigInteger): boolean
     ge: function(self: BigInteger, y: BigInteger): boolean
     -- Check if bints are equal
     __eq: function(self: BigInteger, y: BigInteger): boolean
@@ -202,12 +198,10 @@ global record BigInteger
     metamethod __idiv: function(self: BigInteger, y: BigInteger): BigInteger
     -- Perform integer floor modulo operation between two numbers considering bints
     metamethod __mod: function(self: BigInteger, y: BigInteger): BigInteger
-    -- Perform numeric power between two numbers considering bints
-    metamethod __pow: function(self: BigInteger, y: BigInteger): BigInteger
     -- Negate a bint
     metamethod __unm: function(self: BigInteger): BigInteger
     -- Bitwise AND two integers considering bints
-    metamethod __band: function(self: BigInteger, x: BigInteger, y:BigInteger): BigInteger
+    metamethod __band: function(self: BigInteger, x: BigInteger, y:integer): BigInteger
     -- Bitwise OR two integers considering bints
     metamethod __bor: function(self: BigInteger, y: BigInteger): BigInteger
     -- Bitwise XOR two integers considering bints
@@ -218,10 +212,6 @@ global record BigInteger
     metamethod __shl: function(self: BigInteger, y: integer): BigInteger
     -- Bitwise right shift integers considering bints
     metamethod __shr: function(self: BigInteger, y: integer): BigInteger
-    -- Compare if number x is less than y considering bints and signs
-    metamethod __lt: function(self: BigInteger, y: BigInteger): boolean
-    -- Compare if number x is less or equal than y considering bints and signs
-    metamethod __le: function(self: BigInteger, y: BigInteger): boolean
     -- Check if bints are equal
     metamethod __eq: function(self: BigInteger, y: BigInteger): boolean
     -- Convert a bint to a string on base 10
@@ -326,7 +316,7 @@ global record BigInteger
   local bint_one: function(): BigInteger = bint.one
   
   -- Convert a value to a lua integer without losing precision.
-  local function tointeger(x: number): number
+  local function tointeger(x: number): integer
     x = tonumber(x)
     local ty: string = math_type(x)
     if ty == 'float' then
@@ -337,7 +327,7 @@ global record BigInteger
       end
     end
     if ty == 'integer' then
-      return x
+      return x as integer
     end
   end
   
@@ -436,15 +426,33 @@ global record BigInteger
     if not bint.isbint(x) then
       print('x is ', x)
       print('type is ', type(x))
-      assert(bint.isbint(x), 'value has not integer representation')
       print(debug.traceback())
+      assert(bint.isbint(x), 'value has not integer representation')
     end
     return x
   end
   
   
+  local function bint_assert_convert_clone(x: BigInteger): BigInteger
+    if not bint.isbint(x) then
+      print('x is ', x)
+      print('type is ', type(x))
+      print(debug.traceback())
+      assert(bint.isbint(x), 'value has not integer representation')
+    end
+    local n: BigInteger = setmetatable({}, bint as metatable<BigInteger>)
+    local xi: BigInteger = x
+    for i=1,BINT_SIZE do
+      n[i] = xi[i]
+    end
+    return n
+  end
+  
+  
   local function bint_assert_convert_from_integer(x: integer): BigInteger
+    print('bint_assert_convert_from_integer', x, type(x))
     local xi = bint_frominteger(x)
+    print('bint_assert_convert_from_integer', xi)
     assert(xi, 'value has not integer representation')
     return xi
   end
@@ -457,32 +465,31 @@ global record BigInteger
   -- @return A new bint or nil in case the conversion failed.
   function bint.frombase(s: string, base: integer): BigInteger
     if type(s) ~= 'string' then
-      return
+      error('s is not a string')
     end
     base = base or 10
     if not (base >= 2 and base <= 36) then
-      -- number base is too large
-      return
+      error('number base is too large')
     end
     local step: integer = getbasestep(base)
     if #s < step then
       -- string is small, use tonumber (faster)
+      print('small string')
+      print('frombase2', type(bint_frominteger(tonumber(s, base))))
       return bint_frominteger(tonumber(s, base))
     end
     local sign: string
     local int: string
     sign, int = s:lower():match('^([+-]?)(%w+)$')
     if not (sign and int) then
-      -- invalid integer string representation
-      return
+      error('invalid integer string representation')
     end
     local n: BigInteger = bint_zero()
     for i=1,#int,step do
       local part: string = int:sub(i,i+step-1)
       local d: integer = tonumber(part, base)
       if not d then
-        -- invalid integer string representation
-        return
+        error('invalid integer string representation')
       end
       if i > 1 then
         n = n * bint_frominteger(ipow(1, base, #part))
@@ -494,6 +501,7 @@ global record BigInteger
     if sign == '-' then
       n:_unm()
     end
+    print('n is', type(n), n)
     return n
   end
   local bint_frombase: function(s: string, base: integer): BigInteger = bint.frombase
@@ -505,7 +513,7 @@ global record BigInteger
   -- @see bint.frombase
   function bint.fromstring(s: string): BigInteger
     if type(s) ~= 'string' then
-      return
+      error('s is not a string')
     end
     if s:find('^[+-]?[0-9]+$') then
       return bint_frombase(s, 10)
@@ -565,14 +573,10 @@ global record BigInteger
       end
     end
     -- return a clone
-    local n: BigInteger = setmetatable({}, bint as metatable<BigInteger>)
-    local xi: BigInteger = bint_assert_convert(x as BigInteger)
-    for i=1,BINT_SIZE do
-      n[i] = xi[i]
-    end
-    return n
+    return bint_assert_convert_clone(x as BigInteger)
   end
   local bint_new: function(x: number | string | BigInteger): BigInteger = bint.new
+  
   
   --- Convert a value to a bint if possible.
   -- @param x A value to be converted (string, number or another bint).
@@ -587,12 +591,7 @@ global record BigInteger
         return bint_assert_convert(x as BigInteger)
       end
       -- return a clone
-      local xi = bint_assert_convert(x as BigInteger)
-      local n: BigInteger = setmetatable({}, bint as metatable<BigInteger>)
-      for i=1,BINT_SIZE do
-        n[i] = xi[i]
-      end
-      return n
+      return bint_assert_convert_clone(x as BigInteger)
     end
     local ty: string = type(x)
     if ty == 'number' then
@@ -603,7 +602,19 @@ global record BigInteger
   end
   local tobint: function(x: number | string | BigInteger, clone: boolean): BigInteger = bint.tobint
   
-  
+  function bint.touinteger(x: BigInteger | number): integer
+    if getmetatable(x) == bint then
+      local n = 0
+      local xi = bint_assert_convert_clone(x as BigInteger) as BigInteger
+      for i=1,BINT_SIZE do
+        n = n | (xi[i] << (BINT_WORDBITS * (i - 1)))
+      end
+      return n
+    end
+    return tointeger(x as number)
+  end
+
+
   --- Convert a bint to a signed integer.
   -- It works by taking absolute values then applying the sign bit in case needed.
   -- Note that lua cannot represent values larger than 64 bits,
@@ -611,28 +622,29 @@ global record BigInteger
   -- @param x A bint or value to be converted into an unsigned integer.
   -- @return An integer or nil in case the input cannot be represented by an integer.
   -- @see bint.touinteger
-  function bint.tointeger(x: BigInteger): integer | nil
-    local n: integer = 0
-    local neg: boolean = x:isneg()
-    if neg then
-      x = -x
+  function bint.tointeger(x: BigInteger | number): integer
+    if getmetatable(x) == bint then
+      local xi = bint_assert_convert_clone(x as BigInteger)
+      local n = 0
+      for i=1,BINT_SIZE do
+        n = n | (xi[i] << (BINT_WORDBITS * (i - 1)))
+      end
+      return n
     end
-    for i=1,BINT_SIZE do
-      n = n | (x[i] << (BINT_WORDBITS * (i - 1)))
-    end
-    if neg then
-      n = -n
-    end
-    return n
+    return tointeger(x as number)
   end
-  local bint_tointeger: function(x: BigInteger | integer): integer | nil = bint.tointeger
+
+  local bint_tointeger: function(x: BigInteger | number): integer = bint.tointeger
   
   local function bint_assert_tointeger(x: BigInteger | integer): integer
-    x = bint_tointeger(x)
-    if not x then
+    local xi = bint_tointeger(x)
+    if not xi then
+      print('value is', x)
+      print('type is', type(x))
+      print(debug.traceback())
       error('value has no integer representation')
     end
-    return x
+    return xi
   end
   
   --- Convert a bint to a lua float in case integer would wrap around or lua integer otherwise.
@@ -642,7 +654,7 @@ global record BigInteger
   -- @return A lua number or nil in case the input cannot be represented by a number.
   -- @see bint.tointeger
   function bint.tonumber(x: BigInteger): number
-    bint_assert_convert(x)
+    x = bint_assert_convert_clone(x)
     if x:le(BINT_MATHMAXINTEGER) and x:ge(BINT_MATHMININTEGER) then
       return x:tointeger()
     end
@@ -668,11 +680,10 @@ global record BigInteger
   -- When unsigned is false the symbol '-' is prepended in negative values.
   -- @return A string representing the input.
   -- @raise An assert is thrown in case the base is invalid.
-  function bint.tobase(x: number | string | BigInteger, base: integer, unsigned: boolean): string
-    x = tobint(x)
+  function bint.tobase(x: BigInteger, base: integer, unsigned: boolean): string
+    x = bint_assert_convert_clone(x)
     if not x then
-      -- x is a fractional float or something else
-      return
+      error('x is a fractional float or something else')
     end
     base = base or 10
     if not (base >= 2 and base <= 36) then
@@ -682,11 +693,11 @@ global record BigInteger
     if unsigned == nil then
       unsigned = base ~= 10
     end
-    local isxneg: boolean = x:isneg()
+    local isxneg = x:isneg()
     if (base == 10 and not unsigned) or (base == 16 and unsigned and not isxneg) then
       if x:le(BINT_MATHMAXINTEGER) and x:ge(BINT_MATHMININTEGER) then
         -- integer is small, use tostring or string.format (faster)
-        local n: integer = x:tointeger()
+        local n = x:tointeger()
         if base == 10 then
           return tostring(n)
         elseif unsigned then
@@ -694,23 +705,23 @@ global record BigInteger
         end
       end
     end
-    local ss: {string} = {}
-    local neg: boolean = not unsigned and isxneg
+    local ss = {}
+    local neg = not unsigned and isxneg
     x = neg and x:abs() or bint_new(x)
-    local xiszero: boolean = x:iszero()
+    local xiszero = x:iszero()
     if xiszero then
       return '0'
     end
     -- calculate basepow
-    local step: integer = 0
-    local basepow: integer = 1
-    local limit: integer = (BINT_WORDMSB - 1) // base
+    local step = 0
+    local basepow = 1
+    local limit = (BINT_WORDMSB - 1) // base
     repeat
       step = step + 1
       basepow = basepow * base
     until basepow >= limit
     -- serialize base digits
-    local size: integer = BINT_SIZE
+    local size = BINT_SIZE
     local xd: integer
     local carry: integer
     local d: integer
@@ -752,7 +763,7 @@ global record BigInteger
   -- @return A buffer of bytes representing the input.
   -- @raise Asserts in case input is not convertible to an integer.
   function bint.tole(x: BigInteger, trim: boolean): string
-    x = bint_assert_convert(x)
+    x = bint_assert_convert_clone(x)
     local s: string = BINT_LEPACKFMT:pack(table_unpack(x as {integer}))
     if trim then
       s = s:gsub('\x00+$', '')
@@ -769,9 +780,9 @@ global record BigInteger
   -- @return A buffer of bytes representing the input.
   -- @raise Asserts in case input is not convertible to an integer.
   function bint.tobe(x: BigInteger, trim: boolean): string
-    x = bint_assert_convert(x)
+    x = bint_assert_convert_clone(x)
     local xt: {integer} = {table_unpack(x as {integer})}
-    local s: string = BINT_LEPACKFMT:pack(table_unpack(xt))
+    local s = BINT_LEPACKFMT:pack(table_unpack(xt)):reverse()
     if trim then
       s = s:gsub('^\x00+', '')
       if s == '' then
@@ -847,7 +858,7 @@ global record BigInteger
   -- @param x A bint or a lua number.
   function bint.isneg(x: BigInteger): boolean
     bint_assert_convert(x)
-      return x[BINT_SIZE] & BINT_WORDMSB ~= 0
+    return x[BINT_SIZE] & BINT_WORDMSB ~= 0
   end
   local bint_isneg: function(x: BigInteger): boolean = bint.isneg
   
@@ -1002,23 +1013,21 @@ global record BigInteger
   --- Take absolute of a number considering bints.
   -- @param x A bint or a lua number to take the absolute.
   function bint.abs(x: BigInteger): BigInteger
-    bint_assert_convert(x)
-    return x:_abs()
+    local ix = bint_assert_convert_clone(x)
+    return ix:_abs()
   end
   local bint_abs: function(x: BigInteger): BigInteger = bint.abs
   
   --- Take the floor of a number considering bints.
   -- @param x A bint or a lua number to perform the floor operation.
   function bint.floor(x: BigInteger): BigInteger
-    bint_assert_convert(x)
-    return bint_new(x)
+    return bint_assert_convert_clone(x)
   end
   
   --- Take ceil of a number considering bints.
   -- @param x A bint or a lua number to perform the ceil operation.
   function bint.ceil(x: BigInteger): BigInteger
-    bint_assert_convert(x)
-    return bint_new(x)
+    return bint_assert_convert_clone(x)
   end
   
   --- Wrap around bits of an integer (discarding left bits) considering bints.
@@ -1029,7 +1038,10 @@ global record BigInteger
     if y <= 0 then
       return bint_zero()
     elseif y < BINT_BITS then
-      return x & (bint_one() << y):_dec()
+      print('bwrap y', y, type(y))
+      local tmp = (bint_one() << y)
+      local tmp2 = tmp:_dec():tointeger()
+      return x & tmp2
     end
     return bint_new(x)
   end
@@ -1087,7 +1099,7 @@ global record BigInteger
   function bint.min(x: BigInteger, y: BigInteger): BigInteger
     local ix: BigInteger = bint_assert_convert(x)
     local iy: BigInteger = bint_assert_convert(y)
-    return bint_new(ix < iy and ix or iy)
+    return bint_new(ix:lt(iy) and ix or iy)
   end
   
   --- Add an integer to a bint (in-place).
@@ -1246,10 +1258,10 @@ global record BigInteger
   -- @see bint.udiv
   -- @see bint.umod
   function bint.udivmod(x: BigInteger, y: BigInteger): BigInteger, BigInteger
-    local nume: BigInteger = bint_assert_convert(x)
+    local nume: BigInteger = bint_assert_convert_clone(x)
     local deno: BigInteger = bint_assert_convert(y)
     -- compute if high bits of denominator are all zeros
-    local ishighzero: boolean = true
+    local ishighzero = true
     for i=2,BINT_SIZE do
       if deno[i] ~= 0 then
         ishighzero = false
@@ -1258,14 +1270,14 @@ global record BigInteger
     end
     if ishighzero then
       -- try to divide by a single word (optimization)
-      local low: integer = deno[1]
+      local low = deno[1]
       assert(low ~= 0, 'attempt to divide by zero')
       if low == 1 then
         -- denominator is one
         return nume, bint_zero()
       elseif low <= (BINT_WORDMSB - 1) then
         -- can do single word division
-        local rema: integer = sudivmod(nume, low)
+        local rema = sudivmod(nume, low)
         return nume, bint_fromuinteger(rema)
       end
     end
@@ -1274,24 +1286,20 @@ global record BigInteger
       return bint_zero(), nume
     end
     -- align leftmost digits in numerator and denominator
-    local denolbit: integer = findleftbit(deno)
-    local numelbit: integer
-    local numesize: integer
-    numelbit, numesize = findleftbit(nume)
-    local bit: integer = numelbit - denolbit
+    local denolbit = findleftbit(deno)
+    local numelbit, numesize = findleftbit(nume)
+    local bit = numelbit - denolbit
     deno = deno << bit
-    local wordmaxp1: integer = BINT_WORDMAX + 1
-    local wordbitsm1: integer = BINT_WORDBITS - 1
-    local denosize: integer = numesize
-    local quot: BigInteger = bint_zero()
+    local wordmaxp1 = BINT_WORDMAX + 1
+    local wordbitsm1 = BINT_WORDBITS - 1
+    local denosize = numesize
+    local quot = bint_zero()
     while bit >= 0 do
       -- compute denominator <= numerator
-      local le: boolean = true
-      local size: integer = math_max(numesize, denosize)
+      local le = true
+      local size = math_max(numesize, denosize)
       for i=size,1,-1 do
-        local a: integer
-        local b: integer
-        a, b = deno[i], nume[i]
+        local a, b = deno[i], nume[i]
         if a ~= b then
           le = a < b
           break
@@ -1300,21 +1308,21 @@ global record BigInteger
       -- if the portion of the numerator above the denominator is greater or equal than to the denominator
       if le then
         -- subtract denominator from the portion of the numerator
-        local borrow: integer = 0
+        local borrow = 0
         for i=1,size do
-          local res: integer = nume[i] + wordmaxp1 - deno[i] - borrow
+          local res = nume[i] + wordmaxp1 - deno[i] - borrow
           nume[i] = res & BINT_WORDMAX
           borrow = (res >> BINT_WORDBITS) ~ 1
         end
         -- concatenate 1 to the right bit of the quotient
-        local i: integer = (bit // BINT_WORDBITS) + 1
+        local i = (bit // BINT_WORDBITS) + 1
         quot[i] = quot[i] | (1 << (bit % BINT_WORDBITS))
       end
       -- shift right the denominator in one bit
       for i=1,denosize-1 do
         deno[i] = ((deno[i] >> 1) | (deno[i+1] << wordbitsm1)) & BINT_WORDMAX
       end
-      local lastdenoword: integer = deno[denosize] >> 1
+      local lastdenoword = deno[denosize] >> 1
       deno[denosize] = lastdenoword
       -- recalculate denominator size (optimization)
       if lastdenoword == 0 then
@@ -1328,9 +1336,9 @@ global record BigInteger
       -- decrement current set bit for the quotient
       bit = bit - 1
     end
-    -- the remaining numerator is the remainder
-    return quot, nume
-  end
+  -- the remaining numerator is the remainder
+  return quot, nume
+end
   local bint_udivmod: function(x: BigInteger, y: BigInteger): BigInteger, BigInteger = bint.udivmod
   
   --- Perform unsigned division between two integers considering bints.
@@ -1372,20 +1380,34 @@ global record BigInteger
     bint_assert_convert(y)
     local ax: BigInteger
     local ay: BigInteger
+    print('initial x,y', x, y, ax, ay)
     ax, ay = bint_abs(x), bint_abs(y)
-    local ix: BigInteger = tobint(ax)
-    local iy: BigInteger = tobint(ay)
+
+    local ix: BigInteger
+    local iy: BigInteger
+    ix, iy = tobint(ax), tobint(ay)
+    print('ix,iy', ix, iy)
     local quot: BigInteger
     local rema: BigInteger
     if ix and iy then
       assert(not (bint_eq(x, BINT_MININTEGER) and bint_isminusone(y)), 'division overflow')
+      print('pre udiv ix,iy', ix, iy)
+      print('pre udiv x,y', x, y)
+
       quot, rema = bint_udivmod(ix, iy)
+      print('quot', quot)
+      print('rema', rema)
+      print('post udiv x,y', x, y)
+
     else
       quot, rema = ax // ay, ax % ay
     end
     local isxneg: boolean
     local isyneg: boolean
     isxneg, isyneg = bint_isneg(x), bint_isneg(y)
+    print('isneg', isxneg, isyneg)
+    print('ix,iy', x, y)
+
     if isxneg ~= isyneg then
       quot = -quot
     end
@@ -1405,6 +1427,7 @@ global record BigInteger
   function bint.tdiv(x: BigInteger, y: BigInteger): BigInteger
     bint_assert_convert(x)
     bint_assert_convert(y)
+    print('tdiv x,y', x, y)
     return (bint_tdivmod(x, y))
   end
   
@@ -1521,21 +1544,22 @@ global record BigInteger
     if iy:iszero() then
       return bint_one()
     elseif iy:isone() then
-      return ix
+      return bint_new(ix)
     end
     -- compute exponentiation by squaring
-    local z: BigInteger = bint_one()
+    x, y = bint_new(x),  bint_new(y)
+    local z = bint_one()
     repeat
-      if iy:iseven() then
-        ix = ix * ix
-        iy:_shrone()
+      if y:iseven() then
+        x = x * x
+        y:_shrone()
       else
-        z = ix * z
-        ix = ix * ix
-        iy:_dec():_shrone()
+        z = x * z
+        x = x * x
+        y:_dec():_shrone()
       end
-    until iy:isone()
-    return ix * z
+    until y:isone()
+    return x * z
   end
   
   --- Perform integer power between two unsigned integers over a modulus considering bints.
@@ -1546,13 +1570,13 @@ global record BigInteger
   -- @raise Asserts in case inputs are not convertible to integers.
   -- @see bint.__pow
   -- @see bint.ipow
-  function bint.upowmod(x: integer, y: integer, m: integer): BigInteger
-    local mi = bint_assert_convert_from_integer(m)
+  function bint.upowmod(x: BigInteger, y: BigInteger, m: BigInteger): BigInteger
+    local mi = bint_assert_convert(m)
     if mi:isone() then
       return bint_zero()
     end
-    local xi = bint_assert_convert_from_integer(x)
-    local yi = bint_assert_convert_from_integer(y)
+    local xi = bint_new(x)
+    local yi = bint_new(y)
     local z = bint_one()
     xi = bint_umod(xi, mi)
     while not yi:iszero() do
@@ -1565,15 +1589,6 @@ global record BigInteger
     return z
   end
   
-  --- Perform numeric power between two numbers considering bints.
-  -- This always casts inputs to floats, for integer power only use @{bint.ipow}.
-  -- @param x The base, a bint or lua number.
-  -- @param y The exponent, a bint or lua number.
-  -- @return The result of the pow operation, a lua number.
-  -- @see bint.ipow
-  function bint.__pow(x: BigInteger, y: BigInteger): BigInteger
-    return bint.ipow(x, y)
-  end
   
   --- Bitwise left shift integers considering bints.
   -- @param x An integer to perform the bitwise shift.
@@ -1581,7 +1596,7 @@ global record BigInteger
   -- @return The result of shift operation, a bint.
   -- @raise Asserts in case inputs are not convertible to integers.
   function bint.__shl(x: BigInteger, y: integer): BigInteger
-    x, y = bint_assert_convert(x), bint_assert_tointeger(y)
+    x, y = bint_assert_convert_clone(x), bint_assert_tointeger(y)
     if y == math_mininteger or math_abs(y) >= BINT_BITS then
       return bint_zero()
     end
@@ -1609,7 +1624,7 @@ global record BigInteger
   -- @return The result of shift operation, a bint.
   -- @raise Asserts in case inputs are not convertible to integers.
   function bint.__shr(x: BigInteger, y: integer): BigInteger
-    x, y = bint_assert_convert(x), bint_assert_tointeger(y)
+    x, y = bint_assert_convert_clone(x), bint_assert_tointeger(y)
     if y == math_mininteger or math_abs(y) >= BINT_BITS then
       return bint_zero()
     end
@@ -1634,8 +1649,9 @@ global record BigInteger
   --- Bitwise AND bints (in-place).
   -- @param y An integer to perform bitwise AND.
   -- @raise Asserts in case inputs are not convertible to integers.
-  function bint:_band(y: BigInteger): BigInteger
-    y = bint_assert_convert(y)
+  function bint:_band(y: integer): BigInteger
+    print('int:_band', y, type(y))
+    y = bint_assert_convert_from_integer(y)
     for i=1,BINT_SIZE do
       self[i] = self[i] & y[i]
     end
@@ -1646,8 +1662,9 @@ global record BigInteger
   -- @param x An integer to perform bitwise AND.
   -- @param y An integer to perform bitwise AND.
   -- @raise Asserts in case inputs are not convertible to integers.
-  function bint:__band(x: BigInteger, y: BigInteger): BigInteger
-    return bint_assert_convert(x):_band(y)
+  function bint.__band(x: BigInteger, y: integer): BigInteger
+    print('__band', x, y)
+    return bint_assert_convert_clone(x):_band(y)
   end
   
   --- Bitwise OR bints (in-place).
@@ -1666,7 +1683,7 @@ global record BigInteger
   -- @param y An integer to perform bitwise OR.
   -- @raise Asserts in case inputs are not convertible to integers.
   function bint.__bor(x: BigInteger, y: BigInteger): BigInteger
-    return bint_new(x):_bor(y)
+    return bint_assert_convert_clone(x):_bor(y)
   end
   
   --- Bitwise XOR bints (in-place).
@@ -1685,7 +1702,7 @@ global record BigInteger
   -- @param y An integer to perform bitwise XOR.
   -- @raise Asserts in case inputs are not convertible to integers.
   function bint.__bxor(x: BigInteger, y: BigInteger): BigInteger
-    return bint_assert_convert(x):_bxor(y)
+    return bint_assert_convert_clone(x):_bxor(y)
   end
   
   --- Bitwise NOT a bint (in-place).
@@ -1694,6 +1711,14 @@ global record BigInteger
       self[i] = (~self[i]) & BINT_WORDMAX
     end
     return self
+  end
+
+  function bint.__bnot(x)
+    local y = setmetatable({}, bint)
+    for i=1,BINT_SIZE do
+      y[i] = (~x[i]) & BINT_WORDMAX
+    end
+    return y
   end
 
   --- Negate a bint (in-place). This effectively applies two's complements.
@@ -1763,12 +1788,8 @@ end
     return xneg and not yneg
   end
   
-  function bint.__lt(x: BigInteger, y: BigInteger): boolean
-    return bint.lt(x, y)
-  end
-  
   function bint:gt(y: BigInteger): boolean
-    return not self:lt(y)
+    return not self:eq(y) and not self:lt(y)
   end
   
   --- Compare if number x is less or equal than y considering bints and signs.
@@ -1793,14 +1814,11 @@ end
     return xneg and not yneg
   end
   
-  function bint.__le(x: BigInteger, y: BigInteger): boolean
-    return bint.le(x, y)
-  end
-  
   function bint:ge(y: BigInteger): boolean
-    return not self:le(y)
+    return self:eq(y) or self:gt(y)
   end
   
+
   --- Convert a bint to a string on base 10.
   -- @see bint.tobase
   function bint:__tostring(): string

@@ -1,14 +1,16 @@
+local tl = require("tl")
+tl.loader()
 -- Compute the factorial of 100
 -- See https://en.wikipedia.org/wiki/Factorial
 
-local bint = require 'bint'(576)
+local bint = require 'bint' (576)
 
 local function factorial(n)
-  if n <= 0 then
-    return 1
-  else
-    return n * factorial(n-1)
-  end
+    if n:le(bint(0)) then
+        return bint(1)
+    else
+        return n * factorial(n - bint(1))
+    end
 end
 
 local x = factorial(bint(100))

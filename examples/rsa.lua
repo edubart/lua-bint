@@ -1,7 +1,9 @@
 -- Simple RSA cryptosystem example
 -- See https://en.wikipedia.org/wiki/RSA_(cryptosystem)
+local tl = require("tl")
+tl.loader()
 
-local bint = require 'bint'(512)
+local bint = require 'bint' (512)
 
 local function gcd(a, b)
   while not bint.iszero(b) do
@@ -19,14 +21,14 @@ local function modinv(a, m)
   if bint.isone(m) then
     return m
   end
-  local m0, inv, x0 = m, 1, 0
-  while a > 1 do
+  local m0, inv, x0 = m, bint(1), bint(0)
+  while a:gt(bint(1)) do
     local quot, rem = bint.udivmod(a, m)
     inv = inv - quot * x0
     a, m = m, rem
     inv, x0 = x0, inv
   end
-  if inv < 0 then
+  if inv:lt(bint(0)) then
     inv = inv + m0
   end
   return inv
@@ -44,7 +46,7 @@ print('n = ' .. tostring(n))
 assert(n == bint('30020783547191766561527759475184666413598963507657406677'))
 
 -- 3. Compute the totient
-local phi_n = lcm(p - 1, q - 1)
+local phi_n = lcm(p - bint(1), q - bint(1))
 print('phi_n = ' .. tostring(phi_n))
 assert(phi_n == bint('5003463924531961093587959910697146102414237368913902130'))
 
@@ -59,6 +61,9 @@ assert(d == bint('2768292749187922993934715143535384861582621221551460873'))
 
 -- The public key is (n, e), implement the encrypt function
 local function encrypt(msg)
+  print('ENCRYPT')
+  print(type(msg), type(e), type(n))
+  print(msg, e, n)
   return bint.upowmod(msg, e, n)
 end
 
@@ -70,9 +75,9 @@ end
 -- Test encrypt and decrypt
 print('Message encryption test:')
 local msg = 'Hello world!'
-print('Message: '..msg)
+print('Message: ' .. msg)
 local x = bint.frombe(msg)
-assert(x < n)
+assert(x:lt(n))
 print('x = 0x' .. bint.tobase(x, 16))
 local c = encrypt(x)
 print('c = 0x' .. bint.tobase(c, 16))
@@ -81,6 +86,6 @@ local m = decrypt(c)
 print('m = 0x' .. bint.tobase(m, 16))
 assert(m == x)
 local decoded = bint.tobe(m, true)
-print('Decoded: '..decoded)
+print('Decoded: ' .. decoded)
 assert(decoded == msg)
 print('success!')
