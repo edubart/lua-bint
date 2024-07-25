@@ -159,7 +159,7 @@ global record BigInteger
     -- Negate a bint
     __unm: function(self: BigInteger): BigInteger
     -- Bitwise AND two integers considering bints
-    __band: function(self: BigInteger, x: BigInteger, y:BigInteger): BigInteger
+    __band: function(x: BigInteger, y:integer): BigInteger
     -- Bitwise OR two integers considering bints
     __bor: function(self: BigInteger, y: BigInteger): BigInteger
     -- Bitwise XOR two integers considering bints
@@ -201,7 +201,7 @@ global record BigInteger
     -- Negate a bint
     metamethod __unm: function(self: BigInteger): BigInteger
     -- Bitwise AND two integers considering bints
-    metamethod __band: function(self: BigInteger, x: BigInteger, y:integer): BigInteger
+    metamethod __band: function(x: BigInteger, y:integer): BigInteger
     -- Bitwise OR two integers considering bints
     metamethod __bor: function(self: BigInteger, y: BigInteger): BigInteger
     -- Bitwise XOR two integers considering bints
@@ -1650,10 +1650,9 @@ end
   -- @param y An integer to perform bitwise AND.
   -- @raise Asserts in case inputs are not convertible to integers.
   function bint:_band(y: integer): BigInteger
-    print('int:_band', y, type(y))
-    y = bint_assert_convert_from_integer(y)
+    local yi: BigInteger = bint_assert_convert_from_integer(y)
     for i=1,BINT_SIZE do
-      self[i] = self[i] & y[i]
+      self[i] = self[i] & yi[i]
     end
     return self
   end
@@ -1663,7 +1662,6 @@ end
   -- @param y An integer to perform bitwise AND.
   -- @raise Asserts in case inputs are not convertible to integers.
   function bint.__band(x: BigInteger, y: integer): BigInteger
-    print('__band', x, y)
     return bint_assert_convert_clone(x):_band(y)
   end
   
@@ -1713,8 +1711,8 @@ end
     return self
   end
 
-  function bint.__bnot(x)
-    local y = setmetatable({}, bint)
+  function bint.__bnot(x: BigInteger): BigInteger
+    local y: BigInteger = setmetatable({}, bint as metatable<BigInteger>)
     for i=1,BINT_SIZE do
       y[i] = (~x[i]) & BINT_WORDMAX
     end
