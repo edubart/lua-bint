@@ -630,10 +630,7 @@ local bint_tointeger: function(x: BigInteger | number): integer = bint.tointeger
 local function bint_assert_tointeger(x: BigInteger | integer): integer
   local xi = bint_tointeger(x)
   if not xi then
-    print('value is', x)
-    print('type is', type(x))
-    print(debug.traceback())
-    error('value has no integer representation')
+    error('bint_assert_tointeger: cannot convert to integer, got '..type(x)..' value '..tostring(x))
   end
   return xi
 end
@@ -1793,7 +1790,6 @@ end
 function bint:ge(y: BigInteger): boolean
   return self:eq(y) or self:gt(y)
 end
-
 
 --- Convert a bint to a string on base 10.
 -- @see bint.tobase

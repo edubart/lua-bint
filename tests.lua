@@ -109,10 +109,6 @@ local function test(bits, wordbits)
     assert(bint.type(bint(1)) == 'bint')
 
     assert(tostring(bint.frombase('9223372036854775807')) == '9223372036854775807')
-    print('frombase', bint.frombase('9223372036854775808'):tobase(10))
-    print('tostring test', bint.frombase('-9223372036854775808'),
-      type(tostring(bint.frombase('-9223372036854775808'))))
-
     assert(tostring(bint.frombase('-9223372036854775808')) == '-9223372036854775808')
     -- throws now
     -- assert(bint.frombase('AAAAAAAAAAAAAAAAAAA') == nil)
@@ -476,10 +472,7 @@ local function test(bits, wordbits)
       assert_eq(bint(x):_shrone():tointeger(), x >> 1)
     end
     local function test_bwrap(x, y)
-      print('X', x)
-      print('Y', y)
-      print('BWRAP', bint.bwrap(bint(x), y))
-      -- assert_eq(bint.bwrap(bint(x), y):tointeger(), x & ((1 << math.max(y, 0)) - 1))
+      assert_eq(bint.bwrap(bint(x), y):tointeger(), x & ((1 << math.max(y, 0)) - 1))
     end
     local function test_ops(x, y)
       test_shl(x, y)
@@ -735,7 +728,6 @@ local function test(bits, wordbits)
   do --tdivmod
     local minusseven = bint(-7)
     local three = bint(3)
-    print(minusseven, three)
     assert(minusseven:isneg())
     assert_eq(bint.tdiv(bint(7), bint(3)):tointeger(), 2)
     assert_eq(bint.tdiv(minusseven, three):tointeger(), -2)
