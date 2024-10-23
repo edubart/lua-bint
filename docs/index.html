@@ -104,7 +104,6 @@ Then when you need create a bint, you can use one of the following functions:</p
     <li><a href="index.html#trunc">bint.trunc</a> (convert from lua numbers, truncating the fractional part)</li>
     <li><a href="index.html#new">bint.new</a> (convert from anything, asserts on invalid integers)</li>
     <li><a href="index.html#tobint">bint.tobint</a> (convert from anything, returns nil on invalid integers)</li>
-    <li><a href="index.html#parse">bint.parse</a> (convert from anything, returns a lua number as fallback)</li>
     <li><a href="index.html#zero">bint.zero</a></li>
     <li><a href="index.html#one">bint.one</a></li>
     <li><a href="index.html#">bint</a></li>
@@ -196,10 +195,6 @@ however the user should take care in some situations:</p>
 	<tr>
 	<td class="name" nowrap><a href="#tobint">tobint (x[, clone])</a></td>
 	<td class="summary">Convert a value to a bint if possible.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#parse">parse (x[, clone])</a></td>
-	<td class="summary">Convert a value to a bint if possible otherwise to a lua number.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#touinteger">touinteger (x)</a></td>
@@ -765,7 +760,6 @@ however the user should take care in some situations:</p>
     <h3>See also:</h3>
     <ul>
          <li><a href="index.html#tobint">bint.tobint</a></li>
-         <li><a href="index.html#parse">bint.parse</a></li>
     </ul>
 
 
@@ -800,45 +794,7 @@ however the user should take care in some situations:</p>
     <h3>See also:</h3>
     <ul>
          <li><a href="index.html#new">bint.new</a></li>
-         <li><a href="index.html#parse">bint.parse</a></li>
     </ul>
-
-
-</dd>
-    <dt>
-    <a name = "parse"></a>
-    <strong>parse (x[, clone])</strong>
-    </dt>
-    <dd>
-    Convert a value to a bint if possible otherwise to a lua number.
- Useful to prepare values that you are unsure if it's going to be an integer or float.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">x</span>
-         A value to be converted (string, number or another bint).
-        </li>
-        <li><span class="parameter">clone</span>
-         A boolean that tells if a new bint reference should be returned.
- Defaults to false.
-         (<em>optional</em>)
-        </li>
-    </ul>
-
-    <h3>Returns:</h3>
-    <ol>
-
-        A bint or a lua number or nil in case the conversion failed.
-    </ol>
-
-
-    <h3>See also:</h3>
-    <ul>
-         <li><a href="index.html#new">bint.new</a></li>
-         <li><a href="index.html#tobint">bint.tobint</a></li>
-    </ul>
-
 
 </dd>
     <dt>

@@ -21,8 +21,6 @@ global record BigInteger
   new: function(x: number | string | BigInteger): BigInteger
   -- Convert a value to a bint if possible
   tobint: function(x: number | string | BigInteger, clone: boolean): BigInteger
-  -- Convert a value to a bint if possible, otherwise to a lua number
-  parse: function(x: number | string | BigInteger, clone: boolean): BigInteger
   -- Convert a bint to an unsigned integer
   touinteger: function(x: BigInteger | number): integer
   -- Convert a bint to a signed integer
@@ -416,9 +414,28 @@ end
 
 
 --- Check if the input is a bint.
+-- In order to support upgradability (i.e. operate on bint values created with another bint package)
+-- this check doesn't have maximum accuracy.
 -- @param x Any lua value.
 function bint.isbint(x: any): boolean
-  return getmetatable(x) == bint
+  -- disable the strict condition
+  -- return getmetatable(x) == bint
+  
+  -- use a more relaxed condition
+  local isTable = type(x) == 'table'
+  local mt = getmetatable(x) as {string: function}
+  -- no 100% confidence, but enough for our purposes
+  local isBintish = mt and mt.isbint
+    and mt.tobint 
+    and mt.zero 
+    and mt.iszero 
+    and mt.frombase 
+    and mt.tobase 
+    and mt.isneg
+    and mt.ispos
+    and true
+
+  return isTable and isBintish
 end
 
 
@@ -549,7 +566,6 @@ end
 -- @return A new bint, guaranteed to be a new reference in case needed.
 -- @raise An assert is thrown in case x is not convertible to a bint.
 -- @see bint.tobint
--- @see bint.parse
 function bint.new(x: number | string | BigInteger): BigInteger
   if getmetatable(x) ~= bint then
     local ty: string = type(x)
@@ -575,7 +591,6 @@ local bint_new: function(x: number | string | BigInteger): BigInteger = bint.new
 -- Defaults to false.
 -- @return A bint or nil in case the conversion failed.
 -- @see bint.new
--- @see bint.parse
 function bint.tobint(x: number | string | BigInteger, clone: boolean): BigInteger
   if getmetatable(x) == bint then
     if not clone then
