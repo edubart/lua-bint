@@ -292,6 +292,11 @@ local BINT_MATHMININTEGER: BigInteger
 local BINT_MATHMAXINTEGER: BigInteger
 local BINT_MININTEGER: BigInteger
 
+--- Function to check that the x metatable is a bint one
+local function has_bint_metatable(x: any): boolean
+  return type(x) == "table" and (getmetatable(x as table) as metatable<BigInteger>) == getmetatable(bint)
+end
+
 --- Create a new bint with 0 value.
 function bint.zero(): BigInteger
   local x: BigInteger = setmetatable({}, bint as metatable<BigInteger>)
@@ -567,7 +572,7 @@ end
 -- @raise An assert is thrown in case x is not convertible to a bint.
 -- @see bint.tobint
 function bint.new(x: number | string | BigInteger): BigInteger
-  if getmetatable(x) ~= bint then
+  if not has_bint_metatable(x) then
     local ty: string = type(x)
     if ty == 'number' then
       x = bint_frominteger(x as number)
@@ -592,7 +597,7 @@ local bint_new: function(x: number | string | BigInteger): BigInteger = bint.new
 -- @return A bint or nil in case the conversion failed.
 -- @see bint.new
 function bint.tobint(x: number | string | BigInteger, clone: boolean): BigInteger
-  if getmetatable(x) == bint then
+  if has_bint_metatable(x) then
     if not clone then
       return bint_assert_convert(x as BigInteger)
     end
@@ -609,7 +614,7 @@ end
 local tobint: function(x: number | string | BigInteger, clone: boolean): BigInteger = bint.tobint
 
 function bint.touinteger(x: BigInteger | number): integer
-  if getmetatable(x) == bint then
+  if has_bint_metatable(x) then
     local n = 0
     local xi = bint_assert_convert_clone(x as BigInteger) as BigInteger
     for i=1,BINT_SIZE do
@@ -629,7 +634,7 @@ end
 -- @return An integer or nil in case the input cannot be represented by an integer.
 -- @see bint.touinteger
 function bint.tointeger(x: BigInteger | number): integer
-  if getmetatable(x) == bint then
+  if has_bint_metatable(x) then
     local xi = bint_assert_convert_clone(x as BigInteger)
     local n = 0
     for i=1,BINT_SIZE do
@@ -836,13 +841,13 @@ local bint_isminusone: function(x: BigInteger): boolean = bint.isminusone
 --- Check if the input is a lua integer or a bint.
 -- @param x Any lua value.
 function bint.isintegral(x: any): boolean
-  return getmetatable(x) == bint or math_type(x) == 'integer'
+  return has_bint_metatable(x) or math_type(x) == 'integer'
 end
 
 --- Check if the input is a bint or a lua number.
 -- @param x Any lua value.
 function bint.isnumeric(x: any): boolean
-  return getmetatable(x) == bint or type(x) == 'number'
+  return has_bint_metatable(x) or type(x) == 'number'
 end
 
 --- Get the number type of the input (bint, integer or float).
@@ -850,7 +855,7 @@ end
 -- @return Returns "bint" for bints, "integer" for lua integers,
 -- "float" from lua floats or nil otherwise.
 function bint.type(x: any): string | nil
-  if getmetatable(x) == bint then
+  if has_bint_metatable(x) then
     return 'bint'
   end
   return math_type(x)
@@ -1386,7 +1391,7 @@ function bint.tdivmod(x: BigInteger, y: BigInteger): BigInteger, BigInteger
 
   local ix: BigInteger
   local iy: BigInteger
-  ix, iy = tobint(ax), tobint(ay)
+  ix, iy = tobint(ax, false), tobint(ay, false)
   local quot: BigInteger
   local rema: BigInteger
   if ix and iy then
@@ -1809,7 +1814,7 @@ end
 --- Convert a bint to a string on base 10.
 -- @see bint.tobase
 function bint:__tostring(): string
-  return self:tobase(10)
+  return self:tobase(10, false)
 end
 
 -- Allow creating bints by calling bint itself
