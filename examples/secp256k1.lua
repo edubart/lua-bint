@@ -1,4 +1,4 @@
--- Simple Elliptic Curve Cryptography of secp256k1 for encrypting/decrypting messages
+-- Simple Elliptic Curve Cryptography of secp256k1 for encrypting/decrypting/signing messages
 -- See https://en.bitcoin.it/wiki/Secp256k1
 
 local bint = require 'bint'(768)
@@ -17,6 +17,9 @@ end
 -- Curve prime number
 local P = bint('0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffefffffc2f')
 
+-- Curve order
+local N = bint('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141')
+
 -- Curve parameters
 local A = bint(0)
 local B = bint(7)
@@ -27,6 +30,12 @@ CurvePoint.__index = CurvePoint
 
 -- Curve point at infinity
 local O = CurvePoint{x=bint.zero(), y=math.huge}
+
+-- Curve generator point
+local G = CurvePoint{
+    x = bint('0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'),
+    y = bint('0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8'),
+}
 
 -- Checks if points in the curve are equal.
 function CurvePoint.__eq(a, b)
@@ -82,14 +91,6 @@ function CurvePoint:valid()
     return rem:iszero()
 end
 
--- Curve generator point
-local G = CurvePoint{
-    x = bint('0x79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'),
-    y = bint('0x483ada7726a3c4655da4fbfc0e1108a8fd17b448a68554199c47d08ffb10d4b8'),
-}
-
--- Curve order
-local N = bint('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141')
 
 do -- Tests some curve operations
     assert(G:valid())
@@ -106,45 +107,104 @@ do -- Tests some curve operations
     assert(G*3 == G+G+G)
 end
 
--- Very simple XOR crypt (very insecure, but works for demo purposes, use a better cipher like AES!)
-local function xorcrypt(msg, symmetric_private_key)
-    local xor_key = symmetric_private_key.x ~ symmetric_private_key.y
-    return msg ~ xor_key
+do -- Test encrypt and decrypt
+    -- Very simple XOR crypt (very insecure, but works for demo purposes, use a better cipher like AES!)
+    local function xorcrypt(msg, symmetric_private_key)
+        local xor_key = symmetric_private_key.x ~ symmetric_private_key.y
+        return msg ~ xor_key
+    end
+
+    -- Encrypt message using a private symmetric key and the curve public key.
+    local function encrypt(msg, symmetric_private_key, public_key)
+        return xorcrypt(msg, public_key * symmetric_private_key)
+    end
+
+    -- Decrypt message using a public symmetric key and the curve private key.
+    local function decrypt(msg, symmetric_public_key, private_key)
+        return xorcrypt(msg, symmetric_public_key * private_key)
+    end
+
+    print 'Message encryption test:'
+
+    -- Choose a private key
+    local private_key = bint.frombe('This is my private key, hide it!')
+    print('private_key = ' .. tostring(private_key))
+
+    -- Compute public key
+    local public_key = G * private_key
+    print('public_key = ' .. tostring(public_key))
+    assert(public_key:valid())
+
+    -- Generate a random scalar (ideally should be a random number)
+    local symmetric_private_key = bint.frombe('Symmetric key random, hide it!')
+    local symmetric_public_key = G * symmetric_private_key
+    assert(symmetric_public_key:valid())
+
+    local message = bint.frombe('Hello world!')
+    local encrypted_message = encrypt(message, symmetric_private_key, public_key)
+    print('Message: ' .. message:tobe(true))
+    print('encrypted_message = 0x' .. encrypted_message:tobase(16))
+
+    local decrypted_message = decrypt(encrypted_message, symmetric_public_key, private_key)
+    print('Decoded: ' .. decrypted_message:tobe(true))
+    assert(message == decrypted_message)
 end
 
--- Encrypt message using a private symmetric key and the curve public key.
-local function encrypt(msg, symmetric_private_key, public_key)
-    return xorcrypt(msg, public_key * symmetric_private_key)
+do -- Test message signature using EdDSA (see https://en.wikipedia.org/wiki/EdDSA)
+    print('Message signature test:')
+
+    -- Simple hash for demo purposes (not very secure, use a better hash like SHA-256!)
+    local function hash(msg, sign_public_key, public_key)
+        local function h(v) return (v << 13) ~ (v >> 17) ~ (v << 5) end
+        local s = bint.zero()
+        local k = bint('0x9ddfea08eb382d69')
+        s = (h(msg) ~ s) * k; s = s ~ (s >> 47)
+        s = (h(sign_public_key.x) ~ s) * k; s = s ~ (s >> 47)
+        s = (h(sign_public_key.y) ~ s) * k; s = s ~ (s >> 47)
+        s = (h(public_key.x) ~ s) * k; s = s ~ (s >> 47)
+        s = (h(public_key.y) ~ s) * k; s = s ~ (s >> 47)
+        return s % bint.ipow(2, 256)
+    end
+
+    -- Signs a message using private keys
+    local function sign(message, sign_private_key, private_key)
+        local sign_public_key = G * sign_private_key
+        local public_key = G * private_key
+        local message_hash = hash(message, sign_public_key, public_key)
+        local sign_binding_factor = (sign_private_key + private_key * message_hash) % N
+        return sign_public_key, sign_binding_factor
+    end
+
+    -- Verifies a message using public signature and public keys.
+    local function verify(message, sign_binding_factor, sign_public_key, public_key)
+        local message_hash = hash(message, sign_public_key, public_key)
+        return sign_public_key + public_key * message_hash == G * sign_binding_factor
+    end
+
+    -- Choose a private key
+    local private_key = bint.frombe('This is my private key, hide it!')
+    print('private_key = ' .. tostring(private_key))
+
+    -- Compute public key
+    local public_key = G * private_key
+    print('public_key = ' .. tostring(public_key))
+    assert(public_key:valid())
+
+    -- Generate a random scalar (ideally should be a random number)
+    local sign_private_key = bint.frombe('Signature random, hide it!')
+
+    local message = bint.frombe("Hello world!")
+    print('Message: '.. message:tobe(true))
+
+    -- Sign message
+    local sign_public_key, sign_binding_factor = sign(message, sign_private_key, private_key)
+    print(string.format('signature = (%s, %s)', sign_public_key, sign_binding_factor))
+    assert(sign_public_key:valid())
+
+    -- Verify message
+    local ok = verify(message, sign_binding_factor, sign_public_key, public_key)
+    print('Verification: ' .. tostring(ok))
+    assert(ok == true)
 end
 
--- Decrypt message using a public symmetric key and the curve secret key.
-local function decrypt(msg, symmetric_public_key, secret_key)
-    return xorcrypt(msg, symmetric_public_key * secret_key)
-end
-
--- Choose a secret key
-local secret_key = bint.frombe('This is my secret key, hide it!')
-print('secret_key = ' .. tostring(secret_key))
-
--- Compute public key
-local public_key = G * secret_key
-assert(public_key:valid())
-print('public_key = ' .. tostring(public_key))
-
--- Test encrypt and decrypt
-print 'Message encryption test:'
-
--- Generate a random symmetric key (ideally should be a random number)
-local symmetric_private_key = bint.frombe('Symmetric key random, hide it!')
-local symmetric_public_key = G * symmetric_private_key
-assert(symmetric_public_key:valid())
-
-local message = bint.frombe('Hello world!')
-local encrypted_message = encrypt(message, symmetric_private_key, public_key)
-print('Message: ' .. message:tobe(true))
-print('encrypted_message = 0x' .. encrypted_message:tobase(16))
-
-local decrypted_message = decrypt(encrypted_message, symmetric_public_key, secret_key)
-print('Decoded: ' .. decrypted_message:tobe(true))
-assert(message == decrypted_message)
 print('success!')

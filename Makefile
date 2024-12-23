@@ -9,6 +9,7 @@ test:
 	$(LUA) examples/pi.lua
 	$(LUA) examples/e.lua
 	$(LUA) examples/rsa.lua
+	$(LUA) examples/secp256k1.lua
 
 docs:
 	ldoc -d docs -f markdown bint.lua
