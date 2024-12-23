@@ -89,6 +89,7 @@ Some interesting examples there:
 * [pi.lua](https://github.com/edubart/lua-bint/blob/master/examples/pi.lua) - calculate the first 100 digits of Pi
 * [e.lua](https://github.com/edubart/lua-bint/blob/master/examples/e.lua) - calculate the first 100 digits of Euler's number
 * [rsa.lua](https://github.com/edubart/lua-bint/blob/master/examples/rsa.lua) - simple RSA example for encrypting/decrypting messages
+* [secp256k1.lua](https://github.com/edubart/lua-bint/blob/master/examples/secp256k1.lua) - simple Secp256k1 elliptic curve example for encrypting/decrypting messages
 
 ## Tests
 

@@ -14,22 +14,15 @@ local function lcm(a, b)
   return bint.abs(a * b) // gcd(a, b)
 end
 
+-- Returns modular multiplicative inverse m s.t. (a * m) % m == 1
 local function modinv(a, m)
-  assert(bint.isone(gcd(a, m)), 'no inverse')
-  if bint.isone(m) then
-    return m
+  local r, inv, s = bint(m), bint.one(), bint.zero()
+  while not r:iszero() do
+    local quo, rem = bint.idivmod(a, r)
+    s, r, inv, a = inv - quo * s, rem, s, r
   end
-  local m0, inv, x0 = m, 1, 0
-  while a > 1 do
-    local quot, rem = bint.udivmod(a, m)
-    inv = inv - quot * x0
-    a, m = m, rem
-    inv, x0 = x0, inv
-  end
-  if inv < 0 then
-    inv = inv + m0
-  end
-  return inv
+  assert(a:isone(), 'no inverse')
+  return inv % m
 end
 
 -- 1. Choose two distinct primes
